@@ -1,0 +1,8 @@
+function f() {
+    ({a = ([arguments]) => {
+    }} = 1);
+
+    arguments.x;
+}
+
+f();

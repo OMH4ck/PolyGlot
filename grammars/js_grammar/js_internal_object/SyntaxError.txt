@@ -1,0 +1,22 @@
+	class SyntaxError {
+	arguments;
+	arity;
+	caller;
+	displayName;
+	length;
+	name;
+	count;
+	noSuchMethod;
+	Parent;
+	__proto__;
+	constructor;
+	setPrototypeOf(obj, prototype){}
+	columnNumber;
+	fileName;
+	lineNumber;
+	message;
+	Stack;
+	toSource(){}
+	toString(){}
+	}
+	

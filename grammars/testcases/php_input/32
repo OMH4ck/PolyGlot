@@ -1,0 +1,7 @@
+<?php
+if (!extension_loaded("mbstring")) {
+  die("skip Requires mbstring extension");
+}
+
+var_dump($_FILES);
+var_dump($_POST);

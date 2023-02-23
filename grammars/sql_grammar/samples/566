@@ -1,0 +1,1 @@
+CREATE VIEW v0 AS SELECT COUNT ( * ) , 10 ; SELECT * FROM v0 AS a JOIN v0 ON ( 10 IN ( 10 , 1 ) ) NOT LIKE 'Brand#23' ; 

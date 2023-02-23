@@ -1,0 +1,6 @@
+regexpr('(.{1,2})\\1', 'foo')
+attr(,"match.length")
+attr(,"useBytes")
+regexpr('(.{1,3})\\1', 'foo')
+attr(,"match.length")
+attr(,"useBytes")

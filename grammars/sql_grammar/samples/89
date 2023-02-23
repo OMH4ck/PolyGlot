@@ -1,0 +1,1 @@
+CREATE TABLE v0 ( v1 INTEGER PRIMARY KEY ) ; INSERT INTO v0 VALUES ( 3 ) ; SELECT quote ( zeroblob ( 10 ) ) FROM v0 , v0 , v0 , v0 ; 

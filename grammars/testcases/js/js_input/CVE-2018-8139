@@ -1,0 +1,7 @@
+function func() {
+    new.target.x;
+}
+
+let bound = func.bind({}, 1);
+
+Reflect.construct(bound, []);

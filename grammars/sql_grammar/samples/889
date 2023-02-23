@@ -1,0 +1,1 @@
+CREATE VIEW v0 ( v11 , v10 , v6 , v1 , v2 , v3 , v7 , v8 , v4 , v5 , v9 ) AS SELECT COUNT ( * ) OVER( ) , 1 ; SELECT ( SELECT v3 ) , lead ( v6 , 10 ) OVER( ORDER BY v6 ) FROM v0 ; 

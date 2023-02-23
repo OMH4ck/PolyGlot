@@ -1,0 +1,10 @@
+	class DisplayNames {
+	getCanonicalLocales(locales){}
+	count;
+	noSuchMethod;
+	Parent;
+	__proto__;
+	constructor;
+	setPrototypeOf(obj, prototype){}
+	}
+	

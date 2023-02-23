@@ -1,0 +1,1 @@
+CREATE VIEW v0 ( v15 , v12 , v19 , v2 , v3 , v6 , v1 , v20 , v9 , v4 , v16 , v11 , v13 , v5 , v14 , v21 , v10 , v18 , v8 , v22 , v23 , v7 , v17 ) AS SELECT 9223372036854775807 , - 'Y' , 10 , 3 ; SELECT * FROM v0 AS a , v0 AS b , v0 , v0 , v0 ; 

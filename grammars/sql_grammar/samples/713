@@ -1,0 +1,1 @@
+CREATE TABLE v0 ( v1 INTEGER PRIMARY KEY ) ; UPDATE v0 SET v1 = ( SELECT DISTINCT 1 FROM v0 , v0 , v0 , v0 , v0 ) ; SELECT count ( CASE WHEN v1 != random () THEN 10 END ) , count ( CASE WHEN v1 = '**%s**' THEN 1 END ) FROM v0 ; 

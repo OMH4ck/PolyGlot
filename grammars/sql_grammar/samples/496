@@ -1,0 +1,1 @@
+CREATE VIEW v0 ( v2 , v3 , v4 , v6 , v7 , v8 , v1 , v9 , v10 , v11 , v5 ) AS SELECT COUNT ( * ) OVER( ) , 9 ; SELECT * FROM v0 AS a JOIN v0 ON NULL = 1.100000 NOT LIKE '23' ; 

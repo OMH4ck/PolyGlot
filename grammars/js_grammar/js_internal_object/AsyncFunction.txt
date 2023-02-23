@@ -1,0 +1,11 @@
+	class AsyncFunction {
+	arguments;
+	caller;
+	displayName;
+	length;
+	name;
+	__proto__;
+	constructor;
+	setPrototypeOf(obj, prototype){}
+	}
+	

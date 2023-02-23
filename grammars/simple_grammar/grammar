@@ -1,0 +1,64 @@
+program:
+stmtlist
+---
+stmtlist:
+stmt stmtlist
+stmt
+---
+stmt:
+forstmt
+declaration_stmt ';'
+expr ';'
+---
+declaration_stmt:
+type assign_expr
+STRUCT identifier assign_expr **identifier=kDataType:1:Use;assign_expr->identifier=kDataClassInstance:1:Define**
+structure_declaration
+---
+structure_declaration:
+STRUCT identifier '{' declaration_stmt_list '}' **identifier=kDataClassName:1:Define;declaration_stmt_list->declaration_stmt->assign_expr->identifier=kDataWhatever:1:Define** 
+---
+declaration_stmt_list:
+declaration_stmt ';'
+declaration_stmt ';' declaration_stmt_list
+---
+type:
+identifier **identifier=kDataType:1:Use**
+---
+assign_expr:
+identifier '=' expr **identifier=kDataWhatever:1:Define**
+identifier **identifier=kDataWhatever:1:Define**
+---
+forstmt:
+FOR '(' expr ')' '{' stmtlist '}'
+---
+expr:
+expr '+' expr
+member_access
+bexpr
+---
+member_access:
+identifier '.' identifier **identifier_1=kDataClassInstance:1:Use;identifier_2=kDataClassMember:1:Use**
+identifier '.' member_access **identifier_1=kDataClassInstance:1:Use;member_access->identifier_1=kDataClassName:1:Use**
+---
+bexpr:
+FUCK
+cexpr
+---
+cexpr:
+identifier **identifier=kDataWhatever:1:Use**
+float_literal
+string_literal
+int_literal
+---
+float_literal:
+FLOATLITERAL
+---
+int_literal:
+INTLITERAL
+---
+string_literal:
+STRINGLITERAL
+---
+identifier:
+IDENTIFIER

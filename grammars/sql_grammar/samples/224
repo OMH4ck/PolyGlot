@@ -1,0 +1,1 @@
+CREATE VIEW v0 ( v2 , v1 , v15 , v2 , v7 , v8 , v8 , v12 , v3 , v1 , v7 , v5 , v14 , v9 , v10 , v4 , v11 , v13 , v6 , v2 , v15 ) AS SELECT COUNT ( * ) OVER( ) , 10 ; SELECT * FROM v0 AS one , v0 AS two NATURAL JOIN v0 NATURAL JOIN v0 ORDER BY 'test' ; 

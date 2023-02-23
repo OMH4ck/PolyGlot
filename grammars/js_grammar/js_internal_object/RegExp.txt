@@ -1,0 +1,31 @@
+	class RegExp {
+	n;
+	input;
+	lastIndex;
+	lastMatch;
+	lastParen;
+	leftContext;
+	rightContext;
+	arguments;
+	caller;
+	displayName;
+	length;
+	name;
+	__proto__;
+	constructor;
+	setPrototypeOf(obj, prototype){}
+	dotAll;
+	flags;
+	global;
+	ignoreCase;
+	multiline;
+	source;
+	sticky;
+	unicode;
+	compile(pattern, flags){}
+	exec(str){}
+	test(str){}
+	toSource(){}
+	toString(){}
+	}
+	

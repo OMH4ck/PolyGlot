@@ -1,0 +1,18 @@
+	class Set {
+	arguments;
+	caller;
+	displayName;
+	length;
+	name;
+	__proto__;
+	constructor;
+	setPrototypeOf(obj, prototype){}
+	size;
+	add(value){}
+	clear(){}
+	entries(){}
+	forEach(callback){}
+	has(value){}
+	values(){}
+	}
+	

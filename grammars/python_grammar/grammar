@@ -1,0 +1,750 @@
+program:
+file_input
+---
+file_input:
+NEWLINE file_input
+stmt file_input
+
+---
+decorator:
+OP_AT dotted_name NEWLINE 
+OP_AT dotted_name OP_LP opt_arglist OP_RP NEWLINE
+---
+opt_arglist:
+arglist
+
+---
+decorators: 
+decorator
+decorators decorator
+---
+decorated: 
+decorators classdef
+decorators funcdef
+decorators async_funcdef
+---
+async_funcdef:
+'async' funcdef
+---
+funcdef:
+'def' identifier parameters opt_arrow_test ':' opt_type_comment func_body_suite
+---
+arrow_test:
+'->' test
+---
+opt_arrow_test:
+arrow_test
+
+---
+parameters:
+'(' opt_typedargslist ')'
+---
+opt_typedargslist:
+typedargslist
+
+---
+typedargslist:
+tfpdef_equal_test_list ',' opt_type_comment '/'
+tfpdef_equal_test_list ',' opt_type_comment '/' ',' opt_dollar_tfpdef_on_etc_or_double_dollar_tfpdef
+tfpdef_equal_test_list ',' opt_type_comment '/' ',' opt_type_comment tfpdef_equal_test_list TYPE_COMMENT
+tfpdef_equal_test_list ',' opt_type_comment '/' ',' opt_type_comment tfpdef_equal_test_list
+tfpdef_equal_test_list ',' opt_type_comment '/' ',' opt_type_comment tfpdef_equal_test_list ',' opt_type_comment opt_dollar_tfpdef_on_etc_or_double_dollar_tfpdef
+tfpdef_equal_test_list opt_type_comment
+tfpdef_equal_test_list ',' opt_type_comment opt_dollar_tfpdef_on_etc_or_double_dollar_tfpdef
+dollar_tfpdef_on_etc_or_double_dollar_tfpdef
+---
+opt_dollar_tfpdef_on_etc_or_double_dollar_tfpdef:
+dollar_tfpdef_on_etc_or_double_dollar_tfpdef
+
+---
+dollar_tfpdef_on_etc_or_double_dollar_tfpdef:
+dollar_tfpdef_on_etc
+double_dollar_tfpdef
+---
+dollar_tfpdef_on_etc:
+'*' opt_tfpdef opt_comma_type_comment_tfpdef_equal_test_list TYPE_COMMENT
+'*' opt_tfpdef opt_comma_type_comment_tfpdef_equal_test_list opt_comma_typecomment_double_dollar_tfpdef
+---
+opt_comma_typecomment_double_dollar_tfpdef:
+comma_typecomment_double_dollar_tfpdef
+
+---
+comma_typecomment_double_dollar_tfpdef:
+',' opt_type_comment opt_double_dollar_tfpdef
+---
+opt_comma_type_comment_tfpdef_equal_test_list:
+comma_type_comment_tfpdef_equal_test_list
+
+---
+comma_type_comment_tfpdef_equal_test_list:
+comma_type_comment_tfpdef_equal_test
+comma_type_comment_tfpdef_equal_test_list comma_type_comment_tfpdef_equal_test
+---
+comma_type_comment_tfpdef_equal_test:
+',' opt_type_comment tfpdef_equal_test
+---
+opt_tfpdef:
+tfpdef
+
+---
+opt_double_dollar_tfpdef:
+double_dollar_tfpdef
+
+---
+double_dollar_tfpdef:
+'**' tfpdef opt_comma opt_type_comment
+---
+tfpdef_equal_test_list:
+tfpdef_equal_test
+tfpdef_equal_test_list ',' opt_type_comment tfpdef_equal_test
+---
+opt_type_comment:
+TYPE_COMMENT
+
+---
+opt_equal_test:
+'=' test
+
+---
+tfpdef_equal_test:
+tfpdef opt_equal_test
+---
+tfpdef:
+identifier
+identifier ':' test
+---
+varargslist: 
+vfpdef_case_one
+vfpdef_case_two
+---
+vfpdef_case_one:
+vfpdef_equal_test_list ',' '/' ',' opt_vfpdef_test_star_option
+vfpdef_equal_test_list ',' '/'
+---
+opt_vfpdef_test_star_option:
+vfpdef_equal_test_list_and_star_vfpdef star_vfpdef_and_double_star
+double_star_vfpdef
+
+---
+vfpdef_case_two:
+vfpdef_equal_test_list_and_star_vfpdef
+star_vfpdef_and_double_star
+double_star_vfpdef
+---
+vfpdef_equal_test_list_and_star_vfpdef:
+vfpdef_equal_test_list opt_comma_double_or_double_and_star_vfpdef
+---
+opt_comma_double_or_double_and_star_vfpdef:
+',' opt_double_or_double_and_star_vfpdef
+
+---
+opt_double_or_double_and_star_vfpdef:
+star_vfpdef_and_double_star
+double_star_vfpdef
+
+---
+star_vfpdef_and_double_star:
+star_vfpdef_equal_test_list opt_comma_double_star_vfpdef
+---
+star_vfpdef_equal_test_list:
+'*' opt_vfpdef
+star_vfpdef_equal_test_list ',' vfpdef_equal_test
+---
+opt_comma_double_star_vfpdef:
+',' opt_double_star_vfpdef
+
+---
+opt_double_star_vfpdef:
+double_star_vfpdef
+
+---
+double_star_vfpdef:
+'**' vfpdef opt_comma
+---
+opt_vfpdef:
+vfpdef
+
+---
+vfpdef_equal_test_list:
+vfpdef_equal_test
+vfpdef_equal_test_list ',' vfpdef_equal_test
+---
+vfpdef_equal_test:
+vfpdef opt_equal_test
+---
+vfpdef: 
+identifier
+---
+stmt: 
+simple_stmt
+compound_stmt
+---
+simple_stmt:
+small_stmt_list ';' NEWLINE
+small_stmt_list NEWLINE
+---
+small_stmt_list:
+small_stmt
+small_stmt_list ';' small_stmt
+---
+small_stmt:
+expr_stmt
+del_stmt
+pass_stmt
+flow_stmt
+import_stmt
+global_stmt
+nonlocal_stmt
+assert_stmt
+---
+expr_stmt:
+testlist_star_expr annassign
+testlist_star_expr augassign yield_expr
+testlist_star_expr augassign testlist
+testlist_star_expr annassign_rvalue_list opt_type_comment
+---
+annassign_rvalue_list:
+'=' annassign_rvalue
+annassign_rvalue_list '=' annassign_rvalue
+---
+annassign:
+':' test '=' annassign_rvalue
+':' test
+---
+annassign_rvalue:
+yield_expr
+testlist_star_expr
+---
+testlist_star_expr: 
+test ',' testlist_star_expr 
+star_expr ',' testlist_star_expr 
+test opt_comma
+star_expr opt_comma
+---
+augassign: 
+'+='
+'-='
+'*='
+'@='
+'/='
+'%='
+'&='
+'|='
+'^='
+'<<='
+'>>='
+'**='
+'//='
+---
+del_stmt:
+'del' exprlist
+---
+pass_stmt:
+'pass'
+---
+flow_stmt:
+break_stmt
+continue_stmt
+return_stmt
+raise_stmt
+yield_stmt
+---
+break_stmt:
+'break'
+---
+continue_stmt:
+'continue'
+---
+return_stmt:
+'return' testlist_star_expr
+'return'
+---
+yield_stmt:
+yield_expr
+---
+raise_stmt:
+'raise' opt_raise_content
+---
+opt_raise_content:
+test opt_from_test
+
+---
+opt_from_test:
+'from' test
+
+---
+import_stmt:
+import_name
+import_from
+---
+import_name:
+'import' dotted_as_names
+---
+import_from:
+'from' opt_dot_or_dotdotdot_list dotted_name 'import' star_or_import_as_name
+'from' dot_or_dotdotdot_list 'import' star_or_import_as_name
+---
+star_or_import_as_name:
+'*'
+'(' import_as_names ')'
+import_as_names
+---
+opt_dot_or_dotdotdot_list:
+dot_or_dotdotdot_list
+
+---
+dot_or_dotdotdot_list:
+dot_or_dotdotdot
+dot_or_dotdotdot_list dot_or_dotdotdot
+---
+dot_or_dotdotdot:
+'.'
+'...'
+---
+import_as_name: 
+identifier
+identifier 'as' identifier
+---
+dotted_as_name:
+dotted_name
+dotted_name 'as' identifier
+---
+import_as_names: 
+import_as_name opt_comma
+import_as_name ',' import_as_names 
+---
+opt_comma:
+','
+
+---
+dotted_as_names:
+dotted_as_name
+dotted_as_name ',' dotted_as_names
+---
+dotted_name:
+identifier
+identifier '.' dotted_name
+---
+global_stmt:
+'global' identifier
+global_stmt ',' identifier
+---
+nonlocal_stmt:
+'nonlocal' identifier 
+nonlocal_stmt ',' identifier 
+---
+assert_stmt: 
+'assert' test 
+'assert' test ',' test
+---
+compound_stmt:
+if_stmt
+while_stmt
+for_stmt
+try_stmt
+with_stmt
+funcdef
+classdef
+decorated
+async_stmt
+---
+async_stmt: 
+'async' funcdef
+'async' with_stmt
+'async' for_stmt
+---
+if_stmt:
+'if' namedexpr_test ':' suite opt_elif_stmt_list opt_else_stmt
+---
+opt_else_stmt:
+'else' ':' suite
+
+---
+opt_elif_stmt_list:
+elif_stmt_list
+
+---
+elif_stmt_list:
+elif_stmt
+elif_stmt_list elif_stmt
+---
+elif_stmt:
+'elif' namedexpr_test ':' suite
+---
+while_stmt:
+'while' namedexpr_test ':' suite opt_else_stmt
+---
+for_stmt: 
+'for' exprlist 'in' testlist ':' suite opt_else_stmt
+'for' exprlist 'in' testlist ':' TYPE_COMMENT suite opt_else_stmt
+---
+try_stmt:
+'try' ':' suite except_clause_suite_list opt_else_stmt opt_finally_suite
+'try' ':' suite finally_suite
+---
+except_clause_suite_list:
+except_clause_suite
+except_clause_suite_list except_clause_suite
+---
+except_clause_suite:
+except_clause ':' suite
+---
+opt_finally_suite:
+finally_suite
+
+---
+finally_suite:
+'finally' ':' suite
+---
+with_stmt: 
+with_item_list ':' opt_type_comment suite
+---
+with_item_list:
+'with' with_item
+with_item_list ',' with_item
+---
+with_item: 
+test opt_as_expr
+---
+opt_as_expr:
+'as' expr
+
+---
+except_clause: 
+'except' test 'as' identifier
+'except' test
+'except'
+---
+suite:
+simple_stmt
+NEWLINE INDENT stmt_list DEDENT
+---
+namedexpr_test:
+test opt_assign_test
+---
+opt_assign_test:
+':=' test
+
+---
+test:
+or_test
+or_test 'if' or_test 'else' test
+lambdef
+---
+test_nocond:
+or_test
+lambdef_nocond
+---
+lambdef:
+'lambda' ':' test
+'lambda' varargslist ':' test
+---
+lambdef_nocond:
+'lambda' ':' test_nocond
+'lambda' varargslist ':' test_nocond
+---
+or_test:
+and_test
+and_test 'or' or_test
+---
+and_test:
+not_test
+not_test 'and' and_test
+---
+not_test:
+'not' not_test
+comparison
+---
+comparison:
+expr
+expr comp_op comparison
+---
+comp_op:
+'<'
+'>'
+'=='
+'>='
+'<='
+'<>'
+'!='
+'in'
+'not' 'in'
+'is'
+'is' 'not'
+---
+star_expr:
+'*' expr
+---
+expr:
+xor_expr
+xor_expr '|' expr
+---
+xor_expr:
+and_expr
+and_expr '^' xor_expr
+---
+and_expr:
+shift_expr
+shift_expr '&' and_expr
+---
+shift_expr:
+arith_expr
+arith_expr shift_op shift_expr
+---
+shift_op:
+'<<'
+'>>'
+---
+arith_expr:
+term
+arith_expr arith_op term
+---
+arith_op:
+'+'
+'-'
+---
+term:
+factor
+term term_op factor
+---
+term_op:
+'*'
+'@'
+'/'
+'%'
+'//'
+---
+factor:
+factor_op factor
+power
+---
+factor_op:
+'+'
+'-'
+'~'
+---
+power:
+atom_expr
+atom_expr '**' factor
+---
+atom_expr:
+'await' atom opt_trailer_list
+atom opt_trailer_list
+---
+opt_trailer_list:
+trailer_list
+
+---
+trailer_list:
+trailer
+trailer trailer_list
+---
+atom: 
+'(' opt_yield_or_testlist_comp ')'
+'[' opt_testlist_comp ']'
+'{' opt_dictorsetmaker '}'
+identifier
+number_literal
+string_literal
+'...'
+'None'
+'True'
+'False'
+---
+opt_yield_or_testlist_comp:
+yield_expr
+testlist_comp
+
+---
+opt_testlist_comp:
+testlist_comp
+
+---
+opt_dictorsetmaker:
+dictorsetmaker
+
+---
+testlist_comp:
+namedexpr_or_star_expr comp_for 
+namedexpr_or_star_expr_list
+---
+namedexpr_or_star_expr_list:
+namedexpr_or_star_expr opt_comma
+namedexpr_or_star_expr ',' namedexpr_or_star_expr_list
+---
+namedexpr_or_star_expr:
+namedexpr_test
+star_expr
+---
+trailer:
+'(' ')'
+'(' arglist ')'
+'[' subscriptlist ']'
+'.' identifier
+---
+subscriptlist:
+subscript opt_comma
+subscript ',' subscriptlist
+---
+subscript:
+test
+opt_test ':' opt_test opt_sliceop
+---
+opt_test:
+test
+
+---
+opt_sliceop:
+sliceop
+
+---
+sliceop:
+':'
+':' test
+---
+exprlist:
+expr opt_comma
+star_expr opt_comma
+expr ',' exprlist
+star_expr ',' exprlist
+---
+testlist:
+test opt_comma
+test ',' testlist
+---
+dictorsetmaker:
+test_colon_test_or_expr_list
+test_colon_test_or_expr comp_for
+test_or_star_expr_list
+test_or_star_expr comp_for
+---
+test_or_star_expr:
+test
+star_expr
+---
+test_or_star_expr_list:
+test_or_star_expr opt_comma
+test_or_star_expr ',' test_or_star_expr_list
+---
+test_colon_test:
+test ':' test
+---
+test_colon_test_or_expr:
+test_colon_test
+'**' expr
+---
+test_colon_test_or_expr_list:
+test_colon_test_or_expr opt_comma
+test_colon_test_or_expr ',' test_colon_test_or_expr_list
+---
+classdef:
+'class' identifier ':' suite
+'class' identifier '(' ')' ':' suite
+'class' identifier '(' arglist ')' ':' suite
+---
+arglist:
+argument opt_comma
+argument ',' arglist
+---
+argument:
+test
+test comp_for
+test ':=' test
+test '=' test
+'**' test
+'*' test
+---
+comp_iter:
+comp_for
+comp_if
+---
+opt_comp_iter:
+comp_iter
+
+---
+sync_comp_for:
+'for' exprlist 'in' or_test opt_comp_iter
+---
+comp_for:
+sync_comp_for
+'async' sync_comp_for
+---
+comp_if:
+'if' test_nocond opt_comp_iter
+---
+encoding_decl:
+identifier
+---
+yield_expr:
+'yield'
+'yield' yield_arg
+---
+yield_arg:
+'from' test
+testlist_star_expr
+---
+func_body_suite:
+simple_stmt
+NEWLINE TYPE_COMMENT NEWLINE INDENT stmt_list DEDENT
+NEWLINE INDENT stmt_list DEDENT
+---
+stmt_list:
+stmt
+stmt_list stmt
+---
+func_type_input:
+func_type opt_newline_list
+---
+func_type:
+'(' opt_typelist ')' arrow_test
+---
+typelist:
+test opt_comma_test_list opt_comma_expand_test
+test opt_comma_test_list ','
+test opt_comma_test_list ',' '*' opt_test opt_comma_test_list opt_comma_expand_test
+'*' opt_test opt_comma_test_list opt_comma_expand_test
+expand_test
+---
+opt_comma_expand_test:
+',' expand_test
+
+---
+opt_comma_test_list:
+comma_test_list
+
+---
+comma_test_list:
+',' test
+comma_test_list ',' test
+---
+expand_test:
+'**' test
+---
+opt_typelist:
+typelist
+
+---
+identifier:
+IDENTIFIER
+---
+number_literal:
+float_literal
+int_literal
+---
+float_literal:
+FLOATLITERAL
+---
+int_literal:
+INTLITERAL
+---
+string_literal:
+STRINGLITERAL
+---
+opt_newline_list:
+newline_list
+
+---
+newline_list:
+NEWLINE
+newline_list NEWLINE
+---

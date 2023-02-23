@@ -1,0 +1,1 @@
+CREATE TABLE v0 ( v1 INTEGER PRIMARY KEY ) ; INSERT INTO v0 VALUES ( 10 ) ; SELECT count ( ) , count ( CASE WHEN v1 = 'test' THEN 1 END ) FROM v0 ; 

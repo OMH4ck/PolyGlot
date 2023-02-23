@@ -1,0 +1,1 @@
+SELECT 10 IN ( CAST ( '1994-01-01' AS TEXT ) ) ; SELECT DISTINCT 'GERMANY' IN ( SELECT DISTINCT sqlite_compileoption_used ( sqlite_compileoption_get ( 0 ) ) LIMIT 0 ) GROUP BY 1 ; SELECT v7 , v6 FROM v4 WHERE v5 IS NOT NULL ; 

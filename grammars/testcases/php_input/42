@@ -1,0 +1,8 @@
+<?php
+if (getenv("SKIP_SLOW_TESTS")) die("skip slow test");
+
+
+set_time_limit(1);
+
+foreach (new InfiniteIterator(new ArrayIterator([1])) as $i) {
+}

@@ -1,0 +1,29 @@
+%nonassoc PREC_LOW
+%nonassoc LOOPEX
+%left OROP DOROP
+%left ANDOP
+%right NOTOP
+%nonassoc LSTOP LSTOPSUB
+%left OP_COMMA
+%right ASSIGNOP
+%right OP_QUESTION OP_COLON
+%nonassoc DOTDOT
+%left OROR DORDOR
+%left ANDAND
+%left BITOROP
+%left BITANDOP
+%nonassoc EQOP
+%nonassoc RELOP
+%nonassoc UNIOP UNIOPSUB
+%nonassoc REQUIRE
+%left SHIFTOP
+%left ADDOP
+%left MULOP
+%left MATCHOP
+%right OP_NOT OP_BITNOT UMINUS REFGEN
+%right POWOP
+%nonassoc PREINC PREDEC POSTINC POSTDEC POSTJOIN
+%left ARROW
+%nonassoc TRPAREN
+%left TLPAREN
+%left TLBRACK OP_LBRACE

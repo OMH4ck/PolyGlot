@@ -1,0 +1,2 @@
+<?php
+$var = highlight_string("<br /><?php echo \"foo\";  echo \"bar\";

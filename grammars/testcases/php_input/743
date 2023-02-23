@@ -1,0 +1,8 @@
+<?php
+ob_start("str_rot13");
+echo "foo\n";
+try {
+    ob_end_flush();
+} catch (TypeError $e) {
+    echo $e->getMessage(), "\n";
+}

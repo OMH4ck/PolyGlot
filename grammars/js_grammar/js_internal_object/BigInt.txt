@@ -1,0 +1,16 @@
+	class BigInt {
+	asIntN(width, bigint){}
+	asUintN(width, bigint){}
+	arguments;
+	caller;
+	displayName;
+	length;
+	name;
+	__proto__;
+	constructor;
+	setPrototypeOf(obj, prototype){}
+	toLocaleString(){}
+	toString(){}
+	valueOf(){}
+	}
+	

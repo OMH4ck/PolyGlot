@@ -1,0 +1,689 @@
+Identifier:
+IDENTIFIER
+---
+QualifiedIdentifier:
+Identifier
+Identifier '.' QualifiedIdentifier
+---
+QualifiedIdentifierList: 
+QualifiedIdentifier
+QualifiedIdentifier ',' QualifiedIdentifierList
+---
+CompilationUnit: 
+'package' QualifiedIdentifier ';' OptImportDeclarationList TypeDeclarationList
+OptImportDeclarationList TypeDeclarationList
+---
+OptImportDeclarationList:
+ImportDeclarationList
+
+---
+ImportDeclarationList:
+ImportDeclaration
+ImportDeclaration ImportDeclarationList
+---
+OptTypeDeclarationList:
+TypeDeclarationList
+
+---
+TypeDeclarationList:
+TypeDeclaration
+TypeDeclaration TypeDeclarationList
+---
+ImportDeclaration: 
+IMPORT OptStatic IdentifierList OptDotStar ';'
+---
+OptDotStar:
+DotStar
+---
+DotStar
+'.' '*'
+---
+OptStatic:
+'static'
+
+---
+IdentifierList:
+Identifier
+Identifier '.' IdentifierList
+---
+TypeDeclaration: 
+ClassOrInterfaceDeclaration
+;
+---
+ClassOrInterfaceDeclaration: 
+OptModifierList ClassDeclaration
+OptModifierList InterfaceDeclaration
+---
+OptModifierList:
+ModifierList
+
+---
+ModifierList:
+Modifier
+Modifier ModifierList
+---
+ClassDeclaration: 
+NormalClassDeclaration
+EnumDeclaration
+---
+InterfaceDeclaration: 
+NormalInterfaceDeclaration
+AnnotationTypeDeclaration
+---
+OptTypeParameters:
+TypeParameters
+
+---
+OptExtendsType:
+'extends' Type
+
+---
+OptImplementsTypeList:
+'implements' TypeList
+
+---
+OptExtendsTypeList:
+'extends' TypeList
+
+---
+NormalClassDeclaration: 
+'class' Identifier OptTypeParameters OptExtendsType OptImplementsTypeList ClassBody
+---
+EnumDeclaration:
+'enum' Identifier OptImplementsTypeList EnumBody
+---
+NormalInterfaceDeclaration: 
+'interface' Identifier OptTypeParameters OptExtendsTypeList InterfaceBody
+---
+AnnotationTypeDeclaration:
+'@' 'interface' Identifier AnnotationTypeBody
+---
+OptArraySuffixList:
+ArraySuffixList
+
+---
+ArraySuffixList:
+'[' ']'
+'[' ']' ArraySuffixList
+---
+Type:
+BasicType OptArraySuffix
+ReferenceType OptArraySuffix
+---
+BasicType: 
+'byte'
+'short'
+'char'
+'int'
+'long'
+'float'
+'double'
+'boolean'
+---
+OptTypeArguments:
+TypeArguments
+
+---
+ReferenceType:
+Identifier OptTypeArguments
+Identifier OptTypeArguments '.' ReferenceType
+---
+TypeArguments: 
+'<' TypeArgumentsList '>'
+---
+TypeArgumentsList:
+TypeArgument
+TypeArgument ',' TypeArgumentsList
+---
+TypeArgument:
+ReferenceType
+'?' '[' 'extends' ReferenceType ']'
+'?' '[' 'super' ReferenceType ']'
+---
+NonWildcardTypeArguments:
+'<' TypeList '>'
+---
+OptTypeList:
+TypeList
+
+---
+TypeList:  
+ReferenceType
+ReferenceType ',' TypeList
+---
+TypeArgumentsOrDiamond:
+'<' '>' 
+TypeArguments
+---
+NonWildcardTypeArgumentsOrDiamond:
+'<' '>'
+NonWildcardTypeArguments
+---
+TypeParameters:
+'<' TypeParameterList '>'
+---
+TypeParameterList:
+TypeParameter
+TypeParameter ',' TypeParameterList
+---
+TypeParameter:
+Identifier
+Identifier 'extends' Bound
+---
+Bound:  
+ReferenceType
+ReferenceType '&' Bound
+---
+Modifier: 
+'public'
+'protected'
+'private'
+'static' 
+'abstract'
+'final'
+'native'
+'synchronized'
+'transient'
+'volatile'
+'strictfp'
+---
+ClassBody: 
+'{' ClassBodyDeclarationList '}'
+---
+ClassBodyDeclarationList:
+ClassBodyDeclaration
+ClassBodyDeclaration ClassBodyDeclarationList
+---
+ClassBodyDeclaration:
+';'
+OptModifierList MemberDecl
+OptStatic Block
+---
+MemberDecl:
+MethodOrFieldDecl
+'void' Identifier VoidMethodDeclaratorRest
+Identifier ConstructorDeclaratorRest
+GenericMethodOrConstructorDecl
+ClassDeclaration
+InterfaceDeclaration
+---
+MethodOrFieldDecl:
+Type Identifier MethodOrFieldRest
+---
+MethodOrFieldRest:  
+FieldDeclaratorsRest ';'
+MethodDeclaratorRest
+---
+FieldDeclaratorsRest:  
+VariableDeclaratorRest OptCommaVariableDeclaratorList
+---
+OptCommaVariableDeclaratorList:
+CommaVariableDeclaratorList
+
+---
+CommaVariableDeclaratorList:
+',' VariableDeclarator
+',' VariableDeclarator CommaVariableDeclaratorList
+---
+OptThrowQualifiedIdentifierList:
+'throws' QualifiedIdentifierList
+
+---
+MethodDeclaratorRest:
+FormalParameters OptArraySuffixList OptThrowQualifiedIdentifierList Block
+FormalParameters OptArraySuffixList OptThrowQualifiedIdentifierList ';'
+---
+VoidMethodDeclaratorRest:
+FormalParameters OptThrowQualifiedIdentifierList Block
+FormalParameters OptThrowQualifiedIdentifierList ';'
+---
+ConstructorDeclaratorRest:
+FormalParameters OptThrowQualifiedIdentifierList Block
+---
+GenericMethodOrConstructorDecl:
+TypeParameters GenericMethodOrConstructorRest
+---
+GenericMethodOrConstructorRest:
+'void' Identifier MethodDeclaratorRest
+Type Identifier MethodDeclaratorRest
+Identifier ConstructorDeclaratorRest
+---
+InterfaceBody: 
+'{' OptInterfaceBodyDeclarationList '}'
+---
+OptInterfaceBodyDeclarationList:
+InterfaceBodyDeclarationList
+
+---
+InterfaceBodyDeclarationList:
+InterfaceBodyDeclaration
+InterfaceBodyDeclaration InterfaceBodyDeclarationList
+---
+InterfaceBodyDeclaration:
+';'
+OptModifierList InterfaceMemberDecl
+---
+InterfaceMemberDecl:
+InterfaceMethodOrFieldDecl
+'void' Identifier VoidInterfaceMethodDeclaratorRest
+InterfaceGenericMethodDecl
+ClassDeclaration
+InterfaceDeclaration
+---
+InterfaceMethodOrFieldDecl:
+Type Identifier InterfaceMethodOrFieldRest
+---
+InterfaceMethodOrFieldRest:
+ConstantDeclaratorsRest ';'
+InterfaceMethodDeclaratorRest
+---
+ConstantDeclaratorsRest: 
+ConstantDeclaratorRest OptCommaConstantDeclaratorList
+---
+OptCommaConstantDeclaratorList:
+CommaConstantDeclaratorList
+---
+CommaConstantDeclaratorList:
+',' ConstantDeclarator
+',' ConstantDeclarator CommaConstantDeclaratorList
+---
+ConstantDeclaratorRest: 
+OptArraySuffix '=' VariableInitializer
+---
+ConstantDeclarator: 
+Identifier ConstantDeclaratorRest
+---
+InterfaceMethodDeclaratorRest:
+FormalParameters OptArraySuffix OptThrowQualifiedIdentifierList ';'
+---
+VoidInterfaceMethodDeclaratorRest:
+FormalParameters OptThrowQualifiedIdentifierList ';'
+---
+InterfaceGenericMethodDecl:
+TypeParameters Type Identifier InterfaceMethodDeclaratorRest
+TypeParameters 'void' Identifier InterfaceMethodDeclaratorRest
+---
+FormalParameters: 
+'(' ')'
+'(' FormalParameterDecls ')'
+---
+FormalParameterDecls: 
+OptFinal Type FormalParameterDeclsRest
+---
+OptFinal:
+'final'
+
+---
+FormalParameterDeclsRest: 
+VariableDeclaratorId
+VariableDeclaratorId ',' FormalParameterDecls
+'...' VariableDeclaratorId
+---
+VariableDeclaratorId:
+Identifier OptArraySuffix
+---
+VariableDeclarators:
+VariableDeclarator OptCommaVariableDeclaratorList
+---
+VariableDeclarator:
+Identifier VariableDeclaratorRest
+---
+VariableDeclaratorRest:
+OptArraySuffix
+OptArraySuffix '=' VariableInitializer
+---
+VariableInitializer:
+ArrayInitializer
+Expression
+---
+VariableInitializerList:
+VariableInitializer
+VariableInitializer ',' VariableInitializerList
+---
+ArrayInitializer:
+'{' '}'
+'{' VariableInitializerList '}'
+'{' VariableInitializerList ',' '}'
+---
+Block: 
+'{' BlockStatements '}'
+---
+BlockStatements: 
+BlockStatement
+BlockStatement BlockStatements
+---
+BlockStatement:
+LocalVariableDeclarationStatement
+ClassOrInterfaceDeclaration
+Statement
+Identifier ':' Statement
+---
+LocalVariableDeclarationStatement:
+OptFinal Type VariableDeclarators ';'
+---
+OptIdentifier:
+Identifier
+
+---
+Statement:
+Block
+';'
+Identifier ':' Statement
+StatementExpression ';'
+'if' ParExpression Statement
+'if' ParExpression Statement 'else' Statement
+'assert' Expression ':' Expression ';'
+'assert' Expression ';'
+'switch' ParExpression '{' SwitchBlockStatementGroups '}'
+'while' ParExpression Statement
+'do' Statement 'while' ParExpression ';'
+'for' '(' ForControl ')' Statement
+'break' OptIdentifier ';'
+'continue' OptIdentifier ';'
+'return' OptExpression ';'
+'throw' Expression ';'
+'synchronized' ParExpression Block
+'try' Block Catches
+'try' Block OptCatches Finally
+'try' ResourceSpecification Block OptCatches
+'try' ResourceSpecification Block OptCatches Finally
+---
+StatementExpression: 
+Expression
+---
+OptCatches:
+Catches
+
+---
+Catches:
+CatchClause '{' CatchClause '}'
+---
+CatchClause:  
+'catch' '(' OptFinal CatchType Identifier ')' Block
+---
+CatchType:
+QualifiedIdentifier
+QualifiedIdentifier '|' CatchType
+---
+Finally:
+'finally' Block
+---
+ResourceSpecification:
+'(' Resources ')'
+'(' Resources ';' ')'
+---
+Resources:
+Resource
+Resource ';' Resources
+---
+Resource:
+OptFinal ReferenceType VariableDeclaratorId '=' Expression 
+---
+SwitchBlockStatementGroups: 
+SwitchBlockStatementGroup
+SwitchBlockStatementGroup SwitchBlockStatementGroups
+---
+SwitchBlockStatementGroup: 
+SwitchLabels BlockStatements
+---
+SwitchLabels:
+SwitchLabel
+SwitchLabel SwitchLabels
+---
+SwitchLabel: 
+'case' Expression ':'
+'case' EnumConstantName ':'
+'default' ':'
+---
+EnumConstantName:
+Identifier
+---
+OptExpression:
+
+---
+OptForUpdate:
+ForUpdate
+
+---
+ForControl:
+ForVarControl
+ForInit ';' OptExpression ';' OptForUpdate
+---
+ForVarControl:
+OptFinal Type VariableDeclaratorId  ForVarControlRest
+---
+ForVarControlRest:
+ForVariableDeclaratorsRest ';' OptExpression ';' OptForUpdate
+':' Expression
+---
+ForVariableDeclaratorsRest:
+OptCommaVariableDeclaratorList
+'=' VariableInitializer OptCommaVariableDeclaratorList
+---
+ForInit:
+StatementExpression
+StatementExpression ',' ForInit
+ForUpdate:
+StatementExpression
+StatementExpression ',' ForUpdate
+---
+Expression: 
+Expression1
+Expression1 AssignmentOperator Expression1
+---
+AssignmentOperator:
+'='
+'+='
+'-=' 
+'*='
+'/='
+'&='
+'|='
+'^='
+'%='
+'<<='
+'>>='
+'>>>='
+---
+Expression1: 
+Expression2
+Expression2 Expression1Rest
+---
+Expression1Rest: 
+'?' Expression ':' Expression1
+---
+Expression2:
+Expression3
+Expression3 Expression2Rest
+---
+Expression2Rest:
+OptInfixOpExpression3List
+'instanceof' Type
+---
+OptInfixOpExpression3List:
+InfixOpExpression3List
+
+---
+InfixOpExpression3List:
+InfixOp Expression3
+InfixOp Expression3 InfixOpExpression3List
+---
+InfixOp: 
+'||'
+'&&'
+'|'
+'^'
+'&'
+'=='
+'!='
+'<'
+'>'
+'<='
+'>='
+'<<'
+'>>'
+'>>>'
+'+'
+'-'
+'*'
+'/'
+'%'
+---
+Expression3: 
+PrefixOp Expression3
+'(' Type ')' Expression3
+'(' Expression ')' Expression3
+Primary OptSelectorList OptPostfixOpList
+---
+OptSelectorList:
+SelectorList
+
+---
+OptPostfixOpList:
+PostfixOpList
+
+---
+PostfixOpList:
+PostfixOp
+PostfixOp PostfixOpList
+---
+SelectorList:
+Selector
+Selector SelectorList
+---
+PrefixOp: 
+'++'
+'--'
+'!'
+'~'
+'+'
+'-'
+---
+PostfixOp: 
+'++'
+'--'
+---
+Primary: 
+Literal
+ParExpression
+'this'
+'this' Arguments
+'super' SuperSuffix
+'new' Creator
+NonWildcardTypeArguments ExplicitGenericInvocationSuffix
+NonWildcardTypeArguments 'this' Arguments
+IdentifierList
+IdentifierList IdentifierSuffix
+BasicType OptArraySuffix '.' 'class'
+'void' '.' 'class'
+---
+Literal:
+IntegerLiteral
+FloatingPointLiteral
+CharacterLiteral 
+StringLiteral 
+BooleanLiteral
+NullLiteral
+---
+ParExpression: 
+'(' Expression ')'
+---
+ExpressionList:
+Expression
+Expression ',' ExpressionList
+---
+Arguments:
+'(' ExpressionList ')'
+'(' ')'
+---
+SuperSuffix: 
+Arguments 
+'.' Identifier
+'.' Identifier Arguments
+---
+ExplicitGenericInvocationSuffix: 
+'super' SuperSuffix
+Identifier Arguments
+---
+Creator:
+NonWildcardTypeArguments CreatedName ClassCreatorRest
+CreatedName ClassCreatorRest
+CreatedName ArrayCreatorRest
+---
+CreatedName:
+CreatedNameElement
+CreatedNameElement '.' CreatedName
+---
+CreatedNameElement:
+Identifier TypeArgumentsOrDiamond
+Identifier
+---
+ClassCreatorRest:
+Arguments
+Arguments ClassBody
+---
+ExpressionListWithBrace:
+'[' Expression ']'
+'[' Expression ']' ExpressionListWithBrace
+---
+ArrayCreatorRest:
+ExpressionListWithBrace OptArraySuffix
+'[' ']' OptArraySuffix ArrayInitializer
+---
+IdentifierSuffix:
+'[' OptArraySuffix '.' 'class' ']'
+'[' Expression ']'
+Arguments
+'.' 'class'
+'.' ExplicitGenericInvocation
+'.' 'this'
+'.' 'super' Arguments
+'.' 'new' InnerCreator
+'.' 'new' NonWildcardTypeArguments InnerCreator
+---
+ExplicitGenericInvocation:
+NonWildcardTypeArguments ExplicitGenericInvocationSuffix
+---
+InnerCreator:  
+Identifier ClassCreatorRest
+Identifier NonWildcardTypeArgumentsOrDiamond ClassCreatorRest
+---
+Selector:
+'.' Identifier
+'.' Identifier Arguments
+'.' ExplicitGenericInvocation
+'.' 'this'
+'.' 'super' SuperSuffix
+'.' 'new' InnerCreator
+'.' 'new' NonWildcardTypeArguments InnerCreator
+'[' Expression ']'
+---
+EnumBody:
+'{' OptEnumConstants OptComma OptEnumBodyDeclarations '}'
+---
+OptEnumConstants
+EnumConstants
+
+---
+OptComma:
+','
+
+---
+OptEnumBodyDeclarations:
+EnumBodyDeclarations
+
+---
+EnumConstants:
+EnumConstant
+EnumConstants ',' EnumConstant
+---
+EnumConstant:
+Identifier
+Identifier Arguments
+Identifier ClassBody
+Identifier Arguments ClassBody
+---
+EnumBodyDeclarations:
+';' ClassBodyDeclarationList
+';'
+---

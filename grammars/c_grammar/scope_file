@@ -1,0 +1,11 @@
+program
+enter_scope
+exit_scope
+---
+compound_statement
+enter_scope
+exit_scope
+---
+extra_struct_declaration_list
+enter_scope
+exit_scope

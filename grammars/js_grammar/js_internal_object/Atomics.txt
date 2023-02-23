@@ -1,0 +1,18 @@
+	class Atomics {
+	add(typedArray, index, value){}
+	and(typedArray, index, value){}
+	compareExchange(typedArray, index, expectedValue, replacementValue){}
+	exchange(typedArray, index, value){}
+	isLockFree(size){}
+	load(typedArray, index){}
+	notify(typedArray, index, count){}
+	or(typedArray, index, value){}
+	store(typedArray, index, value){}
+	sub(typedArray, index, value){}
+	wait(typedArray, index, value){}
+	xor(typedArray, index, value){}
+	__proto__;
+	constructor;
+	setPrototypeOf(obj, prototype){}
+	}
+	

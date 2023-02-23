@@ -1,0 +1,745 @@
+program:
+source_unit_list
+---
+source_unit_list:
+source_unit
+source_unit_list source_unit
+---
+source_unit:
+pragma_directive
+import_directive
+contract_definition
+---
+pragma_directive:
+PRAGMALITERAL
+---
+import_directive:
+IMPORT string_literal opt_as_identifer OP_SEMI
+IMPORT identifier opt_as_identifer FROM string_literal OP_SEMI
+IMPORT OP_STAR opt_as_identifer FROM string_literal OP_SEMI
+IMPORT OP_LBRACE identifier_as_list OP_RBRACE FROM string_literal OP_SEMI
+---
+identifier_as_list:
+identifier opt_as_identifer
+identifier opt_as_identifer OP_COMMA identifier_as_list
+---
+opt_as_identifer:
+AS identifier
+
+---
+contract_definition:
+ABSTRACT contract_library_interface identifier opt_is_inheritancespecifier_list OP_LBRACE opt_contract_part_list OP_RBRACE
+contract_library_interface identifier opt_is_inheritancespecifier_list OP_LBRACE opt_contract_part_list OP_RBRACE
+---
+opt_contract_part_list:
+contract_part_list
+
+---
+contract_part_list:
+contract_part **contract_part=kDataVarDefine:1:Define**
+contract_part_list contract_part **contract_part=kDataVarDefine:1:Define**
+---
+opt_is_inheritancespecifier_list:
+is_inheritancespecifier_list
+
+---
+is_inheritancespecifier_list:
+IS inheritance_specifier
+is_inheritancespecifier_list OP_COMMA inheritance_specifier
+---
+contract_library_interface:
+CONTRACT
+LIBRARY
+INTERFACE
+---
+contract_part:
+state_variable_declaration
+using_for_declaration
+struct_definition
+modifier_definition
+function_definition
+event_definition
+enum_definition
+---
+inheritance_specifier:
+user_defined_type_name
+user_defined_type_name OP_LP expression_list OP_RP
+---
+state_variable_declaration:
+type_name opt_identifier_descriptor_list identifier opt_assign_equation OP_SEMI **fixme=kDataVarType:1:Define;identifier=kDataVarName:1:Define**
+---
+identifier_descriptor:
+PUBLIC
+INTERNAL
+PRIVATE
+CONSTANT
+override_specifier
+---
+identifier_descriptor_list:
+identifier_descriptor
+identifier_descriptor identifier_descriptor_list
+---
+opt_identifier_descriptor_list:
+identifier_descriptor_list
+
+---
+using_for_declaration:
+USING identifier FOR star_or_typename OP_SEMI
+---
+star_or_typename:
+OP_STAR
+type_name
+---
+struct_definition:
+STRUCT identifier OP_LBRACE variable_declaration_list OP_RBRACE **fixme=kDataClassType:1:Define;identifier=kDataClassName:1:Define;variable_declaration_list=kDataStructBody:1:Define;variable_declaration_list->variable_declaration=kDataVarDefine:1:Define**
+---
+variable_declaration_list:
+variable_declaration OP_SEMI
+variable_declaration OP_SEMI variable_declaration_list
+---
+modifier_definition:
+MODIFIER identifier opt_parameter_list block
+MODIFIER identifier opt_parameter_list virtual_overridespecifier_list block
+---
+virtual_overridespecifier_list:
+VIRTUAL
+override_specifier
+virtual_overridespecifier_list VIRTUAL
+virtual_overridespecifier_list override_specifier
+---
+opt_parameter_list:
+parameter_list
+
+---
+opt_expression_list:
+expression_list
+
+---
+modifier_invocation:
+identifier
+identifier OP_LP opt_expression_list OP_RP
+---
+function_definition:
+function_descriptor parameter_list function_definition_head_list RETURNS parameter_list semi_or_block **fixme=kDataFunctionType:1:Define;parameter_list_1=kDataFunctionArg:1:Define;parameter_list_1->parameter_list_no_paren->parameter->opt_identifier->identifier=kDataVarName:1:Define;semi_or_block->block=kDataFunctionBody:1:Define;parameter_list_1->parameter_list_no_paren->parameter->type_name=kDataVarType:1:Define;parameter_list_2->parameter_list_no_paren->parameter->type_name=kDataFunctionReturnValue:1:Define**
+function_descriptor parameter_list function_definition_head_list semi_or_block **fixme=kDataFunctionType:1:Define;parameter_list_1=kDataFunctionArg:1:Define;parameter_list_1->parameter_list_no_paren->parameter->opt_identifier->identifier=kDataVarName:1:Define;semi_or_block->block=kDataFunctionBody:1:Define;parameter_list_1->parameter_list_no_paren->parameter->type_name=kDataVarType:1:Define**
+function_descriptor parameter_list RETURNS parameter_list semi_or_block **fixme=kDataFunctionType:1:Define;parameter_list_1=kDataFunctionArg:1:Define;parameter_list_1->parameter_list_no_paren->parameter->opt_identifier->identifier=kDataVarName:1:Define;semi_or_block->block=kDataFunctionBody:1:Define;parameter_list_1->parameter_list_no_paren->parameter->type_name=kDataVarType:1:Define;parameter_list_2->parameter_list_no_paren->parameter->type_name=kDataFunctionReturnValue:1:Define**
+function_descriptor parameter_list semi_or_block **fixme=kDataFunctionType:1:Define;parameter_list_1=kDataFunctionArg:1:Define;parameter_list_1->parameter_list_no_paren->parameter->opt_identifier->identifier=kDataVarName:1:Define;semi_or_block->block=kDataFunctionBody:1:Define;parameter_list_1->parameter_list_no_paren->parameter->type_name=kDataVarType:1:Define**
+---
+semi_or_block:
+OP_SEMI
+block
+---
+function_definition_head_item:
+modifier_invocation
+state_mutability
+EXTERNAL
+PUBLIC
+INTERNAL
+PRIVATE
+VIRTUAL
+override_specifier
+---
+function_definition_head_list:
+function_definition_head_item
+function_definition_head_item function_definition_head_list
+---
+function_descriptor:
+FUNCTION identifier **identifier=kDataFunctionName:1:Define**
+CONSTRUCTOR
+FALLBACK
+RECEIVE
+---
+user_defined_type_name_list:
+user_defined_type_name
+user_defined_type_name OP_COMMA user_defined_type_name_list
+---
+override_specifier:
+OVERRIDE OP_LP user_defined_type_name_list OP_RP
+OVERRIDE
+---
+event_definition:
+EVENT identifier event_parameter_list OP_SEMI
+EVENT identifier event_parameter_list ANONYMOUS OP_SEMI
+---
+enum_value:
+identifier
+---
+enum_value_list:
+enum_value
+enum_value OP_COMMA enum_value_list
+---
+enum_definition:
+ENUM identifier OP_LBRACE enum_value_list OP_RBRACE
+---
+parameter_list:
+OP_LP OP_RP
+OP_LP parameter_list_no_paren OP_RP
+---
+parameter_list_no_paren:
+parameter
+parameter OP_COMMA parameter_list_no_paren
+---
+opt_storage_location:
+storage_location
+
+---
+opt_identifier:
+identifier
+
+---
+parameter:
+type_name opt_storage_location opt_identifier
+---
+event_parameter_list:
+OP_LP OP_RP
+OP_LP event_parameter_list_no_paren OP_RP
+---
+event_parameter_list_no_paren:
+event_parameter
+event_parameter OP_COMMA event_parameter_list_no_paren
+---
+event_parameter:
+type_name opt_identifier
+type_name INDEXED opt_identifier
+---
+function_type_parameter_list:
+OP_LP opt_function_type_parameter_list_without_bracket OP_RP
+---
+opt_function_type_parameter_list_without_bracket:
+function_type_parameter_list_without_bracket
+
+---
+function_type_parameter_list_without_bracket:
+function_type_parameter
+function_type_parameter_list_without_bracket OP_COMMA function_type_parameter
+---
+function_type_parameter:
+type_name opt_storage_location
+---
+variable_declaration:
+type_name declarator **type_name=kDataVarType:1:Define;declarator=kDataDeclarator:1:Define**
+---
+declarator:
+opt_storage_location identifier **identifier=kDataVarName:1:Define**
+---
+type_name:
+elementary_type_name
+user_defined_type_name
+mapping
+array_type_name
+function_type_name
+ADDRESS PAYABLE
+---
+user_defined_type_name:
+identifier
+identifier OP_DOT_TYPE_NAME user_defined_type_name
+---
+mapping:
+MAPPING OP_LP user_defined_type_name EG_OP type_name OP_RP
+MAPPING OP_LP elementary_type_name EG_OP type_name OP_RP
+---
+array_type_name:
+elementary_type_name OP_LBRACKET OP_RBRACKET
+elementary_type_name OP_LBRACKET expression OP_RBRACKET
+array_type_name OP_LBRACKET OP_RBRACKET
+array_type_name OP_LBRACKET expression OP_RBRACKET
+---
+function_type_name:
+FUNCTION function_type_parameter_list opt_simple_function_descriptor_list
+FUNCTION function_type_parameter_list opt_simple_function_descriptor_list RETURNS function_type_parameter_list
+---
+simple_function_descriptor:
+INTERNAL
+EXTERNAL
+state_mutability
+---
+simple_function_descriptor_list:
+simple_function_descriptor %prec LOWEST
+simple_function_descriptor simple_function_descriptor_list
+---
+opt_simple_function_descriptor_list:
+simple_function_descriptor_list
+%prec LOWEST
+---
+storage_location:
+MEMORY
+STORAGE
+CALLDATA
+---
+state_mutability:
+PURE
+VIEW
+PAYABLE
+---
+block:
+OP_LBRACE opt_statement_list OP_RBRACE
+---
+opt_statement_list:
+statement_list
+
+---
+statement_list:
+statement
+statement_list statement
+---
+statement:
+if_statement
+try_statement
+while_statement
+for_statement
+block
+inline_assembly_statement
+do_while_statement OP_SEMI
+placeholder_statement OP_SEMI
+CONTINUE OP_SEMI
+BREAK OP_SEMI
+return OP_SEMI
+THROW OP_SEMI
+emit_statement OP_SEMI
+simple_statement OP_SEMI
+---
+expression_statement:
+expression
+---
+if_statement:
+IF OP_LP expression OP_RP statement
+IF OP_LP expression OP_RP statement ELSE statement
+---
+try_statement:
+TRY expression block catch_clause_list
+TRY expression RETURNS parameter_list block catch_clause_list
+---
+catch_clause_list:
+catch_clause
+catch_clause catch_clause_list
+---
+catch_clause:
+CATCH block
+CATCH opt_identifier parameter_list block
+---
+while_statement:
+WHILE OP_LP expression OP_RP statement
+---
+placeholder_statement:
+OP_UNDERLINE
+---
+simple_statement:
+variable_definition **fixme=kDataVarDefine:1:Define**
+expression_statement
+---
+for_statement:
+FOR OP_LP opt_simple_statement OP_SEMI opt_expression OP_SEMI opt_expression_statement OP_RP statement
+---
+opt_expression_statement:
+expression_statement
+
+---
+opt_expression:
+expression %prec LOWEST
+
+---
+opt_simple_statement:
+simple_statement
+
+---
+inline_assembly_statement:
+ASSEMBLY assembly_block
+ASSEMBLY string_literal assembly_block
+---
+do_while_statement:
+DO statement WHILE OP_LP expression OP_RP
+---
+return:
+RETURN expression
+RETURN
+---
+emit_statement:
+EMIT function_call
+---
+opt_assign_equation:
+assign_equation
+
+---
+assign_equation:
+OP_EQUAL expression
+---
+variable_definition:
+OP_LP variable_declaration_comma_list OP_RP opt_assign_equation
+variable_declaration opt_assign_equation
+---
+variable_declaration_comma_list:
+variable_declaration
+variable_declaration OP_COMMA variable_declaration_comma_list
+---
+expression:
+expression DEC_OP **fixme=kDataFixUnit:1:Use**
+expression INC_OP **fixme=kDataFixUnit:1:Use**
+index_access **fixme=kDataFixUnit:1:Use**
+index_range_access **fixme=kDataFixUnit:1:Use**
+member_access **fixme=kDataFixUnit:1:Use**
+function_call **fixme=kDataFixUnit:1:Use**
+expression OP_LBRACE name_value_list OP_RBRACE **fixme=kDataFixUnit:1:Use**
+OP_LP expression OP_RP %prec UMINUS **fixme=kDataFixUnit:1:Use**
+OP_NOT expression %prec UMINUS **fixme=kDataFixUnit:1:Use**
+OP_BITNOT expression %prec UMINUS **fixme=kDataFixUnit:1:Use**
+DELETE expression %prec UMINUS **fixme=kDataFixUnit:1:Use**
+INC_OP expression %prec UMINUS **fixme=kDataFixUnit:1:Use**
+DEC_OP expression %prec UMINUS **fixme=kDataFixUnit:1:Use**
+OP_ADD expression %prec UMINUS **fixme=kDataFixUnit:1:Use**
+OP_SUB expression %prec UMINUS **fixme=kDataFixUnit:1:Use**
+expression binary_operator expression **expression_1=kDataFixUnit:1:Use;expression_2=kDataFixUnit:1:Use** %prec UMINUS
+expression OP_QUESTION expression OP_COLON expression **fixme=kDataFixUnit:1:Use** %prec UMINUS
+primary_expression **fixme=kDataFixUnit:1:Use**
+new_expression **fixme=kDataFixUnit:1:Use**
+---
+binary_operator:
+OP_STAR
+OP_DIVIDE
+OP_MOD
+DOUBLE_STAR_OP
+OP_ADD
+OP_SUB
+RIGHT_OP
+LEFT_OP
+OP_BITAND
+OP_XOR
+OP_BITOR
+OP_GTEATERTHAN
+OP_LESSTHAN
+LE_OP
+GE_OP
+EQ_OP
+NE_OP
+AND_OP
+OR_OP
+OP_EQUAL
+OR_ASSIGN
+XOR_ASSIGN
+AND_ASSIGN
+LEFT_ASSIGN
+RIGHT_ASSIGN
+ADD_ASSIGN
+SUB_ASSIGN
+MUL_ASSIGN
+DIV_ASSIGN
+MOD_ASSIGN
+---
+primary_expression:
+boolean_literal
+num_literal
+HEX hex_literal
+string_literal
+tuple_expression
+identifier **fixme=kDataFixUnit:1:Use**
+elementary_type_name_expression
+---
+expression_list:
+expression
+expression_list OP_COMMA expression
+---
+name_value_list:
+identifier OP_COLON expression
+name_value_list OP_COMMA identifier OP_COLON expression
+---
+function_call:
+expression OP_LP function_call_arguments OP_RP
+---
+function_call_arguments:
+OP_LBRACE opt_name_value_list OP_RBRACE
+opt_expression_list
+---
+opt_name_value_list:
+name_value_list
+
+---
+new_expression:
+NEW expression
+---
+member_access:
+expression OP_DOT identifier
+---
+index_access:
+expression OP_LBRACKET opt_expression OP_RBRACKET
+---
+index_range_access:
+expression OP_LBRACKET opt_expression OP_COLON opt_expression OP_RBRACKET
+---
+boolean_literal:
+TRUE
+FALSE
+---
+num_literal:
+hex_number
+hex_number number_unit
+decimal_number
+decimal_number number_unit
+---
+number_unit:
+WEI
+SZABO
+FINNEY
+ETHER
+SECONDS
+MINUTES
+HOURS
+DAYS
+WEEKS
+YEARS
+---
+hex_literal:
+HEXLITERAL
+---
+string_literal:
+STRINGLITERAL
+---
+identifier:
+IDENTIFIER
+---
+hex_number:
+HEXNUNBERLITERAL
+---
+decimal_number:
+number_literal
+expon_literal
+---
+expon_literal:
+EXPONLITERAL
+---
+number_literal:
+int_literal
+float_literal
+---
+int_literal:
+INTLITERAL
+---
+float_literal:
+FLOATLITERAL
+---
+tuple_expression:
+OP_LP opt_optexpression_list OP_RP
+OP_LBRACKET opt_expression_list OP_RBRACKET
+---
+opt_optexpression_list:
+optexpression_list
+---
+optexpression_list:
+opt_expression
+optexpression_list OP_COMMA opt_expression
+---
+elementary_type_name_expression:
+elementary_type_name %prec UMM0
+---
+elementary_type_name:
+ADDRESS
+BOOL
+STRING
+int
+uint
+byte
+fixed_type
+---
+int:
+INT
+INT8
+INT16
+INT24
+INT32
+INT40
+INT48
+INT56
+INT64
+INT72
+INT80
+INT88
+INT96
+INT104
+INT112
+INT120
+INT128
+INT136
+INT144
+INT152
+INT160
+INT168
+INT176
+INT184
+INT192
+INT200
+INT208
+INT216
+INT224
+INT232
+INT240
+INT248
+INT256
+---
+uint:
+UINT
+UINT8
+UINT16
+UINT24
+UINT32
+UINT40
+UINT48
+UINT56
+UINT64
+UINT72
+UINT80
+UINT88
+UINT96
+UINT104
+UINT112
+UINT120
+UINT128
+UINT136
+UINT144
+UINT152
+UINT160
+UINT168
+UINT176
+UINT184
+UINT192
+UINT200
+UINT208
+UINT216
+UINT224
+UINT232
+UINT240
+UINT248
+UINT256
+---
+byte:
+BYTE
+BYTES
+BYTES1
+BYTES2
+BYTES3
+BYTES4
+BYTES5
+BYTES6
+BYTES7
+BYTES8
+BYTES9
+BYTES10
+BYTES11
+BYTES12
+BYTES13
+BYTES14
+BYTES15
+BYTES16
+BYTES17
+BYTES18
+BYTES19
+BYTES20
+BYTES21
+BYTES22
+BYTES23
+BYTES24
+BYTES25
+BYTES26
+BYTES27
+BYTES28
+BYTES29
+BYTES30
+BYTES31
+BYTES32
+---
+fixed_type:
+FIXTYPE
+---
+assembly_block:
+OP_LBRACE opt_assembly_statement_list OP_RBRACE
+---
+opt_assembly_statement_list:
+assembly_statement_list
+
+---
+assembly_statement_list:
+assembly_statement
+assembly_statement_list assembly_statement
+---
+assembly_statement:
+assembly_block
+assembly_function_definition
+assembly_variable_declaration
+assembly_assignment
+assembly_if
+assembly_expression
+assembly_switch
+assembly_for_loop
+assembly_break_continue
+assembly_leave
+---
+assembly_function_definition:
+FUNCTION identifier OP_LP opt_assembly_identifier_list OP_RP assembly_block
+FUNCTION identifier OP_LP opt_assembly_identifier_list OP_RP PTR_OP assembly_identifier_list assembly_block
+---
+opt_assembly_identifier_list:
+assembly_identifier_list
+
+---
+assembly_variable_declaration:
+assembly_type assembly_identifier_list OP_COLON_EQUAL assembly_expression **assembly_type=kDataVarType:1:Define;assembly_identifier_list->assembly_declarator=kDataDeclarator:1:Define;assembly_identifier_list->assembly_declarator->identifier=kDataVarName:1:Define**
+assembly_type assembly_identifier_list **assembly_type=kDataVarType:1:Define;assembly_identifier_list->assembly_declarator=kDataDeclarator:1:Define;assembly_identifier_list->assembly_declarator->identifier=kDataVarName:1:Define**
+---
+assembly_type:
+LET
+---
+assembly_assignment:
+assembly_identifier_list OP_COLON_EQUAL assembly_expression
+---
+assembly_expression:
+assembly_function_call
+identifier **fixme=kDataFixUnit:1:Use**
+literal
+---
+literal:
+number_literal
+string_literal
+---
+assembly_if:
+IF assembly_expression assembly_block
+---
+assembly_switch:
+SWITCH assembly_expression assembly_default
+SWITCH assembly_expression assembly_case_list
+SWITCH assembly_expression assembly_case_list assembly_default
+---
+assembly_case_list:
+assembly_case
+assembly_case_list assembly_case
+---
+assembly_case:
+CASE literal assembly_block
+---
+assembly_default:
+DEFAULT assembly_block
+---
+assembly_for_loop:
+FOR assembly_block assembly_expression assembly_block assembly_block
+---
+assembly_break_continue:
+BREAK
+CONTINUE
+---
+assembly_leave:
+LEAVE
+---
+assembly_function_call:
+identifier OP_LP opt_assembly_expression_list OP_RP
+---
+opt_assembly_expression_list:
+assembly_expression_list
+
+---
+assembly_expression_list:
+assembly_expression
+assembly_expression_list OP_COMMA assembly_expression
+---
+assembly_identifier_list:
+assembly_declarator
+assembly_identifier_list OP_COMMA assembly_declarator
+---
+assembly_declarator:
+identifier
+---

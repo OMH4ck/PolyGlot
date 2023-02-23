@@ -1,0 +1,238 @@
+program:
+PROGRAM identifier SEMI routing DOT
+routing DOT
+---
+routing:
+routing_head routing_body
+---
+routing_head:
+const_part type_part var_part routing_part
+---
+const_part:
+CONST const_expr_list
+
+---
+const_expr_list:
+const_expr_list identifier EQUAL const_value SEMI
+identifier EQUAL const_value SEMI
+---
+const_value:
+int_literal
+float_literal
+CHAR
+string_literal
+TRUE
+FALSE
+MAXINT
+---
+type_part:
+TYPE type_decl_list
+
+---
+type_decl_list:
+type_decl_list type_definition
+type_definition
+---
+type_definition:
+identifier EQUAL type_decl SEMI
+---
+type_decl:
+type_decl_simple
+type_decl_array
+type_decl_record
+---
+type_decl_simple:
+SYST_BOOLEAN
+SYST_CHAR
+SYST_INTEGER
+SYST_REAL
+SYST_STRING
+identifier
+const_value DOT DOT const_value
+---
+type_decl_array:
+ARRAY LB type_decl_simple RB OF type_decl_simple
+---
+type_decl_record:
+RECORD field_decl_list END
+---
+field_decl_list:
+field_decl_list field_decl
+field_decl
+---
+field_decl:
+name_list COLON type_decl_simple SEMI
+---
+name_list:
+name_list COMMA identifier
+identifier
+---
+var_part:
+VAR var_decl_list
+
+---
+var_decl_list:
+var_decl_list var_decl
+var_decl
+---
+var_decl:
+name_list COLON type_decl SEMI
+---
+routing_part:
+routing_part function_decl
+routing_part procedure_decl
+function_decl
+procedure_decl
+ %prec LOWEST
+---
+function_decl:
+function_head SEMI routing SEMI
+---
+function_head:
+FUNCTION identifier parameters COLON type_decl_simple
+---
+procedure_decl:
+procedure_head SEMI routing SEMI
+---
+procedure_head:
+PROCEDURE identifier parameters
+---
+parameters:
+LP para_decl_list RP
+
+---
+para_decl_list:
+para_decl_list SEMI para_type_list
+para_type_list
+---
+para_type_list:
+var_para_list COLON type_decl_simple
+val_para_list COLON type_decl_simple
+---
+var_para_list:
+VAR name_list
+---
+val_para_list:
+name_list
+---
+routing_body:
+PBEGIN stmt_list END
+---
+stmt_list:
+stmt_list stmt
+stmt
+---
+stmt:
+INTEGER COLON non_label_stmt
+non_label_stmt
+---
+non_label_stmt:
+assign_stmt SEMI
+proc_stmt SEMI
+compound_stmt
+if_stmt
+repeat_stmt SEMI
+while_stmt
+for_stmt
+case_stmt
+goto_stmt SEMI
+---
+assign_stmt:
+identifier ASSIGN expression
+identifier LB expression RB ASSIGN expression
+identifier DOT identifier ASSIGN expression
+---
+proc_stmt:
+identifier args
+SYSP_READ args
+SYSP_READLN args
+SYSP_WRITE args
+SYSP_WRITELN args
+---
+args:
+LP expression_list RP
+
+---
+compound_stmt:
+PBEGIN stmt_list END
+---
+if_stmt:
+IF expression THEN stmt %prec LOWEST
+IF expression THEN stmt ELSE stmt
+---
+repeat_stmt:
+REPEAT stmt_list UNTIL expression
+---
+while_stmt:
+WHILE expression DO stmt
+---
+for_stmt:
+FOR identifier ASSIGN expression direction expression DO stmt
+---
+direction:
+TO
+DOWNTO
+---
+case_stmt:
+CASE expression OF case_expr_list END
+---
+case_expr_list:
+case_expr_list case_expr
+case_expr
+---
+case_expr:
+const_value COLON stmt
+identifier COLON stmt
+---
+goto_stmt:
+GOTO INTEGER
+---
+expression_list:
+expression_list COMMA expression
+expression
+---
+expression:
+expression GE expr
+expression GT expr
+expression LE expr
+expression LT expr
+expression EQUAL expr
+expression UNEQUAL expr
+expression IN expr
+expr
+---
+expr:
+expr PLUS term
+expr MINUS term
+expr OR term
+term
+---
+term:
+term MUL factor
+term DIV factor
+term MOD factor
+term AND factor
+term IDIV factor
+factor
+---
+factor:
+identifier args
+const_value
+LP expression RP
+NOT factor
+MINUS factor
+identifier LB expression RB
+identifier DOT identifier
+---
+identifier:
+IDENTIFIER
+---
+int_literal:
+INTLITERAL
+---
+float_literal:
+FLOATLITERAL
+---
+string_literal:
+STRINGLITERAL
+---

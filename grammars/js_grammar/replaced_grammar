@@ -1,0 +1,469 @@
+program:
+statement_list
+---
+statement:
+test_me
+block
+variable_statement
+export_statement
+empty_statement
+class_declaration
+expression_statement
+if_statement
+iteration_statement
+continue_statement
+break_statement
+return_statement
+yield_statement
+with_statement
+switch_statement
+throw_statement
+try_statement
+debugger_statement
+function_definition **function_definition=kDataVarDefine:1:Define**
+---
+function_definition:
+function_declaration **function_declaration=kDataFunctionType:1:Define**
+---
+block:
+OP_LBRACE statement_list OP_RBRACE
+---
+statement_list:
+statement_list statement
+statement
+---
+module_items:
+OP_LBRACE alias_name_list OP_RBRACE
+OP_LBRACE alias_name_list OP_COMMA OP_RBRACE
+---
+alias_name_list:
+alias_name_list OP_COMMA alias_name
+alias_name
+---
+import_namespace:
+OP_STAR AS identifier
+OP_STAR
+---
+import_from
+FROM string_literal
+---
+alias_name:
+identifier AS identifier
+identifier
+---
+export_statement:
+EXPORT declaration eos
+EXPORT export_from_block eos
+EXPORT DEFAULT single_expression eos
+---
+export_from_block:
+import_namespace import_from
+module_items import_from
+module_items
+---
+declaration:
+variable_definition
+class_declaration
+function_declaration **function_declaration=kDataFunctionType:1:Define**
+---
+variable_statement:
+variable_definition eos **fixme=kDataVarDefine:1:Define**
+---
+variable_definition:
+var_modifier variable_declaration_list **fixme=kDataVarType:1:Define;var_modifier=kDataVarScope:1:Define**
+---
+variable_declaration_list:
+variable_declaration_list OP_COMMA variable_declaration
+variable_declaration
+---
+variable_declaration:
+assignable OP_EQUAL single_expression **assignable->identifier=kDataVarName:1:Define;single_expression=kDataInitiator:1:Use**
+assignable **assignable->identifier=kDataVarName:1:Define**
+---
+empty_statement:
+OP_SEMI
+---
+expression_statement:
+expression_sequence eos
+---
+if_statement:
+IF OP_LP expression_sequence OP_RP statement ELSE statement %prec INC_OP
+IF OP_LP expression_sequence OP_RP statement %prec OP_EQUAL
+---
+iteration_statement:
+DO statement WHILE OP_LP expression_sequence OP_RP eos
+WHILE OP_LP expression_sequence OP_RP statement
+FOR OP_LP variable_definition OP_SEMI opt_expression_sequence OP_SEMI opt_expression_sequence OP_RP statement
+FOR OP_LP expression_sequence OP_SEMI opt_expression_sequence OP_SEMI opt_expression_sequence OP_RP statement
+FOR OP_LP OP_SEMI opt_expression_sequence OP_SEMI opt_expression_sequence OP_RP statement
+FOR OP_LP variable_definition IN expression_sequence OP_RP statement
+FOR OP_LP single_expression IN single_expression OP_RP statement
+FOR AWAIT OP_LP single_expression OF expression_sequence OP_RP statement
+FOR OP_LP single_expression OF expression_sequence OP_RP statement
+FOR AWAIT OP_LP variable_definition OF expression_sequence OP_RP statement
+FOR OP_LP variable_definition OF expression_sequence OP_RP statement
+---
+opt_expression_sequence:
+
+expression_sequence
+---
+var_modifier:
+VAR
+LET
+CONST
+---
+opt_identifier:
+identifier
+
+---
+continue_statement:
+CONTINUE opt_identifier eos
+---
+break_statement:
+BREAK opt_identifier eos
+---
+return_statement:
+RETURN expression_sequence eos
+RETURN eos
+---
+yield_statement:
+YIELD expression_sequence eos
+YIELD eos
+---
+with_statement:
+WITH OP_LP expression_sequence OP_RP statement
+---
+switch_statement:
+SWITCH OP_LP expression_sequence OP_RP case_block
+---
+case_block:
+OP_LBRACE case_clauses default_clause case_clauses OP_RBRACE
+OP_LBRACE default_clause case_clauses OP_RBRACE
+OP_LBRACE case_clauses default_clause OP_RBRACE
+OP_LBRACE default_clause OP_RBRACE
+OP_LBRACE case_clauses OP_RBRACE
+OP_LBRACE OP_RBRACE
+---
+case_clauses:
+case_clauses case_clause
+case_clause
+---
+case_clause:
+CASE expression_sequence OP_COLON statement_list
+CASE expression_sequence OP_COLON
+---
+default_clause:
+DEFAULT OP_COLON statement_list
+DEFAULT OP_COLON
+---
+throw_statement:
+THROW expression_sequence eos
+---
+try_statement:
+TRY block finally_production
+TRY block catch_production finally_production
+TRY block catch_production
+---
+catch_production:
+CATCH OP_LP assignable OP_RP block
+CATCH OP_LP OP_RP block
+CATCH block
+---
+finally_production:
+FINALLY block
+---
+debugger_statement:
+DEBUGGER eos
+---
+function_declaration:
+ASYNC FUNCTION OP_STAR identifier OP_LP opt_formal_parameter_list OP_RP OP_LBRACE function_body OP_RBRACE **identifier=kDataFunctionName:1:Define**
+FUNCTION OP_STAR identifier OP_LP opt_formal_parameter_list OP_RP OP_LBRACE function_body OP_RBRACE **identifier=kDataFunctionName:1:Define**
+ASYNC FUNCTION identifier OP_LP opt_formal_parameter_list OP_RP OP_LBRACE function_body OP_RBRACE **identifier=kDataFunctionName:1:Define**
+FUNCTION identifier OP_LP opt_formal_parameter_list OP_RP OP_LBRACE function_body OP_RBRACE  **identifier=kDataFunctionName:1:Define**
+FUNCTION identifier OP_LP opt_formal_parameter_list OP_RP OP_LBRACE OP_RBRACE  **identifier=kDataFunctionName:1:Define**
+---
+opt_formal_parameter_list:
+
+formal_parameter_list **formal_parameter_list=kDataFunctionArg:1:Define**
+---
+class_declaration:
+CLASS identifier class_tail **fixme=kDataVarDefine:1:Define;identifier=kDataClassName:1:Define;class_tail=kDataClassType:1:Define**
+---
+class_tail:
+EXTENDS single_expression OP_LBRACE opt_class_element_list OP_RBRACE
+OP_LBRACE opt_class_element_list OP_RBRACE
+---
+opt_class_element_list:
+class_element_list **fixme=kDataStructBody:1:Define**
+
+---
+class_element_list:
+class_element class_element_list
+class_element
+---
+class_element:
+STATIC method_definition **fixme=kDataVarDefine:1:Define;method_definition=kDataFunctionType:1:Define**
+identifier method_definition **fixme=kDataVarDefine:1:Define;method_definition=kDataFunctionType:1:Define**
+ASYNC method_definition **fixme=kDataVarDefine:1:Define;method_definition=kDataFunctionType:1:Define**
+method_definition  **fixme=kDataVarDefine:1:Define;method_definition=kDataFunctionType:1:Define**
+identifier OP_SEMI **fixme=kDataVarDefine:1:Define;identifier=kDataVarName:1:Define**
+OP_WELL property_name OP_EQUAL single_expression OP_SEMI **fixme=kDataVarDefine:1:Define;property_name->identifier=kDataVarName:1:Define;single_expression=kDataInitiator:1:Use**
+property_name OP_EQUAL single_expression OP_SEMI **fixme=kDataVarDefine:1:Define;property_name->identifier=kDataVarName:1:Define;single_expression=kDataInitiator:1:Use**
+---
+method_definition:
+OP_STAR OP_WELL property_name OP_LP opt_formal_parameter_list OP_RP OP_LBRACE function_body OP_RBRACE **property_name->identifier=kDataFunctionName:1:Define**
+OP_STAR OP_WELL getter OP_LP OP_RP OP_LBRACE function_body OP_RBRACE
+OP_STAR OP_WELL setter OP_LP opt_formal_parameter_list OP_RP OP_LBRACE function_body OP_RBRACE
+OP_STAR property_name OP_LP opt_formal_parameter_list OP_RP OP_LBRACE function_body OP_RBRACE **property_name->identifier=kDataFunctionName:1:Define**
+OP_STAR getter OP_LP OP_RP OP_LBRACE function_body OP_RBRACE
+OP_STAR setter OP_LP opt_formal_parameter_list OP_RP OP_LBRACE function_body OP_RBRACE
+OP_WELL property_name OP_LP opt_formal_parameter_list OP_RP OP_LBRACE function_body OP_RBRACE **property_name->identifier=kDataFunctionName:1:Define**
+OP_WELL getter OP_LP OP_RP OP_LBRACE function_body OP_RBRACE
+OP_WELL setter OP_LP opt_formal_parameter_list OP_RP OP_LBRACE function_body OP_RBRACE
+property_name OP_LP opt_formal_parameter_list OP_RP OP_LBRACE function_body OP_RBRACE **property_name=kDataFunctionName:1:Define**
+property_name OP_LP opt_formal_parameter_list OP_RP OP_LBRACE OP_RBRACE **property_name=kDataFunctionName:1:Define**
+getter OP_LP OP_RP OP_LBRACE function_body OP_RBRACE
+setter OP_LP opt_formal_parameter_list OP_RP OP_LBRACE function_body OP_RBRACE
+---
+formal_parameter_list:
+formal_parameter_list_without_last OP_COMMA last_formal_parameter_arg
+formal_parameter_list_without_last
+last_formal_parameter_arg
+---
+formal_parameter_list_without_last:
+formal_parameter_list_without_last OP_COMMA formal_parameter_arg
+formal_parameter_arg
+---
+formal_parameter_arg:
+assignable **assignable->identifier=kDataVarName:1:Define**
+assignable OP_EQUAL single_expression **assignable->identifier=kDataVarName:1:Define**
+---
+last_formal_parameter_arg:
+ELLIPSIS assignable **assignable->identifier=kDataVarName:1:Define**
+---
+function_body:
+statement_list **fixme=kDataFunctionBody:1:Define**
+---
+array_literal:
+OP_LBRACKET opt_element_list OP_RBRACKET
+OP_LBRACKET single_expression OP_RBRACKET
+---
+opt_element_list:
+dot_list array_element
+dot_list array_element element_list opt_dot_list
+array_element element_list opt_dot_list
+
+---
+opt_dot_list:
+dot_list
+
+---
+dot_list:
+OP_COMMA
+dot_list OP_COMMA
+---
+element_list:
+single_element
+element_list single_element
+---
+single_element:
+dot_list array_element
+---
+array_element:
+ELLIPSIS single_expression
+single_expression
+---
+object_literal:
+OP_LBRACE property_assignment_list OP_COMMA OP_RBRACE
+OP_LBRACE OP_COMMA OP_RBRACE
+OP_LBRACE property_assignment_list OP_RBRACE
+OP_LBRACE OP_RBRACE
+---
+property_assignment_list:
+property_assignment_list OP_COMMA property_assignment
+property_assignment
+---
+property_assignment:
+property_name OP_COLON single_expression
+ASYNC OP_STAR property_name OP_LP opt_formal_parameter_list OP_RP OP_LBRACE function_body OP_RBRACE
+OP_STAR property_name OP_LP opt_formal_parameter_list OP_RP OP_LBRACE function_body OP_RBRACE
+ASYNC property_name OP_LP opt_formal_parameter_list OP_RP OP_LBRACE function_body OP_RBRACE
+getter OP_LP OP_RP OP_LBRACE function_body OP_RBRACE
+setter OP_LP formal_parameter_arg OP_RP OP_LBRACE function_body OP_RBRACE
+ELLIPSIS single_expression
+---
+property_name:
+OF
+FROM
+identifier
+string_literal
+number_literal
+OP_LBRACKET single_expression OP_RBRACKET %prec LOWEST
+---
+argument_list:
+argument_list OP_COMMA argument
+argument
+---
+argument:
+ELLIPSIS single_expression
+single_expression 
+---
+expression_sequence:
+expression_sequence OP_COMMA single_expression **fixme=kDataFixUnit:1:Use**
+single_expression **fixme=kDataFixUnit:1:Use**
+---
+single_expression:
+anoymous_function **fixme=kDataVarDefine:1:Define;anoymous_function=kDataFunctionType:1:Define**
+CLASS class_tail **fixme=kDataVarDefine:1:Define;class_tail=kDataClassType:1:Define**
+single_expression OP_LBRACKET expression_sequence OP_RBRACKET **fixme=kDataFixUnit:1:Use**
+single_expression OP_QUESTION OP_DOT OP_WELL identifier **fixme=kDataFixUnit:1:Use**
+single_expression OP_QUESTION OP_DOT identifier **fixme=kDataFixUnit:1:Use**
+single_expression OP_DOT OP_WELL identifier **fixme=kDataFixUnit:1:Use**
+single_expression OP_DOT identifier **fixme=kDataFixUnit:1:Use**
+NEW single_expression **fixme=kDataClassType:1:Use;single_expression_1=kDataFixUnit:1:Use**
+NEW OP_DOT identifier **fixme=kDataFixUnit:1:Use**
+single_expression OP_LP argument_list OP_COMMA OP_RP **fixme=kDataFixUnit:1:Use**
+single_expression OP_LP argument_list OP_RP **fixme=kDataFixUnit:1:Use**
+single_expression OP_LP OP_RP **fixme=kDataFixUnit:1:Use**
+single_expression INC_OP  **fixme=kDataFixUnit:1:Use** %prec HIGHEST
+single_expression DEC_OP **fixme=kDataFixUnit:1:Use** %prec HIGHEST
+DELETE single_expression **fixme=kDataFixUnit:1:Use**
+VOID single_expression **fixme=kDataFixUnit:1:Use**
+TYPEOF single_expression **fixme=kDataFixUnit:1:Use**
+INC_OP single_expression **fixme=kDataFixUnit:1:Use** %prec OP_NOT
+DEC_OP single_expression %prec OP_NOT **fixme=kDataFixUnit:1:Use**
+OP_ADD single_expression **fixme=kDataFixUnit:1:Use**
+OP_SUB single_expression **fixme=kDataFixUnit:1:Use**
+OP_BITNOT single_expression **fixme=kDataFixUnit:1:Use**
+OP_NOT single_expression **fixme=kDataFixUnit:1:Use**
+AWAIT single_expression **fixme=kDataFixUnit:1:Use**
+single_expression DOUBLE_STAR_OP single_expression **fixme=kDataFixUnit:1:Use**
+single_expression star_or_div_or_mod single_expression %prec HIGHEST **fixme=kDataFixUnit:1:Use**
+single_expression plus_or_mins single_expression %prec HIGHEST  **fixme=kDataFixUnit:1:Use**
+single_expression DOUBLE_QUEST_OP single_expression **fixme=kDataFixUnit:1:Use**
+single_expression ls_or_rs_or_rrs single_expression %prec HIGHEST **fixme=kDataFixUnit:1:Use**
+single_expression compare_with single_expression %prec HIGHEST **fixme=kDataFixUnit:1:Use**
+single_expression INSTANCEOF single_expression **fixme=kDataFixUnit:1:Use**
+single_expression IN single_expression **fixme=kDataFixUnit:1:Use**
+single_expression equal_or_nequal single_expression %prec HIGHEST
+single_expression OP_BITAND single_expression **fixme=kDataFixUnit:1:Use**
+single_expression OP_XOR single_expression **fixme=kDataFixUnit:1:Use**
+single_expression OP_BITOR single_expression **fixme=kDataFixUnit:1:Use**
+single_expression AND_OP single_expression **fixme=kDataFixUnit:1:Use**
+single_expression OR_OP single_expression **fixme=kDataFixUnit:1:Use**
+single_expression OP_QUESTION single_expression OP_COLON single_expression **fixme=kDataFixUnit:1:Use** %prec LOWEST
+single_expression OP_EQUAL single_expression **single_expression_1=kDataFixUnit:1:Use;single_expression_2=kDataFixUnit:1:Use**
+single_expression assignment_operator single_expression %prec HIGHEST **fixme=kDataFixUnit:1:Use**
+IMPORT OP_LP single_expression OP_RP **fixme=kDataFixUnit:1:Use**
+THIS **fixme=kDataFixUnit:1:Use**
+assignable **fixme=kDataFixUnit:1:Use**
+SUPER **fixme=kDataFixUnit:1:Use**
+literal **fixme=kDataFixUnit:1:Use**
+OP_LP single_expression OP_RP **fixme=kDataFixUnit:1:Use**
+---
+plus_or_mins:
+OP_ADD
+OP_SUB
+---
+equal_or_nequal:
+EQ_OP
+NE_OP
+EQQ_OP
+NEE_OP
+---
+star_or_div_or_mod:
+OP_STAR
+OP_DIVIDE
+OP_MOD
+---
+ls_or_rs_or_rrs:
+LEFT_OP
+RIGHT_OP
+OP_TG
+---
+compare_with:
+OP_LESSTHAN
+OP_GTEATERTHAN
+LE_OP
+GE_OP
+---
+assignable:
+identifier
+array_literal
+object_literal
+---
+anoymous_function:
+ASYNC FUNCTION OP_STAR OP_LP opt_formal_parameter_list OP_RP OP_LBRACE function_body OP_RBRACE
+ASYNC FUNCTION OP_LP opt_formal_parameter_list OP_RP OP_LBRACE function_body OP_RBRACE
+FUNCTION OP_STAR OP_LP opt_formal_parameter_list OP_RP OP_LBRACE function_body OP_RBRACE
+FUNCTION OP_LP opt_formal_parameter_list OP_RP OP_LBRACE function_body OP_RBRACE
+ASYNC arrow_function_parameters EG_OP arrow_function_body
+identifier EG_OP arrow_function_body
+OP_LP OP_RP EG_OP arrow_function_body
+---
+arrow_function_parameters:
+identifier
+OP_LP opt_formal_parameter_list OP_RP
+---
+arrow_function_body:
+single_expression %prec LOWEST
+OP_LBRACE function_body OP_RBRACE
+---
+assignment_operator:
+MUL_ASSIGN
+DIV_ASSIGN
+MOD_ASSIGN
+ADD_ASSIGN
+SUB_ASSIGN
+LEFT_ASSIGN
+RIGHT_ASSIGN
+GGGE_OP
+AND_ASSIGN
+XOR_ASSIGN
+OR_ASSIGN
+POW_WITH_OP
+---
+literal:
+null_literal
+boolean_literal
+string_literal
+number_literal
+---
+number_literal:
+int_literal
+float_literal
+---
+int_literal:
+INTLITERAL
+---
+float_literal:
+FLOATLITERAL
+---
+boolean_literal:
+TRUE
+FALSE
+---
+null_literal:
+NULL
+---
+getter:
+GET property_name
+GET
+---
+setter
+SET property_name
+SET
+---
+eos:
+OP_SEMI
+---
+identifier:
+IDENTIFIER
+---
+string_literal:
+STRINGLITERAL
+---
+test_me:
+DOMEP OP_ADD
+DOMEM OP_SUB
+---

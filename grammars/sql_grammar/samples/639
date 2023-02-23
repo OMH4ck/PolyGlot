@@ -1,0 +1,1 @@
+CREATE TABLE v0 ( v1 INTEGER PRIMARY KEY ) ; INSERT INTO v0 VALUES ( 10 ) ; SELECT count ( v1 ) , substr ( lower ( '1995-03-15' ) , 0 ) AS mx FROM v0 ; 

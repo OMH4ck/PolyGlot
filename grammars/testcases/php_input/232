@@ -1,0 +1,7 @@
+<?php
+define('::', true);
+try {
+    var_dump(constant('::'));
+} catch (Error $e) {
+    echo $e->getMessage(), "\n";
+}

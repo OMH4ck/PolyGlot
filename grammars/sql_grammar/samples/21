@@ -1,0 +1,1 @@
+SELECT CAST ( zeroblob ( 'Felix Fürstenberg' ) AS TEXT ) AS p ; SELECT DISTINCT 'SM PKG' , '18' , 'abc' , 'Brand#12' , 1 , 10 , 0 , 0 LIMIT 10 OFFSET 10 ; 

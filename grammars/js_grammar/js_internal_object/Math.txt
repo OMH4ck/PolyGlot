@@ -1,0 +1,49 @@
+	class Math {
+	E;
+	LN10;
+	LN2;
+	LOG10E;
+	LOG2E;
+	PI;
+	SQRT1_2;
+	SQRT2;
+	abs(x){}
+	acos(x) {}
+	acosh(x){}
+	asin(x){}
+	asinh(x){}
+	atan(x){}
+	atan2(y, x) {}
+	atanh(x){}
+	cbrt(x){}
+	ceil(x){}
+	clz32 (x){}
+	cos(x){}
+	cosh(x){}
+	exp(x){}
+	expm1(x){}
+	floor(x) {}
+	fround(doubleFloat){}
+	hypot() {}
+	imul(a, b){}
+	log(x){}
+	log10(x){}
+	log1p(x){}
+	log2(x){}
+	max(value1) {}
+	min() {}
+	pow(base, exponent) {}
+	random(){}
+	round(x) {}
+	sign(x){}
+	sin(x){}
+	sinh(x){}
+	sqrt(x) {}
+	tan(x){}
+	tanh(x){}
+	trunc(value){}
+	__proto__;
+	constructor;
+	setPrototypeOf(obj, prototype){}
+	}
+	

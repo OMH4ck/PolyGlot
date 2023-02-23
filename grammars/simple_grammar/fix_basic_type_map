@@ -1,0 +1,6 @@
+string_literal,DOUBLE,float_literal,translate_string_to_double
+string_literal,INT,int_literal,translate_string_to_int
+int_literal,STRING,string_literal,translate_int_to_string
+int_literal,DOUBLE,float_literal,translate_int_to_double
+float_literal,STRING,string_literal,translate_int_to_string
+float_literal,INT,int_literal,translate_double_to_int

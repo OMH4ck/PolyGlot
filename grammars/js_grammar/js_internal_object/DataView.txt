@@ -1,0 +1,34 @@
+	class DataView {
+	getBigInt64(byteOffset ){}
+	arguments;
+	caller;
+	displayName;
+	length;
+	name;
+	__proto__;
+	constructor;
+	setPrototypeOf(obj, prototype){}
+	buffer;
+	byteLength;
+	byteOffset;
+	getBigUint64(byteOffset ){}
+	getFloat32(byteOffset ){}
+	getFloat64(byteOffset ){}
+	getInt16(byteOffset ){}
+	getInt32(byteOffset ){}
+	getInt8(byteOffset){}
+	getUint16(byteOffset ){}
+	getUint32(byteOffset ){}
+	getUint8(byteOffset){}
+	setBigInt64(byteOffset, value ){}
+	setBigUint64(byteOffset, value ){}
+	setFloat32(byteOffset, value ){}
+	setFloat64(byteOffset, value ){}
+	setInt16(byteOffset, value ){}
+	setInt32(byteOffset, value ){}
+	setInt8(byteOffset, value){}
+	setUint16(byteOffset, value ){}
+	setUint32(byteOffset, value ){}
+	setUint8(byteOffset, value){}
+	}
+	

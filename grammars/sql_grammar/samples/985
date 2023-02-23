@@ -1,0 +1,1 @@
+CREATE TABLE v0 ( v1 INTEGER ) ; SELECT instr ( v1 + CASE v1 WHEN 1 THEN 10 ELSE 8 END , v1 ) FROM v0 GROUP BY v1 HAVING changes () ; SELECT v1 , v1 , v1 , v1 , v1 , SUM ( v1 ) , v1 FROM v0 WHERE v1 IS NOT NULL ; 

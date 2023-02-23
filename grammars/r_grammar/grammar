@@ -1,0 +1,139 @@
+program:
+opt_newline_list exprs
+---
+exprs:
+expr_or_assign opt_newline_list
+expr_or_assign ';' opt_newline_list
+exprs expr_or_assign opt_newline_list
+exprs expr_or_assign ';' opt_newline_list
+---
+expr_or_assign:
+expr %prec OP_EXPR
+equal_assign
+---
+equal_assign:
+expr EQ_ASSIGN expr_or_assign
+---
+expr:
+int_literal
+float_literal
+string_literal
+NULL_CONST
+symbol
+'{' opt_newline_list exprlist opt_newline_list '}'
+'(' expr_or_assign ')'
+'-' expr %prec UMINUS
+'+' expr %prec UMINUS
+'!' expr %prec OP_HIGHEST
+'~' expr %prec TILDE
+'?' expr
+expr ':' expr
+expr '+' expr
+expr '-' expr
+expr '*' expr
+expr '/' expr
+expr '^' expr
+expr SPECIAL expr
+expr '%' expr
+expr '~' expr
+expr '?' expr
+expr '.' expr
+'.' expr
+expr LT expr
+expr LE expr
+expr EQ expr
+expr NE expr
+expr GE expr
+expr GT expr
+expr AND expr
+expr OR expr
+expr AND2 expr
+expr OR2 expr
+expr LEFT_ASSIGN expr
+expr RIGHT_ASSIGN expr
+FUNCTION '(' formlist ')' opt_newline_list expr_or_assign %prec LOW
+expr '(' sublist ')'
+IF ifcond expr_or_assign
+IF ifcond expr_or_assign ELSE expr_or_assign
+IFELSE '(' expr ',' expr ',' expr ')'
+FOR forcond expr_or_assign %prec FOR
+WHILE cond expr_or_assign
+REPEAT expr_or_assign
+expr LBB sublist ']' ']'
+expr '[' sublist ']'
+symbol NS_GET symbol
+symbol NS_GET string_literal
+string_literal NS_GET symbol
+string_literal NS_GET string_literal
+symbol NS_GET_INT symbol
+symbol NS_GET_INT string_literal
+string_literal NS_GET_INT symbol
+string_literal NS_GET_INT string_literal
+expr '$' symbol
+expr '$' string_literal
+expr '@' symbol
+expr '@' string_literal
+NEXT
+BREAK
+---
+cond:
+'(' expr ')'
+---
+ifcond:
+'(' expr ')'
+---
+forcond:
+'(' symbol IN expr ')'
+---
+exprlist:
+
+exprlist ';' opt_newline_list
+exprlist expr_or_assign opt_newline_list
+---
+sublist:
+sub
+sublist cr ',' sub
+---
+sub:
+
+expr
+symbol EQ_ASSIGN
+symbol EQ_ASSIGN expr
+string_literal EQ_ASSIGN
+string_literal EQ_ASSIGN expr
+NULL_CONST EQ_ASSIGN
+NULL_CONST EQ_ASSIGN expr
+---
+formlist:
+
+symbol
+symbol EQ_ASSIGN expr
+formlist ',' symbol
+formlist ',' symbol EQ_ASSIGN expr	
+---
+cr:
+
+---
+symbol:
+identifier
+---
+opt_newline_list:
+%prec OP_SEMI
+newline_list %prec OP_EXPR
+---
+newline_list:
+newline_list '\n'
+'\n'
+---
+int_literal:
+INTLITERAL
+---
+float_literal:
+FLOATLITERAL
+---
+string_literal:
+STRINGLITERAL
+---
+identifier:
+IDENTIFIER
+---

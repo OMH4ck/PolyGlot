@@ -1,0 +1,8 @@
+library(tcltk)
+tt <- tktoplevel()
+ts <- ttkscrollbar(tt)
+tc <- tkcanvas(tt)
+tkconfigure(ts, command = function(...) tkyview(tc, ...))
+tkconfigure(tc, yscrollcommand = function(...) tkset(ts, ...))
+tkpack(tc, side = "left")
+tkpack(ts, side = "right", fill = "y")

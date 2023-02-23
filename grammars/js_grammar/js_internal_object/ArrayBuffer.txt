@@ -1,0 +1,14 @@
+	class ArrayBuffer {
+	isView(value){}
+	arguments;
+	caller;
+	displayName;
+	length;
+	name;
+	__proto__;
+	constructor;
+	setPrototypeOf(obj, prototype){}
+	byteLength;
+	slice(begin){}
+	}
+	

@@ -1,0 +1,22 @@
+	class ReferenceError {
+	__proto__;
+	arguments;
+	arity;
+	caller;
+	displayName;
+	length;
+	name;
+	count;
+	noSuchMethod;
+	Parent;
+	constructor;
+	setPrototypeOf(obj, prototype){}
+	columnNumber;
+	fileName;
+	lineNumber;
+	message;
+	Stack;
+	toSource(){}
+	toString(){}
+	}
+	

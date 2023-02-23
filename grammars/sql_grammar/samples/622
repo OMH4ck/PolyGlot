@@ -1,0 +1,1 @@
+CREATE TABLE v0 ( v1 INTEGER ) ; INSERT INTO v0 ( v1 , v1 , v1 ) VALUES ( 99 , 10 , 0 ) ,( 1 , 10 , NULL ) ,( 10.100000 , 'LG CASEaaaaaaaaaaaa' , 10 ) ,( 10 , 2 , NULL ) ; SELECT instr ( lower ( 'Y' ) , v1 ) FROM v0 ; SELECT min ( v1 ) FROM v0 ORDER BY v1 * 1 ; 

@@ -1,0 +1,1 @@
+SELECT CAST ( zeroblob ( - 'test' ) AS TEXT ) ; SELECT DISTINCT ( SELECT DISTINCT '%%green%%' , 0 , 10 , 10.100000 ) LIMIT 1 OFFSET 10 ; 

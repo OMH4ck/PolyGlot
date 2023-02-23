@@ -1,0 +1,750 @@
+program:
+file_input
+---
+file_input:
+NEWLINE file_input
+stmt file_input
+
+---
+decorator:
+OP_AT dotted_name NEWLINE
+OP_AT dotted_name OP_LP opt_arglist OP_RP NEWLINE
+---
+opt_arglist:
+arglist
+
+---
+decorators:
+decorator
+decorators decorator
+---
+decorated:
+decorators classdef
+decorators funcdef
+decorators async_funcdef
+---
+async_funcdef:
+ASYNC funcdef
+---
+funcdef:
+OP_KEYWORD_DEF identifier parameters opt_arrow_test OP_COLON opt_type_comment func_body_suite
+---
+arrow_test:
+OP_TO test
+---
+opt_arrow_test:
+arrow_test
+
+---
+parameters:
+OP_LP opt_typedargslist OP_RP
+---
+opt_typedargslist:
+typedargslist
+
+---
+typedargslist:
+tfpdef_equal_test_list OP_COMMA opt_type_comment OP_DIVIDE
+tfpdef_equal_test_list OP_COMMA opt_type_comment OP_DIVIDE OP_COMMA opt_dollar_tfpdef_on_etc_or_double_dollar_tfpdef
+tfpdef_equal_test_list OP_COMMA opt_type_comment OP_DIVIDE OP_COMMA opt_type_comment tfpdef_equal_test_list TYPE_COMMENT
+tfpdef_equal_test_list OP_COMMA opt_type_comment OP_DIVIDE OP_COMMA opt_type_comment tfpdef_equal_test_list
+tfpdef_equal_test_list OP_COMMA opt_type_comment OP_DIVIDE OP_COMMA opt_type_comment tfpdef_equal_test_list OP_COMMA opt_type_comment opt_dollar_tfpdef_on_etc_or_double_dollar_tfpdef
+tfpdef_equal_test_list opt_type_comment
+tfpdef_equal_test_list OP_COMMA opt_type_comment opt_dollar_tfpdef_on_etc_or_double_dollar_tfpdef
+dollar_tfpdef_on_etc_or_double_dollar_tfpdef
+---
+opt_dollar_tfpdef_on_etc_or_double_dollar_tfpdef:
+dollar_tfpdef_on_etc_or_double_dollar_tfpdef
+
+---
+dollar_tfpdef_on_etc_or_double_dollar_tfpdef:
+dollar_tfpdef_on_etc
+double_dollar_tfpdef
+---
+dollar_tfpdef_on_etc:
+OP_STAR opt_tfpdef opt_comma_type_comment_tfpdef_equal_test_list TYPE_COMMENT
+OP_STAR opt_tfpdef opt_comma_type_comment_tfpdef_equal_test_list opt_comma_typecomment_double_dollar_tfpdef
+---
+opt_comma_typecomment_double_dollar_tfpdef:
+comma_typecomment_double_dollar_tfpdef
+
+---
+comma_typecomment_double_dollar_tfpdef:
+OP_COMMA opt_type_comment opt_double_dollar_tfpdef
+---
+opt_comma_type_comment_tfpdef_equal_test_list:
+comma_type_comment_tfpdef_equal_test_list
+
+---
+comma_type_comment_tfpdef_equal_test_list:
+comma_type_comment_tfpdef_equal_test
+comma_type_comment_tfpdef_equal_test_list comma_type_comment_tfpdef_equal_test
+---
+comma_type_comment_tfpdef_equal_test:
+OP_COMMA opt_type_comment tfpdef_equal_test
+---
+opt_tfpdef:
+tfpdef
+
+---
+opt_double_dollar_tfpdef:
+double_dollar_tfpdef
+
+---
+double_dollar_tfpdef:
+OP_POW_WITH tfpdef opt_comma opt_type_comment
+---
+tfpdef_equal_test_list:
+tfpdef_equal_test
+tfpdef_equal_test_list OP_COMMA opt_type_comment tfpdef_equal_test
+---
+opt_type_comment:
+TYPE_COMMENT
+
+---
+opt_equal_test:
+OP_ASSIGN test
+
+---
+tfpdef_equal_test:
+tfpdef opt_equal_test
+---
+tfpdef:
+identifier
+identifier OP_COLON test
+---
+varargslist:
+vfpdef_case_one
+vfpdef_case_two
+---
+vfpdef_case_one:
+vfpdef_equal_test_list OP_COMMA OP_DIVIDE OP_COMMA opt_vfpdef_test_star_option
+vfpdef_equal_test_list OP_COMMA OP_DIVIDE
+---
+opt_vfpdef_test_star_option:
+vfpdef_equal_test_list_and_star_vfpdef star_vfpdef_and_double_star
+double_star_vfpdef
+
+---
+vfpdef_case_two:
+vfpdef_equal_test_list_and_star_vfpdef
+star_vfpdef_and_double_star
+double_star_vfpdef
+---
+vfpdef_equal_test_list_and_star_vfpdef:
+vfpdef_equal_test_list opt_comma_double_or_double_and_star_vfpdef
+---
+opt_comma_double_or_double_and_star_vfpdef:
+OP_COMMA opt_double_or_double_and_star_vfpdef
+
+---
+opt_double_or_double_and_star_vfpdef:
+star_vfpdef_and_double_star
+double_star_vfpdef
+
+---
+star_vfpdef_and_double_star:
+star_vfpdef_equal_test_list opt_comma_double_star_vfpdef
+---
+star_vfpdef_equal_test_list:
+OP_STAR opt_vfpdef
+star_vfpdef_equal_test_list OP_COMMA vfpdef_equal_test
+---
+opt_comma_double_star_vfpdef:
+OP_COMMA opt_double_star_vfpdef
+
+---
+opt_double_star_vfpdef:
+double_star_vfpdef
+
+---
+double_star_vfpdef:
+OP_POW_WITH vfpdef opt_comma
+---
+opt_vfpdef:
+vfpdef
+
+---
+vfpdef_equal_test_list:
+vfpdef_equal_test
+vfpdef_equal_test_list OP_COMMA vfpdef_equal_test
+---
+vfpdef_equal_test:
+vfpdef opt_equal_test
+---
+vfpdef:
+identifier
+---
+stmt:
+simple_stmt
+compound_stmt
+---
+simple_stmt:
+small_stmt_list OP_SEMI NEWLINE
+small_stmt_list NEWLINE
+---
+small_stmt_list:
+small_stmt
+small_stmt_list OP_SEMI small_stmt
+---
+small_stmt:
+expr_stmt
+del_stmt
+pass_stmt
+flow_stmt
+import_stmt
+global_stmt
+nonlocal_stmt
+assert_stmt
+---
+expr_stmt:
+testlist_star_expr annassign
+testlist_star_expr augassign yield_expr
+testlist_star_expr augassign testlist
+testlist_star_expr annassign_rvalue_list opt_type_comment
+---
+annassign_rvalue_list:
+OP_ASSIGN annassign_rvalue
+annassign_rvalue_list OP_ASSIGN annassign_rvalue
+---
+annassign:
+OP_COLON test OP_ASSIGN annassign_rvalue
+OP_COLON test
+---
+annassign_rvalue:
+yield_expr
+testlist_star_expr
+---
+testlist_star_expr:
+test OP_COMMA testlist_star_expr
+star_expr OP_COMMA testlist_star_expr
+test opt_comma
+star_expr opt_comma
+---
+augassign:
+OP_ADD_WITH
+OP_SUB_WITH
+OP_MUL_WITH
+OP_AT_WITH
+OP_DIVIDE_WITH
+OP_MOD_WITH
+OP_BITAND_WITH
+OP_BITOR_WITH
+OP_BITNOT_WITH
+OP_LEFT_SHIFT_WITH
+OP_RIGHT_SHIFT_WITH
+OP_POW_STAR_WITH
+OP_REAL_DIVIDE_STAR_WITH
+---
+del_stmt:
+OP_KEYWORD_DEL exprlist
+---
+pass_stmt:
+OP_KEYWORD_PASS
+---
+flow_stmt:
+break_stmt
+continue_stmt
+return_stmt
+raise_stmt
+yield_stmt
+---
+break_stmt:
+OP_KEYWORD_BREAK
+---
+continue_stmt:
+OP_KEYWORD_CONTINUE
+---
+return_stmt:
+OP_KEYWORD_RETURN testlist_star_expr
+OP_KEYWORD_RETURN
+---
+yield_stmt:
+yield_expr
+---
+raise_stmt:
+OP_KEYWORD_RAISE opt_raise_content
+---
+opt_raise_content:
+test opt_from_test
+
+---
+opt_from_test:
+OP_KEYWORD_FROM test
+
+---
+import_stmt:
+import_name
+import_from
+---
+import_name:
+OP_KEYWORD_IMPORT dotted_as_names
+---
+import_from:
+OP_KEYWORD_FROM opt_dot_or_dotdotdot_list dotted_name OP_KEYWORD_IMPORT star_or_import_as_name
+OP_KEYWORD_FROM dot_or_dotdotdot_list OP_KEYWORD_IMPORT star_or_import_as_name
+---
+star_or_import_as_name:
+OP_STAR
+OP_LP import_as_names OP_RP
+import_as_names
+---
+opt_dot_or_dotdotdot_list:
+dot_or_dotdotdot_list
+
+---
+dot_or_dotdotdot_list:
+dot_or_dotdotdot
+dot_or_dotdotdot_list dot_or_dotdotdot
+---
+dot_or_dotdotdot:
+OP_DOT
+OP_THREE_DOT
+---
+import_as_name:
+identifier
+identifier OP_KEYWORD_AS identifier
+---
+dotted_as_name:
+dotted_name
+dotted_name OP_KEYWORD_AS identifier
+---
+import_as_names:
+import_as_name opt_comma
+import_as_name OP_COMMA import_as_names
+---
+opt_comma:
+OP_COMMA
+
+---
+dotted_as_names:
+dotted_as_name
+dotted_as_name OP_COMMA dotted_as_names
+---
+dotted_name:
+identifier
+identifier OP_DOT dotted_name
+---
+global_stmt:
+OP_KEYWORD_GLOBAL identifier
+global_stmt OP_COMMA identifier
+---
+nonlocal_stmt:
+OP_KEYWORD_NONLOCAL identifier
+nonlocal_stmt OP_COMMA identifier
+---
+assert_stmt:
+OP_KEYWORD_ASSERT test
+OP_KEYWORD_ASSERT test OP_COMMA test
+---
+compound_stmt:
+if_stmt
+while_stmt
+for_stmt
+try_stmt
+with_stmt
+funcdef
+classdef
+decorated
+async_stmt
+---
+async_stmt:
+ASYNC funcdef
+ASYNC with_stmt
+ASYNC for_stmt
+---
+if_stmt:
+OP_KEYWORD_IF namedexpr_test OP_COLON suite opt_elif_stmt_list opt_else_stmt
+---
+opt_else_stmt:
+OP_KEYWORD_ELSE OP_COLON suite
+
+---
+opt_elif_stmt_list:
+elif_stmt_list
+
+---
+elif_stmt_list:
+elif_stmt
+elif_stmt_list elif_stmt
+---
+elif_stmt:
+OP_KEYWORD_ELIF namedexpr_test OP_COLON suite
+---
+while_stmt:
+OP_KEYWORD_WHILE namedexpr_test OP_COLON suite opt_else_stmt
+---
+for_stmt:
+OP_KEYWORD_FOR exprlist OP_KEYWORD_IN testlist OP_COLON suite opt_else_stmt
+OP_KEYWORD_FOR exprlist OP_KEYWORD_IN testlist OP_COLON TYPE_COMMENT suite opt_else_stmt
+---
+try_stmt:
+OP_KEYWORD_TRY OP_COLON suite except_clause_suite_list opt_else_stmt opt_finally_suite
+OP_KEYWORD_TRY OP_COLON suite finally_suite
+---
+except_clause_suite_list:
+except_clause_suite
+except_clause_suite_list except_clause_suite
+---
+except_clause_suite:
+except_clause OP_COLON suite
+---
+opt_finally_suite:
+finally_suite
+
+---
+finally_suite:
+OP_KEYWORD_FINALLY OP_COLON suite
+---
+with_stmt:
+with_item_list OP_COLON opt_type_comment suite
+---
+with_item_list:
+OP_KEYWORD_WITH with_item
+with_item_list OP_COMMA with_item
+---
+with_item:
+test opt_as_expr
+---
+opt_as_expr:
+OP_KEYWORD_AS expr
+
+---
+except_clause:
+OP_KEYWORD_EXCEPT test OP_KEYWORD_AS identifier
+OP_KEYWORD_EXCEPT test
+OP_KEYWORD_EXCEPT
+---
+suite:
+simple_stmt
+NEWLINE INDENT stmt_list DEDENT
+---
+namedexpr_test:
+test opt_assign_test
+---
+opt_assign_test:
+OP_COLON_EQUAL test
+
+---
+test:
+or_test
+or_test OP_KEYWORD_IF or_test OP_KEYWORD_ELSE test
+lambdef
+---
+test_nocond:
+or_test
+lambdef_nocond
+---
+lambdef:
+OP_KEYWORD_LAMBDA OP_COLON test
+OP_KEYWORD_LAMBDA varargslist OP_COLON test
+---
+lambdef_nocond:
+OP_KEYWORD_LAMBDA OP_COLON test_nocond
+OP_KEYWORD_LAMBDA varargslist OP_COLON test_nocond
+---
+or_test:
+and_test
+and_test OP_KEYWORD_OR or_test
+---
+and_test:
+not_test
+not_test OP_KEYWORD_AND and_test
+---
+not_test:
+OP_KEYWORD_NOT not_test
+comparison
+---
+comparison:
+expr
+expr comp_op comparison
+---
+comp_op:
+OP_LESSTHAN
+OP_GTEATERTHAN
+OP_EQUAL
+OP_GE
+OP_LE
+OP_GL
+OP_NE
+OP_KEYWORD_IN
+OP_KEYWORD_NOT OP_KEYWORD_IN
+OP_KEYWORD_IS
+OP_KEYWORD_IS OP_KEYWORD_NOT
+---
+star_expr:
+OP_STAR expr
+---
+expr:
+xor_expr
+xor_expr OP_BITOR expr
+---
+xor_expr:
+and_expr
+and_expr OP_XOR xor_expr
+---
+and_expr:
+shift_expr
+shift_expr OP_BITAND and_expr
+---
+shift_expr:
+arith_expr
+arith_expr shift_op shift_expr
+---
+shift_op:
+OP_LEFT_SHIFT
+OP_RIGHT_SHIFT
+---
+arith_expr:
+term
+arith_expr arith_op term
+---
+arith_op:
+OP_ADD
+OP_SUB
+---
+term:
+factor
+term term_op factor
+---
+term_op:
+OP_STAR
+OP_AT
+OP_DIVIDE
+OP_MOD
+OP_REAL_DIVIDE
+---
+factor:
+factor_op factor
+power
+---
+factor_op:
+OP_ADD
+OP_SUB
+OP_BITNOT
+---
+power:
+atom_expr
+atom_expr OP_POW_WITH factor
+---
+atom_expr:
+AWAIT atom opt_trailer_list
+atom opt_trailer_list
+---
+opt_trailer_list:
+trailer_list
+
+---
+trailer_list:
+trailer
+trailer trailer_list
+---
+atom:
+OP_LP opt_yield_or_testlist_comp OP_RP
+OP_LBRACKET opt_testlist_comp OP_RBRACKET
+OP_LBRACE opt_dictorsetmaker OP_RBRACE
+identifier
+number_literal
+string_literal
+OP_THREE_DOT
+OP_NONE
+OP_TRUE
+OP_FALSE
+---
+opt_yield_or_testlist_comp:
+yield_expr
+testlist_comp
+
+---
+opt_testlist_comp:
+testlist_comp
+
+---
+opt_dictorsetmaker:
+dictorsetmaker
+
+---
+testlist_comp:
+namedexpr_or_star_expr comp_for
+namedexpr_or_star_expr_list
+---
+namedexpr_or_star_expr_list:
+namedexpr_or_star_expr opt_comma
+namedexpr_or_star_expr OP_COMMA namedexpr_or_star_expr_list
+---
+namedexpr_or_star_expr:
+namedexpr_test
+star_expr
+---
+trailer:
+OP_LP OP_RP
+OP_LP arglist OP_RP
+OP_LBRACKET subscriptlist OP_RBRACKET
+OP_DOT identifier
+---
+subscriptlist:
+subscript opt_comma
+subscript OP_COMMA subscriptlist
+---
+subscript:
+test
+opt_test OP_COLON opt_test opt_sliceop
+---
+opt_test:
+test
+
+---
+opt_sliceop:
+sliceop
+
+---
+sliceop:
+OP_COLON
+OP_COLON test
+---
+exprlist:
+expr opt_comma
+star_expr opt_comma
+expr OP_COMMA exprlist
+star_expr OP_COMMA exprlist
+---
+testlist:
+test opt_comma
+test OP_COMMA testlist
+---
+dictorsetmaker:
+test_colon_test_or_expr_list
+test_colon_test_or_expr comp_for
+test_or_star_expr_list
+test_or_star_expr comp_for
+---
+test_or_star_expr:
+test
+star_expr
+---
+test_or_star_expr_list:
+test_or_star_expr opt_comma
+test_or_star_expr OP_COMMA test_or_star_expr_list
+---
+test_colon_test:
+test OP_COLON test
+---
+test_colon_test_or_expr:
+test_colon_test
+OP_POW_WITH expr
+---
+test_colon_test_or_expr_list:
+test_colon_test_or_expr opt_comma
+test_colon_test_or_expr OP_COMMA test_colon_test_or_expr_list
+---
+classdef:
+OP_KEYWORD_CLASS identifier OP_COLON suite
+OP_KEYWORD_CLASS identifier OP_LP OP_RP OP_COLON suite
+OP_KEYWORD_CLASS identifier OP_LP arglist OP_RP OP_COLON suite
+---
+arglist:
+argument opt_comma
+argument OP_COMMA arglist
+---
+argument:
+test
+test comp_for
+test OP_COLON_EQUAL test
+test OP_ASSIGN test
+OP_POW_WITH test
+OP_STAR test
+---
+comp_iter:
+comp_for
+comp_if
+---
+opt_comp_iter:
+comp_iter
+
+---
+sync_comp_for:
+OP_KEYWORD_FOR exprlist OP_KEYWORD_IN or_test opt_comp_iter
+---
+comp_for:
+sync_comp_for
+ASYNC sync_comp_for
+---
+comp_if:
+OP_KEYWORD_IF test_nocond opt_comp_iter
+---
+encoding_decl:
+identifier
+---
+yield_expr:
+OP_KEYWORD_YIELD
+OP_KEYWORD_YIELD yield_arg
+---
+yield_arg:
+OP_KEYWORD_FROM test
+testlist_star_expr
+---
+func_body_suite:
+simple_stmt
+NEWLINE TYPE_COMMENT NEWLINE INDENT stmt_list DEDENT
+NEWLINE INDENT stmt_list DEDENT
+---
+stmt_list:
+stmt
+stmt_list stmt
+---
+func_type_input:
+func_type opt_newline_list
+---
+func_type:
+OP_LP opt_typelist OP_RP arrow_test
+---
+typelist:
+test opt_comma_test_list opt_comma_expand_test
+test opt_comma_test_list OP_COMMA
+test opt_comma_test_list OP_COMMA OP_STAR opt_test opt_comma_test_list opt_comma_expand_test
+OP_STAR opt_test opt_comma_test_list opt_comma_expand_test
+expand_test
+---
+opt_comma_expand_test:
+OP_COMMA expand_test
+
+---
+opt_comma_test_list:
+comma_test_list
+
+---
+comma_test_list:
+OP_COMMA test
+comma_test_list OP_COMMA test
+---
+expand_test:
+OP_POW_WITH test
+---
+opt_typelist:
+typelist
+
+---
+identifier:
+IDENTIFIER
+---
+number_literal:
+float_literal
+int_literal
+---
+float_literal:
+FLOATLITERAL
+---
+int_literal:
+INTLITERAL
+---
+string_literal:
+STRINGLITERAL
+---
+opt_newline_list:
+newline_list
+
+---
+newline_list:
+NEWLINE
+newline_list NEWLINE
+---

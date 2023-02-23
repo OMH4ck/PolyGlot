@@ -1,0 +1,1 @@
+CREATE TABLE v0 ( v1 INTEGER PRIMARY KEY ) ; INSERT INTO v0 ( v1 ) VALUES ( NULL ) ,( NULL ) ,( NULL ) ,( NULL ) ,( NULL ) ,( NULL ) ,( NULL ) ,( NULL ) ,( NULL ) ,( NULL ) ,( NULL ) ; CREATE TABLE v2 ( v3 INTEGER PRIMARY KEY , v4 INT ) ; INSERT INTO v2 ( v3 ) VALUES ( 3 ) ,( 10 ) ; SELECT * FROM v0 , v2 WHERE v4 = v3 AND v4 = 1 ; 

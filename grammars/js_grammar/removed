@@ -1,0 +1,15 @@
+TemplateStringLiteral
+RegularExpressionLiteral
+bigintLiteral:
+BigDecimalIntegerLiteral
+BigHexIntegerLiteral
+BigOctalIntegerLiteral
+BigBinaryIntegerLiteral
+DecimalLiteral
+HexIntegerLiteral
+OctalIntegerLiteral
+OctalIntegerLiteral2
+BinaryIntegerLiteral
+template_string_literal
+yield_statement(single_expression)
+anoymous_function(function_declaration)

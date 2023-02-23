@@ -1,0 +1,1 @@
+SELECT sqlite_compileoption_get ( 1 ) ; SELECT printf ( count ( 3 ) OVER( ) , 10.100000 , '29' ) ; SELECT max () ; 

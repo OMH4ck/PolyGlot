@@ -1,0 +1,1 @@
+CREATE TABLE v0 ( v1 INTEGER PRIMARY KEY ) ; SELECT sqlite_compileoption_used ( 'LG PKG' ) ; CREATE TABLE v2 ( v3 INTEGER PRIMARY KEY , v4 INT ) ; INSERT INTO v2 ( v4 ) VALUES ( 10 ) ,( 1 ) ; SELECT * FROM v2 , v0 WHERE LIKELY ( v1 ) <= '30' = v1 AND v1 = 2 ; 

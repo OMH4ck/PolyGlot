@@ -1,0 +1,1 @@
+CREATE TABLE v0 ( v2 INT , v1 INT ) ; INSERT INTO v0 ( v2 ) VALUES ( 0 ) ,( 9223372036854775807 ) ; INSERT INTO v0 ( v2 , v1 ) VALUES ( 0 , 4294967295 ) ; SELECT sum ( v2 + length ( v1 ) ) FROM v0 ; 

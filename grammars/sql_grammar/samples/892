@@ -1,0 +1,1 @@
+SELECT sqlite_rename_table ( 0 , 9223372036854775808 , 1 , 9 , 127 , 10 , 0 ) ; INSERT INTO v0 ( v1 ) VALUES ( 127 ) ,( 0 ) ; UPDATE v2 SET v3 = ( SELECT 1 FROM v4 ) ; 

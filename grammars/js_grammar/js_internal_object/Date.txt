@@ -1,0 +1,61 @@
+	class Date {
+	UTC(year,month) {}
+	now(){}
+	parse(dateString){}
+	arguments;
+	caller;
+	displayName;
+	length;
+	name;
+	__proto__;
+	constructor;
+	setPrototypeOf(obj, prototype){}
+	getDate(){}
+	getDay(){}
+	getFullYear(){}
+	getHours(){}
+	getMilliseconds(){}
+	getMinutes(){}
+	getMonth(){}
+	getSeconds(){}
+	getTime() {}
+	getTimezoneOffset(){}
+	getUTCDate(){}
+	getUTCDay(){}
+	getUTCFullYear(){}
+	getUTCHours(){}
+	getUTCMilliseconds(){}
+	getUTCMinutes(){}
+	getUTCMonth(){}
+	getUTCSeconds(){}
+	getYear() {}
+	setDate(dayValue){}
+	setFullYear(yearValue){}
+	setHours(hoursValue){}
+	setMilliseconds(millisecondsValue){}
+	setMinutes(minutesValue){}
+	setMonth(monthValue){}
+	setSeconds(secondsValue){}
+	setTime(timeValue){}
+	setUTCDate(dayValue){}
+	setUTCFullYear(yearValue){}
+	setUTCHours(hoursValue){}
+	setUTCMilliseconds(millisecondsValue){}
+	setUTCMinutes(minutesValue){}
+	setUTCMonth(monthValue){}
+	setUTCSeconds(secondsValue){}
+	setYear(yearValue){}
+	toDateString(){}
+	toGMTString(){}
+	toISOString(){}
+	toJSON(){}
+	toLocaleDateString(){}
+	toLocaleString(){}
+	toLocaleTimeString(){}
+	toSource(){}
+	toString(){}
+	toTimeString(){}
+	toUTCString(){}
+	valueOf(){}
+	}
+	

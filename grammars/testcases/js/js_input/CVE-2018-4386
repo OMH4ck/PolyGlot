@@ -1,0 +1,16 @@
+function trigger() {
+    let o = {a: 1};
+    for (var k in o) {
+        {
+            k = 0x1234;
+
+            function k() {
+
+            }
+        }
+
+        o[k];
+    }
+}
+
+trigger();

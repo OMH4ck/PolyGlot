@@ -1,0 +1,4 @@
+<?php
+$a = 'This gets echoed twice';
+
+   echo "{$b}";

@@ -1,0 +1,1 @@
+CREATE TABLE v0 ( v1 INTEGER ) ; INSERT INTO v0 VALUES ( 0 ) ,( 8 ) ,( 2 ) ,( 10 ) ,( 10 ) ,( 0 ) ,( 0 ) ; SELECT SUM ( v1 * ( 2 - v1 ) ) FROM v0 ORDER BY length ( v1 ) DESC ; SELECT v1 , v1 FROM v0 WHERE v1 IS NOT NULL ; 

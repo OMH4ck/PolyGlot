@@ -1,0 +1,13 @@
+function trigger() {
+    let a, b, c;
+
+    function g() {
+        trigger();
+
+        a, b, c;
+    }
+
+    g();
+}
+
+trigger();

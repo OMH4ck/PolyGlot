@@ -1,0 +1,797 @@
+MultiStmt:
+	Statement
+	MultiStmt ';' Statement
+	MultiStmt ';'
+---
+Statement:
+	InsertStmt
+	ReplaceStmt
+	UpdateStmt
+	DeleteStmt
+	TruncateStmt
+	CreateTableStmt
+	SelectStmt
+	DropTableStmt
+	CreateDatabaseStmt
+	DropDatabaseStmt
+	StartTransactionStmt
+	CommitTransactionStmt
+	RollbackTransactionStmt
+	SetStmt
+	ShowStmt
+	AlterTableStmt
+	NewPrepareStmt
+	ExecPrepareStmt
+	DeallocPrepareStmt
+	ExplainStmt
+	KillStmt
+---
+InsertStmt:
+	INSERT PriorityOpt IgnoreOptional IntoOpt TableName InsertValues OnDuplicateKeyUpdate
+---
+ReplaceStmt:
+	REPLACE PriorityOpt IntoOpt TableName InsertValues
+---
+PriorityOpt:
+	
+	LOW_PRIORITY
+	HIGH_PRIORITY
+	DELAYED
+---
+InsertValues:
+	'(' ColumnNameListOpt ')' values_sym ValueList
+	values_sym ValueList
+	SET AssignmentList
+---
+sym:
+	VALUE
+	VALUES
+    ;
+OnDuplicateKeyUpdat
+---
+ValueList:
+	'(' ExprList ')'
+---
+ColumnNameList:
+	ColumnName
+	ColumnNameList ',' ColumnName
+---
+ColumnName:
+	AllIdent
+	AllIdent '.' AllIdent
+	AllIdent '.' AllIdent '.' AllIdent
+---
+TableName:
+	AllIdent
+	AllIdent '.' AllIdent
+---
+TableNameList:
+	TableName
+	TableNameList ',' TableName
+---
+UpdateStmt:
+	UPDATE PriorityOpt IgnoreOptional TableRef SET AssignmentList WhereClauseOptional OrderByOptional LimitClause
+	UPDATE PriorityOpt IgnoreOptional TableRefs SET AssignmentList WhereClauseOptional
+---
+TableRefs:
+	EscapedTableRef
+	TableRefs ',' EscapedTableRef
+---
+TableFactor:
+	TableName TableAsNameOpt IndexHintListOpt
+	'(' TableRefs ')'
+---
+TableAsNameOpt:
+	
+	TableAsName
+---
+TableAsName:
+	AllIdent
+	AS AllIdent
+---
+IndexHintListOpt:
+	
+	IndexHintList
+---
+IndexHintList:
+	IndexHint
+	IndexHintList IndexHint
+---
+IndexHint:
+	IndexHintType IndexHintScope '(' IndexNameList ')'
+---
+IndexHintType:
+	USE KeyOrIndex
+	IGNORE KeyOrIndex
+	FORCE KeyOrIndex
+---
+KeyOrIndex:
+	KEY
+	INDEX
+---
+KeyOrIndexOpt:
+	
+	KeyOrIndex
+---
+IndexHintScope:
+	
+	FOR JOIN
+	FOR ORDER BY
+	FOR GROUP BY
+---
+IndexNameList:
+	
+	AllIdentOrPrimary
+	IndexNameList ',' AllIdentOrPrimary
+---
+AllIdentOrPrimary:
+	AllIdent
+	PRIMARY
+---
+JoinType:
+	LEFT
+	RIGHT
+---
+CrossOpt:
+	JOIN
+	CROSS JOIN
+	INNER JOIN
+---
+LimitClause:
+	
+	LIMIT SimpleExpr
+---
+WhereClause:
+	WHERE Expr
+---
+GroupByOptional:
+	
+	GroupBy
+---
+SelectStmt:
+	SelectStmtBasic OrderByOptional LimitClause SelectLockOpt
+	SelectStmtFromDual LimitClause SelectLockOpt
+	SelectStmtFromTable OrderByOptional LimitClause SelectLockOpt
+---
+SelectStmtCalcFoundRows:
+	
+	SQL_CALC_FOUND_ROWS
+---
+Expr:
+	Operators
+	PredicateOp
+	SimpleExpr
+---
+FunctionCall:
+	BuildInFun
+	IDENT '(' ')'
+	IDENT '(' ExprList ')'
+---
+BuildInFun:
+	SumExpr
+	FunctionCallNonKeyword
+	FunctionCallKeyword
+    ;
+FuncDatetimePrecListOp
+---
+TimestampUnit:
+	MICROSECOND
+---
+TimeUnit:
+	MICROSECOND
+---
+TrimDirection:
+	BOTH
+---
+FunctionNameCurtime:
+	CURTIME
+	CURRENT_TIME
+---
+FunctionaNameCurdate:
+	CURDATE
+	CURRENT_DATE
+---
+FunctionCallNonKeyword:
+	FunctionNameCurtime '(' FuncDatetimePrecListOpt ')'
+	CURRENT_TIME
+	FunctionaNameCurdate '(' ')'
+	CURRENT_DATE
+	SYSDATE '(' FuncDatetimePrecListOpt ')'
+	NOW '(' ')'
+	FunctionNameDateArithMultiForms '(' Expr ',' Expr ')'
+---
+DistinctKwd:
+	DISTINCT
+	DISTINCTROW
+---
+DistinctOpt:
+	ALL
+	DistinctKwd
+---
+DefaultFalseDistinctOpt:
+	
+	DistinctOpt
+---
+BuggyDefaultFalseDistinctOpt:
+	DefaultFalseDistinctOpt
+	DistinctKwd ALL
+---
+AllIdent:
+	IDENT
+	ACTION
+	AFTER
+	ALWAYS
+	ALGORITHM
+	ANY
+	ASCII
+	AUTO_INCREMENT
+	AVG_ROW_LENGTH
+	AVG
+	BEGINX
+	WORK
+	BINLOG
+	BIT
+	BOOLEAN
+	BOOL
+	BTREE
+	BYTE
+	CASCADED
+	CHARSET
+	CHECKSUM
+	CLEANUP
+	CLIENT
+	COALESCE
+	COLLATION
+	COLUMNS
+	COMMENT
+	COMMIT
+	COMMITTED
+	COMPACT
+	COMPRESSED
+	COMPRESSION
+	CONNECTION
+	CONSISTENT
+	DAY
+	DATA
+	DATE
+	DATETIME
+	DEALLOCATE
+	DEFINER
+	DELAY_KEY_WRITE
+	DISABLE
+	DO
+	DUPLICATE
+	DYNAMIC
+	ENABLE
+	END
+	ENGINE
+	ENGINES
+	ENUM
+	EVENT
+	EVENTS
+	ESCAPE
+	EXCLUSIVE
+	EXECUTE
+	FIELDS
+	FIRST
+	FIXED
+	FLUSH
+	FORMAT
+	FULL
+	FUNCTION
+	GRANTS
+	HASH
+	HOUR
+	IDENTIFIED
+	ISOLATION
+	INDEXES
+	INVOKER
+	JSON
+	KEY_BLOCK_SIZE
+	LOCAL
+	LESS
+	LEVEL
+	MASTER
+	MICROSECOND
+	MINUTE
+	MODE
+	MODIFY
+	MONTH
+	MAX_ROWS
+	MAX_CONNECTIONS_PER_HOUR
+	MAX_QUERIES_PER_HOUR
+	MAX_UPDATES_PER_HOUR
+	MAX_USER_CONNECTIONS
+	MERGE
+	MIN_ROWS
+	NAMES
+	NATIONAL
+	NO
+	NONE
+	OFFSET
+	ONLY
+	PASSWORD
+	PARTITIONS
+	PLUGINS
+	PREPARE
+	PRIVILEGES
+	PROCESS
+	PROCESSLIST
+	PROFILES
+	QUARTER
+	QUERY
+	QUERIES
+	QUICK
+	RECOVER
+	REDUNDANT
+	RELOAD
+	REPEATABLE
+	REPLICATION
+	REVERSE
+	ROLLBACK
+	ROUTINE
+	ROW
+	ROW_COUNT
+	ROW_FORMAT
+	SECOND
+	SECURITY
+	SEPARATOR
+	SERIALIZABLE
+	SESSION
+	SHARE
+	SHARED
+	SIGNED
+	SLAVE
+	SNAPSHOT
+	SQL_CACHE
+	SQL_NO_CACHE
+	START
+	STATS_PERSISTENT
+	STATUS
+	SUPER
+	SOME
+	GLOBAL
+	TABLES
+	TEMPORARY
+	TEMPTABLE
+	TEXT
+	THAN
+	TIME
+	TIMESTAMP
+	TRACE
+	TRANSACTION
+	TRIGGERS
+	TRUNCATE
+	UNCOMMITTED
+	UNKNOWN
+	USER
+	UNDEFINED
+	VALUE
+	VARIABLES
+	VIEW
+	WARNINGS
+	WEEK
+	YEAR
+    /* builtin functions. */
+	ADDDATE
+	BIT_AND
+	BIT_OR
+	BIT_XOR
+	CAST
+	COUNT
+	CURDATE
+	CURTIME
+	DATE_ADD
+	DATE_SUB
+	EXTRACT
+	GROUP_CONCAT
+	MAX
+	MID
+	MIN
+	NOW
+	POSITION
+	SESSION_USER
+	STD
+	STDDEV
+	STDDEV_POP
+	STDDEV_SAMP
+	SUBDATE
+	SUBSTR
+	SUBSTRING
+	TIMESTAMPADD
+	TIMESTAMPDIFF
+	SUM
+	SYSDATE
+	SYSTEM_USER
+	TRIM
+	VARIANCE
+	VAR_POP
+	VAR_SAMP
+---
+NumLiteral:
+	INTEGER_LIT
+	DECIMAL_LIT
+---
+Literal:
+	NULLX
+---
+SimpleExpr:
+	Literal
+	PLACE_HOLDER_LIT
+	ColumnName
+	RowExpr
+	FunctionCall
+	'-' SimpleExpr %prec NEG
+---
+WhenClauseList:
+	WhenClause
+	WhenClauseList WhenClause
+---
+Operators:
+	Expr '+' Expr
+---
+PredicateOp:
+	Expr IsOrNot NULLX %prec IS
+---
+TODO:
+	create table xx like xx
+CreateTableStm
+---
+IfNotExists:
+	
+	IF NOT EXISTS
+---
+IfExists:
+	
+	IF EXISTS
+---
+TableElementList:
+	TableElement
+	TableElementList ',' TableElement
+---
+TableElement:
+	ColumnDef
+	Constraint
+	CHECK '(' Expr ')'
+---
+ColumnDef:
+	ColumnName Type ColumnOptionList
+---
+ColumnDefList:
+	ColumnDef
+	ColumnDefList ',' ColumnDef
+---
+ColumnOptionList:
+	
+	ColumnOptionList ColumnOption
+---
+ColumnOption:
+	NOT NULLX
+	NULLX
+	AUTO_INCREMENT
+	PrimaryOpt KEY
+	UNIQUE %prec lowerThanKey
+	UNIQUE KEY
+	DEFAULT DefaultValue
+	ON UPDATE CURRENT_TIMESTAMP
+	COMMENT STRING_LIT
+---
+SignedLiteral:
+	Literal
+	'+' NumLiteral
+	'-' NumLiteral
+---
+DefaultValue:
+	CURRENT_TIMESTAMP
+	SignedLiteral
+---
+DefaultKwdOpt:
+	
+	DEFAULT
+---
+Constraint:
+	ConstraintKeywordOpt ConstraintElem
+---
+ConstraintKeywordOpt:
+	
+	CONSTRAINT
+	CONSTRAINT AllIdent
+---
+ConstraintElem:
+	PRIMARY KEY '(' ColumnNameList ')' IndexOptionList
+	FULLTEXT KeyOrIndexOpt IndexName '(' ColumnNameList ')' IndexOptionList
+	KeyOrIndex IndexName '(' ColumnNameList ')' IndexOptionList
+	UNIQUE KeyOrIndexOpt IndexName '(' ColumnNameList ')' IndexOptionList
+	KeyOrIndex GLOBAL IndexName '(' ColumnNameList ')' IndexOptionList
+	UNIQUE KeyOrIndexOpt GLOBAL IndexName '(' ColumnNameList ')' IndexOptionList
+---
+IndexName:
+	
+	AllIdent
+---
+IndexOptionList:
+	
+	IndexOptionList IndexOption
+---
+IndexOption:
+	KEY_BLOCK_SIZE EqOpt INTEGER_LIT
+	IndexType
+	COMMENT STRING_LIT
+---
+IndexType:
+	USING BTREE
+	USING HASH
+---
+Type:
+	NumericType
+	StringType
+	DateAndTimeType
+---
+NumericType:
+	IntegerType OptFieldLen FieldOpts
+	BooleanType FieldOpts
+	FixedPointType FloatOpt FieldOpts
+---
+IntegerType:
+	TINYINT
+	SMALLINT
+	MEDIUMINT
+	INT
+	INT1
+	INT2
+	INT3
+	INT4
+	INT8
+	INTEGER
+	BIGINT
+---
+BooleanType:
+	BOOL
+	BOOLEAN
+---
+FixedPointType:
+	DECIMAL
+	NUMERIC
+---
+FloatingPointType:
+	FLOAT
+	REAL
+	DOUBLE
+	DOUBLE PRECISION
+---
+BitValueType:
+	BIT
+---
+StringType:
+	NationalOpt CHAR FieldLen OptBinary OptCharset OptCollate
+	NationalOpt CHAR OptBinary OptCharset OptCollate
+	Varchar FieldLen OptBinary OptCharset OptCollate
+	BINARY OptFieldLen
+	VARBINARY FieldLen
+	BlobType
+	TextType OptBinary OptCharset OptCollate
+	ENUM '(' StringList ')' OptCharset OptCollate
+	SET '(' StringList ')' OptCharset OptCollate
+	JSON
+	HLL
+---
+NationalOpt:
+	
+	NATIONAL
+---
+Varchar:
+	NATIONAL VARCHAR
+	VARCHAR
+	NVARCHAR
+---
+BlobType:
+	TINYBLOB
+	BLOB OptFieldLen
+	MEDIUMBLOB
+	LONGBLOB
+---
+TextType:
+	TINYTEXT
+	TEXT OptFieldLen
+	MEDIUMTEXT
+	LONGTEXT
+	LONG VARCHAR
+---
+DateAndTimeType:
+	DATE
+	DATETIME OptFieldLen
+---
+OptFieldLen:
+	/* empty == (-1) == unspecified field length*/
+	FieldLen
+---
+FieldLen:
+	'(' INTEGER_LIT ')'
+---
+FieldOpt:
+	UNSIGNED
+	SIGNED
+	ZEROFILL
+---
+FieldOpts:
+	
+	FieldOpts FieldOpt
+---
+FloatOpt:
+	
+	FieldLen
+	Precision
+---
+Precision:
+	'(' INTEGER_LIT ',' INTEGER_LIT ')'
+---
+OptBinary:
+	
+	BINARY
+---
+OptCharset:
+	
+	CharsetKw StringName
+---
+CharsetKw:
+	CHARACTER SET
+	CHARSET
+---
+OptCollate:
+	
+	COLLATE StringName
+---
+StringList:
+	STRING_LIT
+	StringList ',' STRING_LIT
+---
+StringName:
+	STRING_LIT
+	AllIdent
+---
+CreateTableOptionListOpt:
+	
+	TableOptionList
+---
+TableOptionList:
+	TableOption
+	TableOptionList TableOption
+	TableOptionList ','  TableOption
+---
+TableOption:
+	ENGINE EqOpt StringName
+	DefaultKwdOpt CharsetKw EqOpt StringName
+	DefaultKwdOpt COLLATE EqOpt StringName
+	AUTO_INCREMENT EqOpt INTEGER_LIT
+	COMMENT EqOpt STRING_LIT
+	AVG_ROW_LENGTH EqOpt INTEGER_LIT
+	KEY_BLOCK_SIZE EqOpt INTEGER_LIT
+---
+EqOpt:
+	
+	EQ_OP
+---
+DropTableStmt:
+	DROP TableOrTables IfExists TableNameList RestrictOrCascadeOpt
+---
+TableOrTables:
+	TABLE
+	TABLES
+---
+RestrictOrCascadeOpt:
+	
+	RESTRICT
+	CASCADE
+---
+CreateDatabaseStmt:
+	CREATE DATABASE IfNotExists DBName DatabaseOptionListOpt
+---
+DBName:
+	AllIdent
+---
+DatabaseOption:
+	DefaultKwdOpt CharsetKw EqOpt StringName
+	DefaultKwdOpt COLLATE EqOpt StringName
+---
+DatabaseOptionListOpt:
+	
+	DatabaseOptionList
+---
+DatabaseOptionList:
+	DatabaseOption
+	DatabaseOptionList DatabaseOption
+---
+DropDatabaseStmt:
+	DROP DATABASE IfExists DBName
+---
+WorkOpt:
+	
+	WORK
+---
+StartTransactionStmt:
+	START TRANSACTION
+	BEGINX WorkOpt
+---
+CommitTransactionStmt:
+	COMMIT WorkOpt
+---
+RollbackTransactionStmt:
+	ROLLBACK WorkOpt
+---
+SetStmt:
+	SET VarAssignList
+---
+VarAssignList:
+	VarAssignItem
+	VarAssignList ',' VarAssignItem
+---
+VarAssignItem:
+	VarName EQ_OP Expr
+---
+VarName:
+	AllIdent
+	GLOBAL AllIdent
+	SESSION AllIdent
+	LOCAL AllIdent
+---
+TransactionChars:
+	ShowStm
+---
+FromOrIn:
+	FROM
+	IN
+
+ShowTargetFilterabl
+---
+AlterTableStmt:
+	ALTER IgnoreOptional TABLE TableName AlterSpecList
+---
+AlterSpecList:
+	AlterSpec
+	AlterSpecList ',' AlterSpec
+---
+ColumnKwdOpt:
+	
+	COLUMN
+---
+AsOrToOpt:
+	
+	AS
+	TO
+---
+NewPrepareStmt:
+	PREPARE AllIdent FROM STRING_LIT
+	PREPARE AllIdent FROM VarName
+---
+ExecPrepareStmt:
+	EXECUTE AllIdent
+	EXECUTE AllIdent USING VarList
+---
+VarList:
+	VarName
+	VarList ',' VarName
+---
+DeallocPrepareStmt:
+	DEALLOCATE PREPARE AllIdent
+	DROP PREPARE AllIdent
+---
+ExplainSym:
+	EXPLAIN
+	DESCRIBE
+	DESC
+---
+ExplainStmt:
+	ExplainSym ExplainableStmt
+---
+KillStmt:
+	KILL INTEGER_LIT
+	KILL CONNECTION INTEGER_LIT
+	KILL QUERY INTEGER_LIT
+---
+ExplainableStmt:
+	SelectStmt
+	DeleteStmt
+	UpdateStmt
+	InsertStmt
+	ReplaceStmt
+---

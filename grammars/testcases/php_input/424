@@ -1,0 +1,10 @@
+<?php
+spl_autoload_register(function ($name) {
+  echo "In autoload: ";
+  var_dump($name);
+});
+
+function f(UndefClass $x)
+{
+}
+f(new stdClass);

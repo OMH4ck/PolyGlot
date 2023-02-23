@@ -1,0 +1,420 @@
+program:
+stmtseq
+---
+block:
+OP_LBRACE remember stmtseq OP_RBRACE
+---
+formblock:
+ASSIGNOP remember OP_SEMI FORMRBRACK formstmtseq OP_SEMI OP_DOT
+---
+remember:
+
+---
+mblock:
+OP_LBRACE stmtseq OP_RBRACE
+---
+stmtseq:
+fullstmt
+stmtseq fullstmt
+---
+formstmtseq:
+
+formstmtseq formline
+---
+fullstmt:
+barestmt
+labfullstmt
+---
+labfullstmt:
+LABEL barestmt
+LABEL labfullstmt
+---
+barestmt:
+PLUGSTMT
+FORMAT startformsub formname formblock
+SUB subname startsub proto subattrlist optsubbody
+SIGSUB subname startsub subattrlist optsigsubbody
+PACKAGE bareword bareword OP_SEMI
+USE startsub bareword bareword optlistexpr OP_SEMI
+IF TLPAREN remember mexpr TRPAREN mblock else
+UNLESS TLPAREN remember mexpr TRPAREN mblock else
+GIVEN TLPAREN remember mexpr TRPAREN mblock
+WHEN TLPAREN remember mexpr TRPAREN mblock
+DEFAULT block
+WHILE TLPAREN remember texpr TRPAREN mintro mblock cont
+UNTIL TLPAREN remember iexpr TRPAREN mintro mblock cont
+FOR TLPAREN remember mnexpr OP_SEMI texpr OP_SEMI mintro mnexpr TRPAREN mblock
+FOR MY remember my_scalar TLPAREN mexpr TRPAREN mblock cont
+FOR scalar TLPAREN remember mexpr TRPAREN mblock cont
+FOR my_refgen remember my_var TLPAREN mexpr TRPAREN mblock cont
+FOR REFGEN refgen_topic TLPAREN remember mexpr TRPAREN mblock cont
+FOR TLPAREN remember mexpr TRPAREN mblock cont
+block cont
+PACKAGE bareword bareword OP_LBRACE remember stmtseq OP_RBRACE
+sideff OP_SEMI
+YADAYADA OP_SEMI
+OP_SEMI
+---
+formline:
+THING formarg
+---
+formarg:
+
+FORMLBRACK stmtseq FORMRBRACK
+---
+sideff:
+expr
+expr IF expr
+expr UNLESS expr
+expr WHILE expr
+expr UNTIL iexpr
+expr FOR expr
+expr WHEN expr
+---
+else:
+
+ELSE mblock
+ELSIF TLPAREN mexpr TRPAREN mblock else
+---
+cont:
+
+CONTINUE block
+---
+mintro:
+
+---
+nexpr:
+
+sideff
+---
+texpr:
+
+expr
+---
+iexpr:
+expr
+---
+mexpr:
+expr
+---
+mnexpr:
+nexpr
+---
+formname:
+bareword
+
+---
+startsub:
+
+---
+startanonsub:
+
+---
+startformsub:
+
+---
+subname:
+bareword
+PRIVATEREF
+---
+proto:
+
+THING
+---
+subattrlist:
+
+COLONATTR THING
+COLONATTR
+---
+myattrlist:
+COLONATTR THING
+COLONATTR
+---
+sigvarname:
+
+PRIVATEREF
+---
+sigslurpsigil:
+OP_AT
+OP_MOD
+---
+sigslurpelem:
+sigslurpsigil sigvarname sigdefault
+---
+sigdefault:
+
+ASSIGNOP
+ASSIGNOP term
+---
+sigscalarelem:
+OP_DOLLAR sigvarname sigdefault
+---
+sigelem:
+sigscalarelem
+sigslurpelem
+---
+siglist:
+siglist OP_COMMA
+siglist OP_COMMA sigelem
+sigelem %prec PREC_LOW
+---
+siglistornull:
+
+siglist
+---
+optsubsignature:
+
+subsignature
+---
+subsignature:
+TLPAREN subsigguts TRPAREN
+---
+subsigguts:
+siglistornull
+---
+optsubbody:
+subbody
+OP_SEMI
+---
+subbody:
+remember OP_LBRACE stmtseq OP_RBRACE
+---
+optsigsubbody:
+sigsubbody
+OP_SEMI
+---
+sigsubbody:
+remember optsubsignature OP_LBRACE stmtseq OP_RBRACE
+---
+expr:
+expr ANDOP expr
+expr OROP expr
+expr DOROP expr
+listexpr %prec PREC_LOW
+---
+listexpr:
+listexpr OP_COMMA
+listexpr OP_COMMA term
+term %prec PREC_LOW
+---
+listop:
+LSTOP indirob listexpr
+FUNC TLPAREN indirob expr TRPAREN
+term ARROW method TLPAREN optexpr TRPAREN
+term ARROW method
+METHOD indirob optlistexpr
+FUNCMETH indirob TLPAREN optexpr TRPAREN
+LSTOP optlistexpr
+FUNC TLPAREN optexpr TRPAREN
+FUNC SUBLEXSTART optexpr SUBLEXEND
+LSTOPSUB startanonsub block optlistexpr %prec LSTOP
+---
+method:
+METHOD
+scalar
+---
+subscripted:
+gelem OP_LBRACE expr OP_SEMI OP_RBRACE
+scalar TLBRACK expr TRBRACK
+term ARROW TLBRACK expr TRBRACK
+subscripted TLBRACK expr TRBRACK
+scalar OP_LBRACE expr OP_SEMI OP_RBRACE
+term ARROW OP_LBRACE expr OP_SEMI OP_RBRACE
+subscripted OP_LBRACE expr OP_SEMI OP_RBRACE
+term ARROW TLPAREN TRPAREN
+term ARROW TLPAREN expr TRPAREN
+subscripted TLPAREN expr TRPAREN
+subscripted TLPAREN TRPAREN
+TLPAREN expr TRPAREN TLBRACK expr TRBRACK
+QWLIST TLBRACK expr TRBRACK
+TLPAREN TRPAREN TLBRACK expr TRBRACK
+---
+termbinop:
+term ASSIGNOP term
+term POWOP term
+term MULOP term
+term ADDOP term
+term SHIFTOP term
+term RELOP term
+term EQOP term
+term BITANDOP term
+term BITOROP term
+term DOTDOT term
+term ANDAND term
+term OROR term
+term DORDOR term
+term MATCHOP term
+---
+termunop:
+OP_SUB term %prec UMINUS
+ADDOP term %prec UMINUS
+OP_NOT term
+OP_BITNOT term
+term POSTINC
+term POSTDEC
+term POSTJOIN
+PREINC term
+PREDEC term
+---
+anonymous:
+TLBRACK expr TRBRACK
+TLBRACK TRBRACK
+HASHBRACK expr OP_SEMI OP_RBRACE	%prec TLPAREN
+HASHBRACK OP_SEMI OP_RBRACE	%prec TLPAREN
+ANONSUB startanonsub proto subattrlist subbody %prec TLPAREN
+ANON_SIGSUB startanonsub subattrlist sigsubbody %prec TLPAREN
+---
+termdo:
+DO term %prec UNIOP
+DO block %prec TLPAREN
+---
+term:
+termbinop
+termunop
+anonymous
+termdo
+term OP_QUESTION term OP_COLON term
+REFGEN term
+MY REFGEN term
+myattrterm %prec UNIOP
+LOCAL term %prec UNIOP
+TLPAREN expr TRPAREN
+QWLIST
+TLPAREN TRPAREN
+scalar %prec TLPAREN
+star %prec TLPAREN
+hsh %prec TLPAREN
+ary %prec TLPAREN
+arylen %prec TLPAREN
+subscripted
+sliceme TLBRACK expr TRBRACK
+kvslice TLBRACK expr TRBRACK
+sliceme OP_LBRACE expr OP_SEMI OP_RBRACE
+kvslice OP_LBRACE expr OP_SEMI OP_RBRACE
+THING %prec TLPAREN
+amper
+amper TLPAREN TRPAREN
+amper TLPAREN expr TRPAREN
+NOAMP subname optlistexpr
+term ARROW OP_DOLLAR MULOP
+term ARROW OP_AT MULOP
+term ARROW OP_MOD MULOP
+term ARROW BITANDOP MULOP
+term ARROW MULOP MULOP %prec TLPAREN
+LOOPEX
+LOOPEX term
+NOTOP listexpr
+UNIOP
+UNIOP block
+UNIOP term
+REQUIRE
+REQUIRE term
+UNIOPSUB
+UNIOPSUB term
+FUNC0
+FUNC0 TLPAREN TRPAREN
+FUNC0OP
+FUNC0OP TLPAREN TRPAREN
+FUNC0SUB
+FUNC1 TLPAREN TRPAREN
+FUNC1 TLPAREN expr TRPAREN
+PMFUNC SUBLEXSTART listexpr optrepl SUBLEXEND
+bareword
+listop
+PLUGEXPR
+---
+myattrterm:
+MY myterm myattrlist
+MY myterm
+MY REFGEN myterm myattrlist
+---
+myterm:
+TLPAREN expr TRPAREN
+TLPAREN TRPAREN
+scalar %prec TLPAREN
+hsh %prec TLPAREN
+ary %prec TLPAREN
+---
+optlistexpr:
+%prec PREC_LOW
+listexpr %prec PREC_LOW
+---
+optexpr:
+
+expr
+---
+optrepl:
+
+OP_DIVIDE expr
+---
+my_scalar:
+scalar
+---
+my_var:
+scalar
+ary
+hsh
+---
+refgen_topic:
+my_var
+amper
+---
+my_refgen:
+MY REFGEN
+REFGEN MY
+---
+amper:
+BITANDOP indirob
+---
+scalar:
+OP_DOLLAR indirob
+---
+ary:
+OP_AT indirob
+---
+hsh:
+OP_MOD indirob
+---
+arylen:
+DOLSHARP indirob
+term ARROW DOLSHARP MULOP
+---
+star:
+MULOP indirob
+---
+sliceme:
+ary
+term ARROW OP_AT
+---
+kvslice:
+hsh
+term ARROW OP_MOD
+---
+gelem:
+star
+term ARROW MULOP
+---
+indirob:
+bareword
+scalar %prec PREC_LOW
+block
+PRIVATEREF
+---
+bareword:
+int_literal
+float_literal
+string_literal
+identifier
+---
+int_literal:
+INTLITERAL
+---
+float_literal:
+FLOATLITERAL
+---
+string_literal:
+STRINGLITERAL
+---
+identifier:
+IDENTIFIER
+---

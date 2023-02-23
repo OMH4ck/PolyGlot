@@ -1,0 +1,184 @@
+program:
+chunk
+---
+chunk:
+opt_newline_list opt_stat_list opt_last_stat
+---
+opt_stat_list
+stat_list
+
+---
+stat_list:
+stat OP_SEMI opt_newline_list stat_list
+stat OP_SEMI opt_newline_list
+stat newline_list stat_list
+stat opt_newline_list
+---
+opt_last_stat:
+last_stat OP_SEMI opt_newline_list
+last_stat opt_newline_list
+
+---
+stat:
+var_list ASSIGNOP exp_list
+function_call
+KEYWORD_DO chunk KEYWORD_END
+KEYWORD_WHILE exp KEYWORD_DO chunk KEYWORD_END
+KEYWORD_REPEAT chunk KEYWORD_UNTIL exp
+KEYWORD_IF exp KEYWORD_THEN chunk opt_elif_block_list opt_else_block KEYWORD_END
+KEYWORD_FOR identifier ASSIGNOP exp OP_COMMA exp KEYWORD_DO chunk KEYWORD_END
+KEYWORD_FOR identifier ASSIGNOP exp OP_COMMA exp OP_COMMA exp KEYWORD_DO chunk KEYWORD_END
+KEYWORD_FOR exp_list KEYWORD_IN exp KEYWORD_DO chunk KEYWORD_END
+KEYWORD_FUNCTION func_name func_body
+KEYWORD_LOCAL KEYWORD_FUNCTION identifier func_body
+KEYWORD_LOCAL name_list
+KEYWORD_LOCAL name_list ASSIGNOP exp_list
+KEYWORD_GOTO identifier
+TCOLON2 identifier TCOLON2
+---
+opt_elif_block_list:
+elif_block_list
+
+---
+elif_block_list:
+KEYWORD_ELSEIF exp KEYWORD_THEN chunk
+KEYWORD_ELSEIF exp KEYWORD_THEN chunk elif_block_list
+---
+opt_else_block:
+KEYWORD_ELSE chunk
+
+---
+last_stat:
+KEYWORD_RETURN exp_list
+KEYWORD_RETURN
+KEYWORD_BREAK
+---
+func_name:
+dot_name_list
+dot_name_list OP_COLON identifier
+---
+dot_name_list:
+identifier
+dot_name_list DOROP identifier
+---
+var_list:
+var
+var OP_COMMA var_list
+---
+var:
+identifier
+pre_fix_exp TLBRACK exp TRBRACK
+pre_fix_exp DOROP identifier
+---
+name_list:
+identifier
+name_list OP_COMMA identifier
+---
+exp_list:
+exp
+exp OP_COMMA exp_list
+---
+exp:
+KEYWORD_NIL
+KEYWORD_FALSE
+KEYWORD_TRUE
+float_literal
+int_literal
+string_literal
+TDOT3
+function
+pre_fix_exp %prec PREC_LOW
+table_constructor
+exp binop exp %prec PREC_HIGH
+unop exp %prec PREC_HIGH
+---
+pre_fix_exp:
+var
+function_call
+TLPAREN exp TRPAREN
+---
+function_call:
+pre_fix_exp args
+pre_fix_exp OP_COLON identifier args
+---
+args:
+TLPAREN TRPAREN
+TLPAREN exp_list TRPAREN
+table_constructor
+string_literal
+---
+function:
+KEYWORD_FUNCTION func_body
+---
+func_body:
+TLPAREN TRPAREN chunk KEYWORD_END
+TLPAREN par_list TRPAREN chunk KEYWORD_END
+---
+par_list:
+name_list
+name_list OP_COMMA TDOT3
+TDOT3
+---
+table_constructor:
+OP_LBRACE field_list OP_RBRACE
+OP_LBRACE OP_RBRACE
+---
+field_list:
+field
+field field_sep field_list
+---
+field:
+TLBRACK exp TRBRACK ASSIGNOP exp
+identifier ASSIGNOP exp
+exp
+---
+field_sep:
+OP_COMMA
+OP_SEMI
+---
+binop:
+ADDOP
+OP_SUB
+MULOP
+OP_DIVIDE
+OP_DOUBLE_DIV
+OP_XOR
+OP_MOD
+DOTDOT
+OP_LESSTHAN
+TLEQ
+OP_GTEATERTHAN
+TGEQ
+EQOP
+OP_MINASSIGN
+OP_TASSIGN
+ANDOP
+OROP
+BITANDOP
+BITOROP
+---
+unop:
+OP_SUB
+KEYWORD_NOT
+OP_SHARP
+---
+identifier:
+IDENTIFIER
+---
+string_literal:
+STRINGLITERAL
+---
+float_literal:
+FLOATLITERAL
+---
+int_literal:
+INTLITERAL
+---
+opt_newline_list
+newline_list
+
+---
+newline_list:
+NEWLINE newline_list
+NEWLINE
+---

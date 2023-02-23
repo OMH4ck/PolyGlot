@@ -1,0 +1,1 @@
+CREATE TABLE v0 ( v1 INT , v2 INT ) ; SELECT min ( v2 ) FROM v0 WHERE v1 NOT IN ( 99 ) ORDER BY v2 LIMIT 1 ; SELECT COALESCE ( max ( v2 ) , 1 ) FROM v0 ; 

@@ -1,0 +1,1 @@
+CREATE TABLE v0 ( v1 INTEGER ) ; SELECT v1 , v1 , v1 , v1 , v1 , v1 , v1 FROM v0 ; SELECT SUM ( v1 * ( 1 - v1 ) ) AS REVENUE , v1 FROM v0 WHERE v1 IS NOT NULL ; SELECT v1 , v1 FROM v0 WHERE v1 IS NOT NULL ; 

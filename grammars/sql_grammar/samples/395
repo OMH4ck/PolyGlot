@@ -1,0 +1,1 @@
+CREATE TABLE v0 ( v2 INTEGER , v1 DOUBLE , v3 INTEGER ) ; INSERT INTO v0 ( v3 ) VALUES ( 0.100000 ) ,( 3 ) ,( 1 ) ; SELECT coalesce ( min ( v2 ) , 0 ) FROM v0 ; INSERT INTO v0 ( v2 ) VALUES ( 8 ) ,( 0.100000 ) ; SELECT min ( TYPEOF ( zeroblob ( v3 ) ) ) FROM v0 GROUP BY v2 ORDER BY v2 * 10 ; 

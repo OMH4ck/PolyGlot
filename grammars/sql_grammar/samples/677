@@ -1,0 +1,1 @@
+CREATE TABLE v0 ( v1 CHAR(10) ) ; INSERT INTO v0 VALUES ( 10 ) ,( 10 ) ,( 10 ) ,( 0 ) ,( 9 ) ,( 0 ) ; SELECT instr ( 'LG PKG' , typeof ( v1 ) ) FROM v0 ; SELECT min ( v1 ) FROM v0 ORDER BY v1 * 9223372036854775807 ; 

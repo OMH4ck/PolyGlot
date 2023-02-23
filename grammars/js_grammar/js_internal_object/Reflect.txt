@@ -1,0 +1,17 @@
+	class Reflect {
+	apply(target, thisArgument, argumentsList){}
+	construct(target, argumentsList){}
+	defineProperty(target, propertyKey, attributes){}
+	deleteProperty(target, propertyKey){}
+	getOwnPropertyDescriptor(target, propertyKey){}
+	getPrototypeOf(target){}
+	has(target, propertyKey){}
+	isExtensible(target){}
+	ownKeys(target){}
+	preventExtensions(target){}
+	setPrototypeOf(target, prototype){}
+	__proto__;
+	constructor;
+	setPrototypeOf(obj, prototype){}
+	}
+

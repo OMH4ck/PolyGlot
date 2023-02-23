@@ -1,0 +1,1 @@
+SELECT MIN ( DISTINCT v7 ) , v5 FROM v4 WHERE v6 ISNULL GROUP BY v8 NOT LIKE abs ( v9 ) ; INSERT INTO v10 VALUES ( 9 ) ; SELECT quote ( zeroblob ( 10 ) ) ; 

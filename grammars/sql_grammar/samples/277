@@ -1,0 +1,1 @@
+CREATE TABLE v0 ( v2 INT , v1 INT ) ; INSERT INTO v0 ( v2 , v2 ) VALUES ( 0 , 3 ) ; SELECT COALESCE ( max ( v1 ) OVER( ORDER BY v1 ) , 0 ) FROM v0 ; 

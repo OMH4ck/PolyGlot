@@ -1,0 +1,1 @@
+SELECT lead ( v1 ) OVER( ORDER BY likelihood ( v3 <= 's%' , 1.100000 ) OVER x ) ; INSERT INTO v4 ( v5 ) VALUES ( 99 ) ,( 1 ) ; UPDATE v6 SET v7 = ( SELECT 10 FROM v8 ) ; 

@@ -1,0 +1,1 @@
+CREATE TABLE v0 ( v1 INTEGER ) ; INSERT INTO v0 ( v1 , v1 , v1 ) VALUES ( 10 , 12 , 0 ) ,( 10 , 10 , NULL ) ,( 10.100000 , '1995-03-15' , 3 ) ,( 10 , 10 , NULL ) ,( 10 , 10 , 9223372036854775807 ) ,( 0 , 10 , 1 ) ,( 1 , 3 , 10 ) ; SELECT * FROM v0 AS one , v0 AS x NATURAL JOIN v0 NATURAL JOIN v0 ORDER BY random () ; SELECT min ( random () ) FROM v0 ORDER BY v1 * 10 ; 

@@ -1,0 +1,4 @@
+<?php
+if(PHP_OS_FAMILY !== "Windows")
+  die('skip Run only on Windows');
+ echo sys_get_temp_dir();

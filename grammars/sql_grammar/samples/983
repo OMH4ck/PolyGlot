@@ -1,0 +1,1 @@
+SELECT quote ( ret_r ( 'DELIVER IN PERSON' ) ) ; INSERT INTO v0 SELECT v10 , v8 * v9 FROM v7 ; 

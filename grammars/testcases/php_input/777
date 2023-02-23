@@ -1,0 +1,6 @@
+<?php
+/*
+ * Function is implemented in main/output.c
+*/
+
+var_dump(ob_start());

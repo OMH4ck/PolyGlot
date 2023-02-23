@@ -1,0 +1,7 @@
+	class Intl {
+	getCanonicalLocales(locales){}
+	__proto__;
+	constructor;
+	setPrototypeOf(obj, prototype){}
+	}
+	

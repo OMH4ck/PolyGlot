@@ -1,0 +1,47 @@
+	class Object{
+	getOwnPropertyDescriptors(obj){}
+	assign(targetsources){}
+	freeze(obj){}
+	__proto__;
+	defineProperty(obj, prop, descriptor){}
+	noSuchMethod;
+	arguments;
+	toSource() {}
+	isFrozen(obj){}
+	__lookupSetter__(sprop){}
+	keys(obj){}
+	getPrototypeOf(object){}
+	Parent;
+	propertyIsEnumerable(prop){}
+	values(obj){}
+	watch(prop, handler){}
+	getOwnPropertySymbols(obj){}
+	isExtensible(obj){}
+	caller;
+	preventExtensions(obj){}
+	displayName;
+	constructor;
+	__defineSetter__(prop, fun){}
+	getOwnPropertyDescriptor(obj, prop){}
+	count;
+	setPrototypeOf(obj, prototype){}
+	defineProperties(obj, props) {}
+	entries(obj){}
+	fromEntries(iterable){}
+	__lookupGetter__(sprop){}
+	unwatch(prop){}
+	is(value1, value2){}
+	toString(){}
+	toLocaleString(){}
+	__defineGetter__(prop, func){}
+	seal(obj){}
+	hasOwnProperty(prop){}
+	valueOf(){}
+	create(proto){}
+	getOwnPropertyNames(obj){}
+	isSealed(obj){}
+	name;
+	isPrototypeOf(object){}
+	length;
+	}
+	

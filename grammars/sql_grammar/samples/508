@@ -1,0 +1,1 @@
+CREATE TABLE v0 ( v2 INT , v1 INT ) ; INSERT INTO v0 ( v1 , v1 ) VALUES ( 2 , 10 ) ; SELECT COALESCE ( v1 , count ( ( NOT ( v2 IS NULL ) ) AND ( NOT ( v1 IS NULL ) ) ) , v2 , v1 ) FROM v0 ; 

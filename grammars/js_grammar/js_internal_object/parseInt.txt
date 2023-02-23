@@ -1,0 +1,1 @@
+	function parseInt(string, radix){}

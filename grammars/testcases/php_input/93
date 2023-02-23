@@ -1,0 +1,10 @@
+<?php
+if(PHP_OS_FAMILY !== "Windows") {
+    die('skip only run on Windows');
+}
+
+require_once "open_basedir.inc";
+test_open_basedir("realpath");
+
+require_once "open_basedir.inc";
+delete_directories();

@@ -1,0 +1,11 @@
+<?php
+if (getenv("SKIP_SLOW_TESTS")) die("skip slow test");
+
+
+set_time_limit(1);
+
+$x = true;
+$y = 0;
+while ($x) {
+    $y++;
+}
