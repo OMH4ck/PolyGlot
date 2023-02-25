@@ -1449,7 +1449,7 @@ def genTypeSystemSrc():
 
     op_rules = ", ".join(op_rules)
     content = content.replace("__SEMANTIC_OP_RULE__", op_rules)
-    btm = parseBasicType("./js_grammar/basic_type_map")
+    btm = parseBasicType("grammars/js_grammar/basic_type_map")
     #basic_type_handler = genBasicTypeHandler(btm)
     basic_type_handler_new = genBasicTypeHandlerNew(btm)
     #fbtm = parseFixBasicType("./c_grammar/fix_basic_type_map")

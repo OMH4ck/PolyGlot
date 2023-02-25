@@ -6,8 +6,8 @@ all: template/* Generator.py
 	    mkdir include; \
 	    mkdir parser; \
 	fi
-	cd ${LAN}_grammar && ./replace.sh
-	python Generator.py -i ${LAN}_grammar/replaced_grammar -t ${LAN}_grammar/tokens -d data/destructor -D data/datatype -e data/extra_flex_rule_${LAN} -s ${LAN}_grammar/semantic.json
+	cd grammars/${LAN}_grammar && ./replace.sh
+	python Generator.py -i grammars/${LAN}_grammar/replaced_grammar -t grammars/${LAN}_grammar/tokens -d data/destructor -D data/datatype -e data/extra_flex_rule_${LAN} -s grammars/${LAN}_grammar/semantic.json
 	./update.sh
 
 gen: template/* Generator.py
