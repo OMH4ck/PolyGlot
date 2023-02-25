@@ -74,7 +74,9 @@ size_t PolyGlotMutator::generate(const char* test_case){
     if(TypeSystem::validate(ir)){
       save_test_cases_.push_back(ir->to_string());
     }
+    deep_delete(ir);
   }
+
   return save_test_cases_.size();
 }
 
