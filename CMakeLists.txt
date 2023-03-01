@@ -26,6 +26,7 @@ include_directories(${AFLPP_DIR})
 
 add_library(polyglot_mutator SHARED srcs/custom_mutator.cc ${SRC_FILES} ./parser/bison_parser.cpp  ./parser/flex_lexer.cpp)
 target_include_directories(polyglot_mutator PRIVATE include)
+target_link_options(polyglot_mutator PRIVATE "-Wl,--no-undefined")
 # target_compile_options(${dbms}_mutator PRIVATE -fPIC)
 
 #include(lint.cmake)

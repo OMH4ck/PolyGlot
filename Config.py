@@ -107,6 +107,13 @@ class Config:
 
         self.mutate_src_output_path = "%s/mutate.cpp" % (self.src_path)
         self.mutate_header_output_path = "%s/mutate.h" % (self.include_path)
+
+        #
+        self.test_header_template_path = "%stest_header_template.h" % (self.template_path)
+        self.test_src_template_path = "%stest_src_template.cpp" % (self.template_path)
+
+        self.test_src_output_path = "%s/test.cpp" % (self.src_path)
+        self.test_header_output_path = "%s/test.h" % (self.include_path)
         ## Others
 
         self.parser_utils_header_template_path =  "%sparser_utils_header_template.h" % (self.template_path)

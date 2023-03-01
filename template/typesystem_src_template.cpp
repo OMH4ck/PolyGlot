@@ -1,6 +1,7 @@
 #include "../include/ast.h"
 #include "../include/define.h"
 #include "../include/mutate.h"
+#include "../include/test.h"
 #include "../include/typesystem.h"
 #include "../include/utils.h"
 #include "../include/var_definition.h"
@@ -283,7 +284,6 @@ ScopeType scope_js(const string &s) {
   return kScopeStatement;
 }
 
-#ifdef WEAK_TYPE
 void TypeSystem::collect_simple_variable_defintion_wt(IR *cur) {
   if (DBG)
     cout << "Collecting: " << cur->to_string() << endl;
@@ -448,8 +448,6 @@ void TypeSystem::collect_structure_definition_wt(IR *cur, IR *root) {
       collect_structure_definition_wt(cur->right_, root);
   }
 }
-
-#else
 
 void collect_simple_variable_defintion(IR *cur) {
   string var_type;
@@ -714,11 +712,10 @@ void TypeSystem::collect_function_definition(IR *cur) {
     queue<IR *> q;
     map<IR **, IR *> m_save;
     set<NODETYPE> ss;
-#ifdef WEAK_TYPE
-#else
     // ss.insert(kParameterDeclaration);
-    ss.insert(__FUNCTION_ARGUMENT_UNIT__);
-#endif
+    if (!IsWeakType()) {
+      ss = GetFunctionArgNodeType();
+    }
 
     // q.push(function_arg_ir);
     split_to_basic_unit(function_arg_ir, q, m_save, ss);
@@ -809,7 +806,6 @@ void TypeSystem::collect_function_definition(IR *cur) {
     type_fix_framework(function_body);
   }
 }
-#endif
 
 DATATYPE TypeSystem::find_define_type(IR *cur) {
   if (cur->data_type_ == kDataVarType || cur->data_type_ == kDataClassType ||
@@ -840,41 +836,46 @@ bool TypeSystem::collect_definition(IR *cur) {
     case kDataVarType:
       if (DBG)
         cout << "kDataVarType" << endl;
-#ifdef WEAK_TYPE
-      collect_simple_variable_defintion_wt(cur);
-#else
-      collect_simple_variable_defintion(cur);
-#endif
+      if (IsWeakType()) {
+
+        collect_simple_variable_defintion_wt(cur);
+      } else {
+
+        collect_simple_variable_defintion(cur);
+      }
       return true;
 
     case kDataClassType:
       if (DBG)
         cout << "kDataClassType" << endl;
-#ifdef WEAK_TYPE
-      collect_structure_definition_wt(cur, cur);
-#else
-      collect_structure_definition(cur, cur);
-#endif
+      if (IsWeakType()) {
+
+        collect_structure_definition_wt(cur, cur);
+      } else {
+
+        collect_structure_definition(cur, cur);
+      }
       return true;
 
     case kDataFunctionType:
       if (DBG)
         cout << "kDataFunctionType" << endl;
-#ifdef WEAK_TYPE
-      collect_function_definition_wt(cur);
-#else
-      collect_function_definition(cur);
-#endif
+      if (IsWeakType()) {
+        collect_function_definition_wt(cur);
+      } else {
+
+        collect_function_definition(cur);
+      }
       return true;
     default:
       if (DBG)
         cout << "fuck default" << endl;
-// handle structure and function ,array ,etc..
-#ifdef WEAK_TYPE
-      collect_simple_variable_defintion_wt(cur);
-#else
-      collect_simple_variable_defintion(cur);
-#endif
+      // handle structure and function ,array ,etc..
+      if (IsWeakType()) {
+        collect_simple_variable_defintion_wt(cur);
+      } else {
+        collect_simple_variable_defintion(cur);
+      }
 
       break;
     }
@@ -1533,19 +1534,20 @@ set<int> get_all_types_from_compound_type(int compound_type, set<int> &visit) {
       res.insert(member_type);
     } else if (is_function_type(member_type)) {
       // assert(0);
-#ifdef WEAK_TYPE
-      auto pfunc = get_function_type_by_type_id(member_type);
-      res.insert(pfunc->return_type_);
-      res.insert(member_type);
-#endif
+      if (IsWeakType()) {
+
+        auto pfunc = get_function_type_by_type_id(member_type);
+        res.insert(pfunc->return_type_);
+        res.insert(member_type);
+      }
     } else if (is_basic_type(member_type)) {
       res.insert(member_type);
+    } else {
+      if (IsWeakType()) {
+
+        res.insert(member_type);
+      }
     }
-#ifdef WEAK_TYPE
-    else {
-      res.insert(member_type);
-    }
-#endif
   }
 
   return res;
@@ -1790,16 +1792,17 @@ string TypeSystem::structure_member_gen_handler(
   res = get_class_member_by_type(compound_type, member_type);
   if (res.empty()) {
     assert(member_type == compound_type);
-#ifdef WEAK_TYPE
-    if (is_builtin_type(compound_type) && get_rand_int(4)) {
-      auto compound_ptr = get_type_by_type_id(compound_type);
-      if (compound_ptr != nullptr && compound_var == compound_ptr->type_name_)
-        return "(new " + compound_ptr->type_name_ + "())";
-      else {
-        return compound_var;
+    if (IsWeakType()) {
+
+      if (is_builtin_type(compound_type) && get_rand_int(4)) {
+        auto compound_ptr = get_type_by_type_id(compound_type);
+        if (compound_ptr != nullptr && compound_var == compound_ptr->type_name_)
+          return "(new " + compound_ptr->type_name_ + "())";
+        else {
+          return compound_var;
+        }
       }
     }
-#endif
     return compound_var;
   }
   res = compound_var + res;
@@ -1938,10 +1941,11 @@ string TypeSystem::generate_expression_by_type_core(int type, IR *ir) {
   auto compound_var_size = compound_var_map.size();
   auto function_size = function_map.size();
 
-#ifndef WEAK_TYPE
-  // add pointer into *_var_map
-  update_pointer_var(pointer_var_map, simple_var_map, compound_var_map);
-#endif
+  if (!IsWeakType()) {
+
+    // add pointer into *_var_map
+    update_pointer_var(pointer_var_map, simple_var_map, compound_var_map);
+  }
 
   if (type == ALLTYPES && all_satisfiable_types.size()) {
     type = random_pick(all_satisfiable_types)->first;
@@ -1973,8 +1977,7 @@ string TypeSystem::generate_expression_by_type_core(int type, IR *ir) {
   }
 
   int tmp_prob = 2;
-
-#ifndef WEAK_TYPE
+  /*
   while (0) {
     // can choose to generate its derived_type if possible
     auto type_ptr = get_type_by_type_id(type);
@@ -1998,7 +2001,7 @@ string TypeSystem::generate_expression_by_type_core(int type, IR *ir) {
       break;
     }
   }
-#endif
+   */
 
   // Filter out unmatched types, update the sizes
   filter_element(simple_var_map, all_satisfiable_types[type][SIMPLE_VAR_IDX]);
@@ -2089,11 +2092,7 @@ string TypeSystem::generate_expression_by_type_core(int type, IR *ir) {
   choice -= prob[1];
   if (0 <= choice && choice < prob[2]) {
     // handle structure here
-#ifdef WEAK_TYPE
     return structure_member_gen_handler(compound_var_map, type);
-#else
-    return structure_member_gen_handler(compound_var_map, type);
-#endif
   } else {
     // handle simple var here
     if (DBG)
@@ -2148,44 +2147,46 @@ bool TypeSystem::simple_fix(IR *ir, int type) {
     return true;
   }
 
-#ifndef WEAK_TYPE
-  if ((*cache_inference_map_[ir]).find(type) ==
-      (*cache_inference_map_[ir]).end()) {
-    auto new_type = NOTEXIST;
-    int counter = 0;
-    for (auto &iter : (*cache_inference_map_[ir])) {
-      if (is_derived_type(type, iter.first)) {
-        if (new_type == NOTEXIST || get_rand_int(counter) == 0) {
-          new_type = iter.first;
+  if (!IsWeakType()) {
+
+    if ((*cache_inference_map_[ir]).find(type) ==
+        (*cache_inference_map_[ir]).end()) {
+      auto new_type = NOTEXIST;
+      int counter = 0;
+      for (auto &iter : (*cache_inference_map_[ir])) {
+        if (is_derived_type(type, iter.first)) {
+          if (new_type == NOTEXIST || get_rand_int(counter) == 0) {
+            new_type = iter.first;
+          }
+          counter++;
         }
-        counter++;
+      }
+
+      type = new_type;
+      if (DBG)
+        cout << "nothing in cache_inference_map_: " << ir->to_string() << endl;
+      if (DBG)
+        cout << "NodeType: " << get_string_by_nodetype(ir->type_) << endl;
+    }
+    if ((*cache_inference_map_[ir])[type].size() == 0)
+      return false;
+    assert((*cache_inference_map_[ir])[type].size());
+    if (ir->left_) {
+      auto iter = random_pick((*cache_inference_map_[ir])[type]);
+      if (ir->right_) {
+        simple_fix(ir->left_, iter->first);
+        simple_fix(ir->right_, iter->second);
+      } else {
+        simple_fix(ir->left_, iter->first);
       }
     }
+  } else {
 
-    type = new_type;
-    if (DBG)
-      cout << "nothing in cache_inference_map_: " << ir->to_string() << endl;
-    if (DBG)
-      cout << "NodeType: " << get_string_by_nodetype(ir->type_) << endl;
+    if (ir->left_)
+      simple_fix(ir->left_, type);
+    if (ir->right_)
+      simple_fix(ir->right_, type);
   }
-  if ((*cache_inference_map_[ir])[type].size() == 0)
-    return false;
-  assert((*cache_inference_map_[ir])[type].size());
-  if (ir->left_) {
-    auto iter = random_pick((*cache_inference_map_[ir])[type]);
-    if (ir->right_) {
-      simple_fix(ir->left_, iter->first);
-      simple_fix(ir->right_, iter->second);
-    } else {
-      simple_fix(ir->left_, iter->first);
-    }
-  }
-#else
-  if (ir->left_)
-    simple_fix(ir->left_, type);
-  if (ir->right_)
-    simple_fix(ir->right_, type);
-#endif
   return true;
 }
 
@@ -2199,37 +2200,43 @@ bool TypeSystem::top_fix(IR *root) {
   while (res && !stk.empty()) {
     root = stk.top();
     stk.pop();
-#ifdef WEAK_TYPE
-    // if(root->type_ == kSingleExpression){
-    if (root->str_val_ == "FIXME") {
-      int type = ALLTYPES;
-      if (get_rand_int(3) != 0) {
-        type = ANYTYPE;
-      }
+    if (IsWeakType()) {
 
-      res = simple_fix(root, type);
-    }
-#else
-    // if (root->type_ == kAssignmentExpression)
-    if (root->type_ == __FIX_IR_TYPE__ || root->str_val_ == "FIXME") {
-      if (contain_fixme(root) == false)
-        continue;
+      // if(root->type_ == kSingleExpression){
+      if (root->str_val_ == "FIXME") {
+        int type = ALLTYPES;
+        if (get_rand_int(3) != 0) {
+          type = ANYTYPE;
+        }
 
-      bool flag = type_inference_new(root, 0);
-      if (!flag) {
-        res = false;
-        break;
+        res = simple_fix(root, type);
+      } else {
+        if (root->right_)
+          stk.push(root->right_);
+        if (root->left_)
+          stk.push(root->left_);
       }
-      auto iter = random_pick(*(cache_inference_map_[root]));
-      auto t = iter->first;
-      res = simple_fix(root, t);
-    }
-#endif
-    else {
-      if (root->right_)
-        stk.push(root->right_);
-      if (root->left_)
-        stk.push(root->left_);
+    } else {
+
+      // if (root->type_ == kAssignmentExpression)
+      if (root->type_ == GetFixIRType() || root->str_val_ == "FIXME") {
+        if (contain_fixme(root) == false)
+          continue;
+
+        bool flag = type_inference_new(root, 0);
+        if (!flag) {
+          res = false;
+          break;
+        }
+        auto iter = random_pick(*(cache_inference_map_[root]));
+        auto t = iter->first;
+        res = simple_fix(root, t);
+      } else {
+        if (root->right_)
+          stk.push(root->right_);
+        if (root->left_)
+          stk.push(root->left_);
+      }
     }
   }
   return res;
@@ -2287,33 +2294,35 @@ bool TypeSystem::validate(IR *&root) {
 
   vector<IR *> ivec;
 
-#ifndef WEAK_TYPE
-  ast->translate(ivec);
-  ast->deep_delete();
-  deep_delete(root);
-  root = ivec.back();
-  extract_struct_after_mutation(root);
+  if (!IsWeakType()) {
 
-  ast = parser(root->to_string());
-  if (ast == NULL) {
-    return false;
+    ast->translate(ivec);
+    ast->deep_delete();
+    deep_delete(root);
+    root = ivec.back();
+    extract_struct_after_mutation(root);
+
+    ast = parser(root->to_string());
+    if (ast == NULL) {
+      return false;
+    }
+    ivec.clear();
+
+    set_scope_translation_flag(true);
+
+    ast->translate(ivec);
+    ast->deep_delete();
+    deep_delete(root);
+    root = ivec.back();
+  } else {
+
+    set_scope_translation_flag(true);
+    ast->translate(ivec);
+    ast->deep_delete();
+    deep_delete(root);
+    root = ivec.back();
+    extract_struct_after_mutation(root);
   }
-  ivec.clear();
-
-  set_scope_translation_flag(true);
-
-  ast->translate(ivec);
-  ast->deep_delete();
-  deep_delete(root);
-  root = ivec.back();
-#else
-  set_scope_translation_flag(true);
-  ast->translate(ivec);
-  ast->deep_delete();
-  deep_delete(root);
-  root = ivec.back();
-  extract_struct_after_mutation(root);
-#endif
   // init_internal_type();
   res = type_fix_framework(root);
   if (res == false) {

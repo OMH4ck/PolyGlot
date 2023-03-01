@@ -1384,6 +1384,30 @@ def genVarDefHeader():
 
     return content
 
+def genTestHeader():
+    with open(configuration.test_header_template_path, 'r') as f:
+        content = f.read()
+
+    return content
+
+def genTestSrc():
+    with open(configuration.test_src_template_path, 'r') as f:
+        content = f.read()
+
+    if semanticRule["IsWeakType"] == 1:
+        content = content.replace("__IS_WEAK_TYPE__", "true")
+    else:
+        content = content.replace("__IS_WEAK_TYPE__", "false")
+
+    if(semanticRule['IsWeakType'] == 0):
+        content = content.replace("__FIX_IR_TYPE__", semanticRule["FixIRType"])
+        content = content.replace("__FUNCTION_ARGUMENT_UNIT__", semanticRule["FunctionArgumentUnit"])
+    else:
+        content = content.replace("__FIX_IR_TYPE__", "kUnknown")
+        content = content.replace("__FUNCTION_ARGUMENT_UNIT__", "kUnknown")
+
+    return content
+
 def genTypeSystemHeader():
     global semanticRule
     with open(configuration.ts_header_template_path, 'r') as f:
@@ -1430,9 +1454,6 @@ def genTypeSystemSrc():
     content = content.replace("__SEMANTIC_BASIC_UNIT__", basic_unit)
     content = content.replace("__SEMANTIC_BUILTIN_OBJ__", "\"%s\"" % semanticRule["BuiltinObjFile"])
 
-    if(semanticRule['IsWeakType'] == 0):
-        content = content.replace("__FIX_IR_TYPE__", semanticRule["FixIRType"])
-        content = content.replace("__FUNCTION_ARGUMENT_UNIT__", semanticRule["FunctionArgumentUnit"])
 
     op_rules = []
     for oprule in semanticRule['OPRule']:
@@ -1782,6 +1803,14 @@ if __name__ == "__main__":
     ts_h = genTypeSystemHeader()
     with open(configuration.ts_header_output_path, "wb") as f:
         f.write(ts_h)
+
+    xx_h = genTestHeader()
+    with open(configuration.test_header_output_path, "wb") as f:
+        f.write(xx_h)
+
+    xx_h = genTestSrc()
+    with open(configuration.test_src_output_path, "wb") as f:
+        f.write(xx_h)
 
     vd_src = genVarDefSrc()
     with open(configuration.vardef_src_output_path, "wb") as f:

@@ -26,9 +26,6 @@ extern unsigned long type_fix_framework_fail_counter;
 extern unsigned long top_fix_fail_counter;
 extern unsigned long top_fix_success_counter;
 
-__IS_WEAK_TYPE__
-// #define WEAK_TYPE
-
 enum FIXORDER {
   LEFT_TO_RIGHT = 0,
   RIGHT_TO_LEFT,
@@ -112,14 +109,13 @@ public:
                                 map<int, vector<string>> &compound_var_map);
 
   static DATATYPE find_define_type(IR *cur);
-#ifndef WEAK_TYPE
+
   static void collect_structure_definition(IR *cur, IR *root);
   static void collect_function_definition(IR *cur);
-#else
+
   static void collect_simple_variable_defintion_wt(IR *cur);
   static void collect_function_definition_wt(IR *cur);
   static void collect_structure_definition_wt(IR *cur, IR *root);
-#endif
 
   static bool is_contain_definition(IR *cur);
   static bool collect_definition(IR *cur);
