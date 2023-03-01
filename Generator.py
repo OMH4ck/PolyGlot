@@ -25,7 +25,8 @@ allClass = list()
 
 tokenDict = dict()
 #notKeywordSym = dict()
-literalValue = dict() #{"float":["float_literal"], "int":["int_literal"], "string":["identifier", "string_literal"]}
+literalValue = dict(
+)  #{"float":["float_literal"], "int":["int_literal"], "string":["identifier", "string_literal"]}
 destructorDict = dict()
 gDataFlagMap = dict()
 gDataFlagMap["Define"] = 1
@@ -46,6 +47,7 @@ gDataFlagMap["Insertable"] = 0x800
 
 semanticRule = None
 
+
 def is_specific(classname):
     '''
         test if this class need specific handling
@@ -57,7 +59,7 @@ def is_specific(classname):
     flag = False
     for k, v in literalValue.items():
         for cname in v:
-            if(cname == classname):
+            if (cname == classname):
                 return [True, k]
 
     return [False, ""]
@@ -65,9 +67,11 @@ def is_specific(classname):
 
 def expect():
     id = [0]
+
     def func():
         id[0] += 1
         return 'v' + str(id[0])
+
     return func
 
 
@@ -98,7 +102,9 @@ GenClass: class
     caseList : list of case  # A list of each case of this class
 '''
 
+
 class DataTypeRule:
+
     def __init__(self, path, datatype, scope, dataflag):
         self.path = path
         self.datatype = datatype
@@ -108,7 +114,9 @@ class DataTypeRule:
             flag |= gDataFlagMap[i]
         self.dataflag = flag
 
+
 class Token:
+
     def __init__(self, token_name, prec, assoc, match_string, ttype):
         self.token_name = token_name
         self.prec = prec
@@ -117,8 +125,10 @@ class Token:
         self.match_string = match_string
         self.is_keyword = (token_name == match_string)
 
+
 class Symbol:
-    def __init__(self, name, isTerminator = False, isId = False):
+
+    def __init__(self, name, isTerminator=False, isId=False):
         self.name = name
         self.isTerminator = isTerminator
         self.isId = isId
@@ -126,11 +136,12 @@ class Symbol:
 
     def analyze(self):
         token = self.analyze_item(self.name)
-        if(token == "_COMMA_" or token == "_QUOTA_" or token == "_LD_" or token == "_RD_" or "_QUEAL_"):
+        if (token == "_COMMA_" or token == "_QUOTA_" or token == "_LD_" or
+                token == "_RD_" or "_QUEAL_"):
             self.name = self.name.replace("\'", "")
-        if(self.name.isupper()):
+        if (self.name.isupper()):
             self.isTerminator = True
-        if(token == "_IDENTIFIER_"):
+        if (token == "_IDENTIFIER_"):
             #self.isTerminator = False
             self.isId = True
 
@@ -155,10 +166,18 @@ class Symbol:
             return "_VAR_"
 
     def __str__(self):
-        return "name:%s, isTerminator:%s, isId:%s" % (self.name, self.isTerminator, self.isId)
+        return "name:%s, isTerminator:%s, isId:%s" % (
+            self.name, self.isTerminator, self.isId)
+
 
 class Case:
-    def __init__(self, caseidx, isEmpty, prec, data_type_to_replace, expected_value_generator=expect()):
+
+    def __init__(self,
+                 caseidx,
+                 isEmpty,
+                 prec,
+                 data_type_to_replace,
+                 expected_value_generator=expect()):
         self.caseidx = caseidx
         self.symbolList = list()
         self.idTypeList = list()
@@ -188,13 +207,13 @@ class Case:
         member_list.clear()
 
         #if empty, we won't add anything into memberlist
-        if(self.isEmpty == True):
+        if (self.isEmpty == True):
             return member_list
 
         for s in self.symbolList:
             if s.isTerminator == True:
                 continue
-            if(s.name in member_list):
+            if (s.name in member_list):
                 member_list[s.name] += 1
             else:
                 member_list[s.name] = 1
@@ -205,15 +224,17 @@ class Case:
         for i in self.symbolList:
             symbol += "(" + str(i) + ")" + ","
         symbol = symbol[:-1]
-        res = "caseidx:%d, SymbolList:(%s), isEmpty:%s, prec: %s\n" % (self.caseidx, symbol, self.isEmpty, self.prec)
+        res = "caseidx:%d, SymbolList:(%s), isEmpty:%s, prec: %s\n" % (
+            self.caseidx, symbol, self.isEmpty, self.prec)
         return res
 
 
 class Genclass:
-    def __init__(self, name, memberList = None, caseList = None):
-        if(memberList == None):
+
+    def __init__(self, name, memberList=None, caseList=None):
+        if (memberList == None):
             memberList = dict()
-        if(caseList == None):
+        if (caseList == None):
             caseList = list()
 
         self.name = underline_to_hump(name)
@@ -223,9 +244,10 @@ class Genclass:
 
     def merge_member_list(self, current_member_list):
         for m in current_member_list:
-            if(m in self.memberList and current_member_list[m]>self.memberList[m]):
+            if (m in self.memberList and
+                    current_member_list[m] > self.memberList[m]):
                 self.memberList[m] = current_member_list[m]
-            elif(m not in self.memberList):
+            elif (m not in self.memberList):
                 self.memberList[m] = current_member_list[m]
 
     def __str__(self):
@@ -239,50 +261,60 @@ class Genclass:
             case += str(i) + ","
         case = case[:-1] + ")"
 
-        return "Genclass:[name:%s,\n memberList:%s,\n caseList:%s]" %(name, members, case)
+        return "Genclass:[name:%s,\n memberList:%s,\n caseList:%s]" % (
+            name, members, case)
 
 
-def handle_datatype(vvlist, data_type, scope, dataflag, gen_name, tnum = 0):
+def handle_datatype(vvlist, data_type, scope, dataflag, gen_name, tnum=0):
     tab = "\t"
     vlist = [i[0] for i in vvlist]
-    if(len(vlist) == 1):
+    if (len(vlist) == 1):
 
-        if('fixme' in vlist[0]):
+        if ('fixme' in vlist[0]):
             vlist[0] = '$$'
 
-        res = tab*tnum + "if(%s){\n" % vlist[0]
-        res += tab*(tnum+1) + "%s->data_type_ = %s; \n" %(vlist[0], data_type)
-        res += tab*(tnum+1) + "%s->scope_ = %d; \n" %(vlist[0], scope)
-        res += tab*(tnum+1) + "%s->data_flag_ =(DATAFLAG)%d; \n" %(vlist[0], dataflag)
-        res += tab*tnum + "}\n"
+        res = tab * tnum + "if(%s){\n" % vlist[0]
+        res += tab * (tnum + 1) + "%s->data_type_ = %s; \n" % (vlist[0],
+                                                               data_type)
+        res += tab * (tnum + 1) + "%s->scope_ = %d; \n" % (vlist[0], scope)
+        res += tab * (tnum + 1) + "%s->data_flag_ =(DATAFLAG)%d; \n" % (
+            vlist[0], dataflag)
+        res += tab * tnum + "}\n"
         return res
-    if(is_list(vvlist[0][1]) == False):
+    if (is_list(vvlist[0][1]) == False):
         res = ""
-        if(len(vlist) == 2 and vlist[1] == "fixme"):
-            res += handle_datatype(vvlist[1:], data_type, scope, dataflag, gen_name, tnum)
+        if (len(vlist) == 2 and vlist[1] == "fixme"):
+            res += handle_datatype(vvlist[1:], data_type, scope, dataflag,
+                                   gen_name, tnum)
         else:
             tmp_name = gen_name()
-            res = tab*tnum + "if(%s){\n" % vlist[0]
-            res += tab*(tnum+1) + "auto %s = %s->%s_; \n" %(tmp_name, vlist[0], vlist[1])
+            res = tab * tnum + "if(%s){\n" % vlist[0]
+            res += tab * (tnum + 1) + "auto %s = %s->%s_; \n" % (
+                tmp_name, vlist[0], vlist[1])
             tmp_list = vvlist[1:]
             tmp_list[0][0] = tmp_name
-            res += handle_datatype(tmp_list, data_type, scope, dataflag, gen_name, tnum+1)
-            res += tab*tnum + "}\n"
+            res += handle_datatype(tmp_list, data_type, scope, dataflag,
+                                   gen_name, tnum + 1)
+            res += tab * tnum + "}\n"
         return res
     else:
         tmp_name = gen_name()
-        res = tab*(tnum+1) + "auto %s = %s->%s_; \n" %(tmp_name, vlist[0], vlist[1])
+        res = tab * (tnum + 1) + "auto %s = %s->%s_; \n" % (tmp_name, vlist[0],
+                                                            vlist[1])
         tmp_list = vvlist[1:]
         tmp_list[0][0] = tmp_name
-        res += handle_datatype(tmp_list, data_type, scope, dataflag, gen_name, tnum + 1)
+        res += handle_datatype(tmp_list, data_type, scope, dataflag, gen_name,
+                               tnum + 1)
 
-        loop =  tab*tnum + "while(%s){\n" % vlist[0]
+        loop = tab * tnum + "while(%s){\n" % vlist[0]
         loop += res
-        loop += tab*(tnum+1) + "%s = %s->%s_;\n" %(vvlist[0][0], vvlist[0][0], vvlist[0][1])
-        loop +=  tab*tnum + "}\n"
+        loop += tab * (tnum + 1) + "%s = %s->%s_;\n" % (
+            vvlist[0][0], vvlist[0][0], vvlist[0][1])
+        loop += tab * tnum + "}\n"
 
         return loop
     return res
+
 
 def genDataTypeOneRule(datatype_rule):
     vvlist = [[i, i] for i in datatype_rule.path]
@@ -290,7 +322,7 @@ def genDataTypeOneRule(datatype_rule):
     datatype = datatype_rule.datatype
     scope = datatype_rule.scope
     dataflag = datatype_rule.dataflag
-    return handle_datatype(vvlist, datatype, scope, dataflag,  gen_tmp(), 2)
+    return handle_datatype(vvlist, datatype, scope, dataflag, gen_tmp(), 2)
 
 
 def parseGrammar(grammarDescription):
@@ -308,19 +340,19 @@ def parseGrammar(grammarDescription):
 
     for c in cases:
         ptn = re.compile("\*\*.*\*\*")
-        data_type_to_replace = re.search(ptn, c) #ptn.findall(c)
-        if(data_type_to_replace != None):
+        data_type_to_replace = re.search(ptn, c)  #ptn.findall(c)
+        if (data_type_to_replace != None):
             #print("here1")
             #print data_type_to_replace.group()
-            data_type_to_replace = data_type_to_replace.group()[2: -2]
+            data_type_to_replace = data_type_to_replace.group()[2:-2]
             c = re.sub(ptn, '', c)
 
         #print c
-        tmp_c = (c + "%") .split("%")
+        tmp_c = (c + "%").split("%")
         c = tmp_c[0].strip()
-        if(tmp_c[1] != ''):
+        if (tmp_c[1] != ''):
             tmp_c[1] = "%" + tmp_c[1]
-        case = Case(caseIndex, len(c)==0, tmp_c[1], data_type_to_replace)
+        case = Case(caseIndex, len(c) == 0, tmp_c[1], data_type_to_replace)
         caseIndex += 1
         symbols = c.split(" ")
         case.symbolList = [Symbol(s) for s in symbols]
@@ -341,9 +373,9 @@ def is_list(class_name):
     class_name = underline_to_hump(class_name)
 
     for i in allClass:
-        if(class_name == i.name):
+        if (class_name == i.name):
             for member in i.memberList.keys():
-                if(underline_to_hump(member) == class_name):
+                if (underline_to_hump(member) == class_name):
                     return True
 
             return False
@@ -361,7 +393,7 @@ def genClassDef(current_class, parent_class):
     '''
     res = "class "
     res += current_class.name + ":"
-    res += "public " + "Node "+ "{\n"
+    res += "public " + "Node " + "{\n"
     res += "public:\n" + "\tvirtual void deep_delete();\n"
     res += "\tvirtual IR* translate(vector<IR*> &v_ir_collector);\n"
     res += "\tvirtual void generate();\n"
@@ -375,34 +407,37 @@ def genClassDef(current_class, parent_class):
 
     #Handle classes which need specific variable
     specific = is_specific(current_class.name)
-    if(specific[0]):
+    if (specific[0]):
         res += "\t" + specific[1] + " " + specific[1] + "_val_;\n"
         res += "};\n\n"
         return res
 
     for member_name, count in current_class.memberList.items():
-        if(member_name == ""):
+        if (member_name == ""):
             continue
-        if(count == 1):
-            res += "\t" + underline_to_hump(member_name) + " * " + member_name + "_;\n"
+        if (count == 1):
+            res += "\t" + underline_to_hump(
+                member_name) + " * " + member_name + "_;\n"
         else:
             for idx in range(count):
-                res += "\t" + underline_to_hump(member_name) + " * " + member_name + "_" + str(idx+1) + "_;\n"
+                res += "\t" + underline_to_hump(
+                    member_name) + " * " + member_name + "_" + str(idx +
+                                                                   1) + "_;\n"
     res += "};\n\n"
 
     return res
-
 
 
 def genDeepDelete(current_class):
 
     res = "void " + current_class.name + "::deep_delete(){\n"
     for member_name, count in current_class.memberList.items():
-        if(count == 1):
+        if (count == 1):
             res += "\t" + "SAFEDELETE(" + member_name + "_);\n"
         else:
             for idx in range(count):
-                res += "\t" + "SAFEDELETE(" + member_name + "_" + str(idx+1) + "_);\n"
+                res += "\t" + "SAFEDELETE(" + member_name + "_" + str(
+                    idx + 1) + "_);\n"
 
     res += "\tdelete this;\n"
     res += "};\n\n"
@@ -427,8 +462,8 @@ def translateOneMember(member_name, variable_name):
 def findOperator(symbol_list):
     res = ""
     idx = 0
-    while(idx < len(symbol_list)):
-        if(symbol_list[idx].isTerminator == True):
+    while (idx < len(symbol_list)):
+        if (symbol_list[idx].isTerminator == True):
             res += get_match_string(symbol_list[idx].name) + " "
             symbol_list.remove(symbol_list[idx])
             idx -= 1
@@ -440,17 +475,19 @@ def findOperator(symbol_list):
 
     return res.strip()
 
+
 def get_match_string(token):
     #print(token)
     if tokenDict.has_key(token) and tokenDict[token].is_keyword == False:
         return strip_quote(tokenDict[token].match_string)
     return token
 
+
 def findLastOperator(symbol_list):
     res = ""
     idx = 0
-    if(idx < len(symbol_list)):
-        if(symbol_list[idx].isTerminator == True):
+    if (idx < len(symbol_list)):
+        if (symbol_list[idx].isTerminator == True):
             res += get_match_string(symbol_list[idx].name)
             symbol_list.remove(symbol_list[idx])
 
@@ -459,9 +496,9 @@ def findLastOperator(symbol_list):
         if (symbol_list[i].isTerminator == False):
             is_case_end = False
             break
-    if(is_case_end == True):
+    if (is_case_end == True):
         i = 0
-        while(i < len(symbol_list)):
+        while (i < len(symbol_list)):
             res += " " + get_match_string(symbol_list[i].name)
             symbol_list.remove(symbol_list[i])
 
@@ -469,11 +506,12 @@ def findLastOperator(symbol_list):
 
     return res
 
+
 def findOperand(symbol_list):
     res = ""
     idx = 0
-    if(idx < len(symbol_list)):
-        if(symbol_list[idx].isTerminator == False):
+    if (idx < len(symbol_list)):
+        if (symbol_list[idx].isTerminator == False):
             res = symbol_list[idx].name
             symbol_list.remove(symbol_list[idx])
         else:
@@ -484,9 +522,10 @@ def findOperand(symbol_list):
 
 
 def strip_quote(s):
-    if(s[0] == '"' and s[-1] == '"'):
+    if (s[0] == '"' and s[-1] == '"'):
         return s[1:-1]
     return s
+
 
 def collectOpFromCase(symbol_list):
     """
@@ -508,7 +547,6 @@ def collectOpFromCase(symbol_list):
     operators.append(findLastOperator(symbol_list))
 
     res = ([i for i in operands if i != ""], [i for i in operators])
-
 
     return res
 
@@ -532,21 +570,25 @@ def translateOneIR(ir_argument, classname, irname):
     for operand in operands:
         res_operand += ", " + operand
 
-    res_operator = "OP3(" + operators[0] +"," + operators[1] + "," + operators[2] + ")"
+    res_operator = "OP3(" + operators[0] + "," + operators[1] + "," + operators[
+        2] + ")"
     #operand_num = len(operands)
 
     if irname != "res":
-        irname  = "auto " + irname
+        irname = "auto " + irname
 
-    res =  irname + " = new IR(" + "k" + underline_to_hump(classname) + ", " + res_operator + res_operand +");\n"
+    res = irname + " = new IR(" + "k" + underline_to_hump(
+        classname) + ", " + res_operator + res_operand + ");\n"
     return res
 
 
 def gen_tmp():
     count = [0]
+
     def get_tmp():
         count[0] += 1
         return "tmp" + str(count[0])
+
     return get_tmp
 
 
@@ -557,26 +599,27 @@ def transalteOneCase(current_class, case_idx):
     process_queue = list()
     name_idx_dict = dict()
     res = ""
-
     """
     Handle Empty Case Here
     """
     if current_case.isEmpty == True:
-        return "\t\tres = new IR(k" + underline_to_hump(current_class.name) +", string(\"\"));\n"
+        return "\t\tres = new IR(k" + underline_to_hump(
+            current_class.name) + ", string(\"\"));\n"
 
     for name, count in member_list.items():
-        if(count > 1):
+        if (count > 1):
             name_idx_dict[name] = 1
 
     get_tmp = gen_tmp()
     for symbol in symbols:
-        if(symbol.isTerminator == False):
+        if (symbol.isTerminator == False):
             tmp_name = get_tmp()
             new_symbol = Symbol(tmp_name, False, symbol.isId)
             process_queue.append(new_symbol)
             cur_symbol_real_name = ""
-            if(symbol.name in name_idx_dict.keys()):
-                cur_symbol_real_name = symbol.name + "_" + str(name_idx_dict[symbol.name]) + "_"
+            if (symbol.name in name_idx_dict.keys()):
+                cur_symbol_real_name = symbol.name + "_" + str(
+                    name_idx_dict[symbol.name]) + "_"
                 name_idx_dict[symbol.name] += 1
             else:
                 cur_symbol_real_name = symbol.name + "_"
@@ -584,9 +627,9 @@ def transalteOneCase(current_class, case_idx):
         else:
             process_queue.append(symbol)
 
-    while(len(process_queue) != 0):
+    while (len(process_queue) != 0):
         ir_info = collectOpFromCase(process_queue)
-        if(len(process_queue) == 0):
+        if (len(process_queue) == 0):
             res += "\t\t" + translateOneIR(ir_info, current_class.name, "res")
         else:
             tmp_name = get_tmp()
@@ -595,8 +638,8 @@ def transalteOneCase(current_class, case_idx):
             new_symbol = Symbol(tmp_name, False, False)
             process_queue = [new_symbol] + process_queue
 
-
     return res
+
 
 def genGenerateOneCase(current_class, case_idx):
 
@@ -614,21 +657,23 @@ def genGenerateOneCase(current_class, case_idx):
     for sym in case_list.symbolList:
         if sym.isTerminator:
             continue
-        membername = sym.name+"_"
-        if(current_class.memberList[sym.name] > 1):
+        membername = sym.name + "_"
+        if (current_class.memberList[sym.name] > 1):
             membername = "%s_%d_" % (sym.name, counter[sym.name])
             counter[sym.name] += 1
 
         #ddprint(sym.name)
-        res += "\t\t%s = new %s();\n" %(membername, underline_to_hump(sym.name))
+        res += "\t\t%s = new %s();\n" % (membername, underline_to_hump(
+            sym.name))
         res += "\t\t%s->generate();\n" % membername
 
     return res
 
+
 def getNotSelfContainCases(current_class):
     #print(current_class.name)
-    fuck_list = {"SimpleSelect":[0, 1, 2, 3], "CExpr": [0], "AExpr": [0]}
-    if(fuck_list.has_key(current_class.name)):
+    fuck_list = {"SimpleSelect": [0, 1, 2, 3], "CExpr": [0], "AExpr": [0]}
+    if (fuck_list.has_key(current_class.name)):
         #print("YES:", fuck_list[current_class.name])
         return fuck_list[current_class.name]
     case_idx_list = []
@@ -644,48 +689,49 @@ def getNotSelfContainCases(current_class):
 
     return case_idx_list
 
+
 def genGenerate(current_class):
 
     case_nums = len(current_class.caseList)
     has_switch = case_nums != 1
     class_name = underline_to_hump(current_class.name)
 
-    res =  "void " + class_name + "::generate(){\n"
+    res = "void " + class_name + "::generate(){\n"
     not_self_contained_list = getNotSelfContainCases(current_class)
     not_len = len(not_self_contained_list)
     #print(class_name)
     #print(not_self_contained_list)
     has_default = True
-    if(case_nums == 0):
+    if (case_nums == 0):
         print class_name
-    if(not_len / case_nums > 0.8):
+    if (not_len / case_nums > 0.8):
         #print("FUCK")
         has_default = False
 
     if has_default == False:
-        res += "\tGENERATESTART(%d)\n\n" %(case_nums)
+        res += "\tGENERATESTART(%d)\n\n" % (case_nums)
     else:
-        res += "\tGENERATESTART(%d)\n\n" %(case_nums * 100)
+        res += "\tGENERATESTART(%d)\n\n" % (case_nums * 100)
 
     #Handling class need specific variable like identifier
     specific = is_specific(current_class.name)
-    if(specific[0]):
+    if (specific[0]):
         res += "\t\t%s_val_ = gen_%s();\n" % (specific[1], specific[1])
         res += "\n\tGENERATEEND\n}\n\n"
         return res
 
-    if(has_switch):
+    if (has_switch):
         res += "\tSWITCHSTART\n"
 
     case_id = 0
     #for each_case in current_class.caseList:
     for i in range(len(current_class.caseList)):
-        if(has_switch):
+        if (has_switch):
             res += "\t\tCASESTART(" + str(case_id) + ")\n"
             case_id += 1
 
         res += genGenerateOneCase(current_class, i)
-        if(has_switch):
+        if (has_switch):
             res += "\t\tCASEEND\n"
 
     #if(has_switch):
@@ -701,14 +747,15 @@ def genGenerate(current_class):
 }
 """
 
-    if(has_switch and has_default == False):
+    if (has_switch and has_default == False):
         res += "\tSWITCHEND\n"
-    elif(has_default):
+    elif (has_default):
         tmp_str = ""
         for i in range(not_len):
             tmp_str += "CASESTART(" + str(i) + ")\n"
 
-            tmp_str += genGenerateOneCase(current_class, not_self_contained_list[i])
+            tmp_str += genGenerateOneCase(current_class,
+                                          not_self_contained_list[i])
 
             tmp_str += "case_idx_ = %d;\n" % (not_self_contained_list[i])
 
@@ -716,9 +763,9 @@ def genGenerate(current_class):
 
         res += tmplate_str % (not_len, tmp_str)
 
-
     res += "\n\tGENERATEEND\n}\n\n"
     return res
+
 
 def genTranslateBegin(class_name):
     """
@@ -732,9 +779,11 @@ def genTranslateBegin(class_name):
     for item in ir_handlers:
         if item["IRType"] == class_name:
             for handler in item["PreHandler"]:
-                res.append(handler["Function"] + "(" + ", ".join(handler["Args"]) + ");")
+                res.append(handler["Function"] + "(" +
+                           ", ".join(handler["Args"]) + ");")
 
     return "\t" + "\n\t".join(res) + "\n"
+
 
 def genTranslateEnd(class_name):
     """
@@ -746,9 +795,9 @@ def genTranslateEnd(class_name):
     for item in ir_handlers:
         if item["IRType"] == class_name:
             for handler in item["PostHandler"]:
-                res.append(handler["Function"] + "(" + ", ".join(handler["Args"]) + ");")
+                res.append(handler["Function"] + "(" +
+                           ", ".join(handler["Args"]) + ");")
     return "\t" + "\n\t".join(res) + "\n"
-
 
 
 def genTranslate(current_class):
@@ -767,31 +816,33 @@ def genTranslate(current_class):
     res += genTranslateBegin(current_class.name)
     #Handling class need specific variable like identifier
     specific = is_specific(current_class.name)
-    if(specific[0]):
+    if (specific[0]):
         if "iteral" in class_name and specific[1] == 'string':
-            res += "\t\tres = new IR(k" + current_class.name + ", " + specific[1] + "_val_, data_type_, scope_, data_flag_);\n"
+            res += "\t\tres = new IR(k" + current_class.name + ", " + specific[
+                1] + "_val_, data_type_, scope_, data_flag_);\n"
         else:
-            res += "\t\tres = new IR(k" + current_class.name + ", " + specific[1] + "_val_, data_type_, scope_, data_flag_);\n"
+            res += "\t\tres = new IR(k" + current_class.name + ", " + specific[
+                1] + "_val_, data_type_, scope_, data_flag_);\n"
         res += genTranslateEnd(current_class.name)
         res += "\n\tTRANSLATEEND\n}\n\n"
         return res
 
-    if(has_switch):
+    if (has_switch):
         res += "\tSWITCHSTART\n"
 
     case_id = 0
     #for each_case in current_class.caseList:
     for i in range(len(current_class.caseList)):
         #each_case = current_class.caseList[i]
-        if(has_switch):
+        if (has_switch):
             res += "\t\tCASESTART(" + str(case_id) + ")\n"
             case_id += 1
 
         res += transalteOneCase(current_class, i)
-        if(has_switch):
+        if (has_switch):
             res += "\t\tCASEEND\n"
 
-    if(has_switch):
+    if (has_switch):
         res += "\tSWITCHEND\n"
 
     res += genTranslateEnd(current_class.name)
@@ -811,6 +862,7 @@ ALLDATATYPE(DECLARE_TYPE)
     res += "};\n"
     return res
 
+
 def genClassTypeEnum():
     res = "enum NODETYPE{"
 
@@ -825,6 +877,7 @@ ALLTYPE(DECLARE_TYPE)
     res += "typedef NODETYPE IRTYPE;\n"
     return res
 
+
 def genClassDeclaration(class_list):
     res = ""
 
@@ -837,8 +890,10 @@ ALLCLASS(DECLARE_CLASS);
 """
     return res
 
+
 def genTokenForOneKeyword(keyword, token):
     return "%s\tTOKEN(%s)\n" % (keyword, token)
+
 
 def genParserUtilsHeader(token_dict):
     with open(configuration.parser_utils_header_template_path, 'r') as f:
@@ -851,6 +906,7 @@ def genParserUtilsHeader(token_dict):
     content = content.replace("__TOKEN_STATE__", replaced)
 
     return content
+
 
 def genFlex(token_dict):
     res = ""
@@ -871,7 +927,7 @@ def genFlex(token_dict):
         ban_ptn = re.compile(r"PREFIX_([A-Z_]*)")
         ban_res = ban_ptn.findall(contents)
         ban_list = set(ban_res)
-        if(len(contents) > 2 and contents[-1] != '\n'):
+        if (len(contents) > 2 and contents[-1] != '\n'):
             contents += '\n'
 
         contents = contents.split("+++++\n")
@@ -880,7 +936,7 @@ def genFlex(token_dict):
 
     test = ""
     for i in contents:
-        if(len(i) < 2):
+        if (len(i) < 2):
             continue
         if len(i[1]) > 0 and i[1][0] == '[':
             ## Update match string here
@@ -896,7 +952,8 @@ def genFlex(token_dict):
                             token.is_keyword = False
                         break
             #print(token_list)
-        test += "%s {\n\t%s}\n" % (i[0].strip(), "\n\t".join(i[1].replace("PREFIX_", configuration.token_prefix).split("\n")))
+        test += "%s {\n\t%s}\n" % (i[0].strip(), "\n\t".join(i[1].replace(
+            "PREFIX_", configuration.token_prefix).split("\n")))
         #print(test)
         #raw_input()
         test += "\n"
@@ -904,7 +961,7 @@ def genFlex(token_dict):
     #print(token_dict)
     for token in token_dict.values():
         #print(token.token_name)
-        if(token.token_name in ban_list):
+        if (token.token_name in ban_list):
             continue
         res += genTokenForOneKeyword(token.match_string, token.token_name)
 
@@ -912,6 +969,7 @@ def genFlex(token_dict):
 
     res += "%%\n"
     return res
+
 
 def genBisonType(class_set):
     """
@@ -929,6 +987,7 @@ def genBisonType(class_set):
 
     return res
 
+
 def genBisonPrec(token_dict):
     """
     input:
@@ -940,7 +999,7 @@ def genBisonPrec(token_dict):
     precdict = dict()
     for token_name, token in token_dict.items():
         if token.prec != 0:
-            if(precdict.has_key(token.prec) == False):
+            if (precdict.has_key(token.prec) == False):
                 precdict[token.prec] = []
             precdict[token.prec].append(token_name)
 
@@ -955,6 +1014,7 @@ def genBisonPrec(token_dict):
 
     return res
 
+
 def genBisonToken(token_dict):
     """
     input:
@@ -968,15 +1028,14 @@ def genBisonToken(token_dict):
 
     type_token = ""
     for token_name in token_dict.keys():
-        if(token_dict[token_name].ttype != "0"):
-            type_token += "\n%%token <%s> %s\n" % (token_dict[token_name].ttype, token_name)
+        if (token_dict[token_name].ttype != "0"):
+            type_token += "\n%%token <%s> %s\n" % (token_dict[token_name].ttype,
+                                                   token_name)
             continue
         if counter % 8 == 0:
             token_res += "\n%token"
         token_res += " " + token_name
         counter += 1
-
-
 
     token_res += type_token
     token_res += "\n"
@@ -987,16 +1046,16 @@ def genBisonToken(token_dict):
 
     return token_res
 
+
 def genBisonDataType(extra_data_type, allClass):
 
     res = ""
     for k, v in extra_data_type.items():
         res += "\t%s\t%s;\n" % (v, k)
 
-
     for c in allClass:
         underline_name = hump_to_underline(c.name)
-        res += "\t%s\t%s;\n" % (c.name+" *", underline_name+"_t")
+        res += "\t%s\t%s;\n" % (c.name + " *", underline_name + "_t")
 
     return res
 
@@ -1006,14 +1065,14 @@ def genBisonTypeDefOneCase(gen_class, caseidx):
     symbol_name_list = []
     counter = dict()
     res = []
-    if(gen_class.name == configuration.bison_top_input_type):
+    if (gen_class.name == configuration.bison_top_input_type):
         res.append("$$ = result;\n")
         res.append("$$->case_idx_ = CASE%d;\n" % caseidx)
     else:
         res.append("$$ = new %s();\n" % (gen_class.name))
         res.append("$$->case_idx_ = CASE%d;\n" % caseidx)
 
-    if(case.isEmpty == False):
+    if (case.isEmpty == False):
         #tmp = "\t/* empty */ {\n \t\t%s \t}\n"
         for idx in range(len(case.symbolList)):
             sym = case.symbolList[idx]
@@ -1021,35 +1080,35 @@ def genBisonTypeDefOneCase(gen_class, caseidx):
             if sym.isTerminator == True:
                 continue
             tmp = "$$->%s_ = $%d;\n"
-            if(counter.has_key(sym.name) == False):
+            if (counter.has_key(sym.name) == False):
                 counter[sym.name] = 0
             counter[sym.name] += 1
-            if(gen_class.memberList[sym.name] == 1):
-                res.append(tmp % (sym.name, idx+1))
+            if (gen_class.memberList[sym.name] == 1):
+                res.append(tmp % (sym.name, idx + 1))
             else:
-                res.append(tmp % (sym.name + "_%d" % counter[sym.name], idx+1))
-
+                res.append(tmp %
+                           (sym.name + "_%d" % counter[sym.name], idx + 1))
 
         #Handling class which need specific variable
         specific = is_specific(gen_class.name)
-        if(specific[0]):
+        if (specific[0]):
             res = []
             res.append("$$ = new %s();\n" % (gen_class.name))
             res.append("$$->%s_val_ = $%d;\n" % (specific[1], 1))
             if specific[1] == 'string':
                 res.append("free($%d);\n" % 1)
 
-
-
     data_type_rule = ""
     for dtr in case.datatype_rules:
         data_type_rule += genDataTypeOneRule(dtr) + "\n"
 
     res.append(data_type_rule[2:])
-    if(gen_class.name == configuration.bison_top_input_type):
+    if (gen_class.name == configuration.bison_top_input_type):
         res.append("$$ = NULL;\n")
 
-    return "\t%s %s {\n\t\t%s\n\t}\n" % (" ".join(symbol_name_list), case.prec,  "\t\t".join(res))
+    return "\t%s %s {\n\t\t%s\n\t}\n" % (" ".join(symbol_name_list), case.prec,
+                                         "\t\t".join(res))
+
 
 def genBisonTypeDef(gen_class):
     res = hump_to_underline(gen_class.name) + ":\n"
@@ -1069,16 +1128,17 @@ def genBisonDestructor(destructorDict, extra_data_type):
     for dest_define, name in destructorDict.items():
         typename = ""
         for i in name:
-            if(i in extra_data_type.keys()):
+            if (i in extra_data_type.keys()):
                 typename += " <%s>" % (i)
             else:
                 typename += " <%s_t>" % (i)
-        if(dest_define == "EMPTY"):
+        if (dest_define == "EMPTY"):
             dest_define = " "
         res += "%destructor{\n\t" + dest_define + "\n} " + typename + "\n\n"
 
     res += "%destructor { if($$!=NULL)$$->deep_delete(); } <*>\n\n"
     return res
+
 
 def genBison(allClass):
     global tokenDict
@@ -1091,8 +1151,9 @@ def genBison(allClass):
     res += configuration.gen_bison_code_require()
     res += configuration.gen_bison_params()
 
-    extra = {"fval":"double", "sval":"char*", "ival":"long"}
-    res += "%%union %s_STYPE{\n%s}\n" % (configuration.bison_data_type_prefix, genBisonDataType(extra, allClass))
+    extra = {"fval": "double", "sval": "char*", "ival": "long"}
+    res += "%%union %s_STYPE{\n%s}\n" % (configuration.bison_data_type_prefix,
+                                         genBisonDataType(extra, allClass))
 
     res += genBisonToken(tokenDict)
     res += "\n"
@@ -1109,6 +1170,7 @@ def genBison(allClass):
     res += "%%"
     return res
 
+
 def genCaseEnum(casenum):
     res = "enum CASEIDX{\n\t"
 
@@ -1117,6 +1179,7 @@ def genCaseEnum(casenum):
     res += "\n};\n"
 
     return res
+
 
 def genDataFlag():
     res = "enum DATAFLAG {\n"
@@ -1129,15 +1192,24 @@ def genDataFlag():
     res += helper
     return res
 
+
 def genAstHeader(allClass):
 
-    include_list = [standard_header("vector"), standard_header("string"), normal_header("define.h"), standard_header("iostream"), standard_header("map"),standard_header("memory"), standard_header("fstream")]
+    include_list = [
+        standard_header("vector"),
+        standard_header("string"),
+        normal_header("define.h"),
+        standard_header("iostream"),
+        standard_header("map"),
+        standard_header("memory"),
+        standard_header("fstream")
+    ]
     res = """#ifndef __AST_H__\n#define __AST_H__\n"""
 
     for i in include_list:
         res += "#include %s\n" % i
     res += "using namespace std;\n"
-    res +="\n"
+    res += "\n"
 
     res += genClassTypeEnum()
     res += "\n"
@@ -1151,7 +1223,6 @@ def genAstHeader(allClass):
         content = f.read()
         res = content.replace("HEADER_BEGIN", res)
 
-
     res = res.replace("__ALLCLASSDECLARATION__", genClassDeclaration(allClass))
     res = res.replace("__ALLDATAFLAG__", genDataFlag())
     res += "\n"
@@ -1164,9 +1235,17 @@ def genAstHeader(allClass):
     res += "#endif\n"
     return res
 
+
 def genAstSrc(allClass):
 
-    include_list = [normal_header("../include/ast.h"), normal_header("../include/define.h"), normal_header("../include/utils.h"), standard_header("cassert"), normal_header("../include/var_definition.h"), normal_header("../include/typesystem.h")]
+    include_list = [
+        normal_header("../include/ast.h"),
+        normal_header("../include/define.h"),
+        normal_header("../include/utils.h"),
+        standard_header("cassert"),
+        normal_header("../include/var_definition.h"),
+        normal_header("../include/typesystem.h")
+    ]
     res = ""
 
     res += include_all(include_list)
@@ -1180,7 +1259,7 @@ def genAstSrc(allClass):
     tmp_set = ["kDeclaration"]
     tmp_str = ""
     for i in tmp_set:
-        tmp_str+= "\t" + "define_top_set.insert(" + i + ");\n"
+        tmp_str += "\t" + "define_top_set.insert(" + i + ");\n"
 
     res = res.replace("__INIT_TOP_DEFINE_SET__", tmp_str)
 
@@ -1192,6 +1271,7 @@ def genAstSrc(allClass):
 
     return res
 
+
 def genDefineHeader(all_class, all_datatype):
     global semanticRule
 
@@ -1201,7 +1281,8 @@ def genDefineHeader(all_class, all_datatype):
 
     content = content.replace("__INIT_FILE_DIR__", semanticRule["InitFileDir"])
     if "language" in semanticRule.keys():
-        content = content.replace("__LANG_FUZZ__","#define " + semanticRule["language"] + "FUZZ")
+        content = content.replace(
+            "__LANG_FUZZ__", "#define " + semanticRule["language"] + "FUZZ")
     else:
         content = content.replace("__LANG_FUZZ__", "")
 
@@ -1229,25 +1310,30 @@ def genDefineHeader(all_class, all_datatype):
 
     return content
 
+
 def genUtilsHeader():
     content = ""
     with open(configuration.utils_header_template_path, 'r') as f:
         content = f.read()
 
     # content
-    content = content.replace("__TOPASTNODE__",  configuration.bison_top_input_type)
+    content = content.replace("__TOPASTNODE__",
+                              configuration.bison_top_input_type)
     #print content
     return content
+
 
 def genUtilsSrc():
     content = ""
     with open(configuration.utils_src_template_path, 'r') as f:
         content = f.read()
 
-    content = content.replace("__TOPASTNODE__",  configuration.bison_top_input_type)
+    content = content.replace("__TOPASTNODE__",
+                              configuration.bison_top_input_type)
     content = content.replace("__API_PREFIX__", configuration.api_prefix)
 
     return content
+
 
 def parseBasicType(filename):
     content = ""
@@ -1262,6 +1348,7 @@ def parseBasicType(filename):
         result[i[0]] = i[1:]
 
     return result
+
 
 def genBasicTypeHandler(input):
     res = ""
@@ -1281,6 +1368,7 @@ def genBasicTypeHandler(input):
 
     return res
 
+
 def genBasicTypeHandlerNew(input):
     res = ""
     for k, btypes in input.items():
@@ -1295,6 +1383,7 @@ def genBasicTypeHandlerNew(input):
 
     return res
 
+
 def parseFixBasicType(filename):
     content = ""
     with open(filename, 'r') as f:
@@ -1304,11 +1393,12 @@ def parseFixBasicType(filename):
     res = dict()
     for i in content:
         if res.has_key(i[0]) == False:
-            res[i[0]] = [[x for x in i if x!=i[0]]]
+            res[i[0]] = [[x for x in i if x != i[0]]]
         else:
-            res[i[0]].append([x for x in i if x!=i[0]])
+            res[i[0]].append([x for x in i if x != i[0]])
     #print res
     return res
+
 
 def genFixBasicType(input):
     """
@@ -1318,10 +1408,12 @@ def genFixBasicType(input):
     for k, eachs in input.items():
         res += "\t\t\t" + "case k%s:\n" % underline_to_hump(k)
         for each in eachs:
-            res += "\t\t\t\t" + "if(type == get_basic_type_id_by_string(\"%s\")) %s(cur, k%s);\n" % (each[0], each[2], underline_to_hump(each[1]))
+            res += "\t\t\t\t" + "if(type == get_basic_type_id_by_string(\"%s\")) %s(cur, k%s);\n" % (
+                each[0], each[2], underline_to_hump(each[1]))
         res += "\t\t\t\tbreak;\n"
         #res += "\n\t\t\t}\n"
     return res
+
 
 def genConvertIRTypeMap():
     global allClass
@@ -1333,9 +1425,11 @@ def genConvertIRTypeMap():
             type_a = underline_to_hump(class_a.name)
             type_b = underline_to_hump(class_b.name)
             if can_be_converted(type_a, type_b, convert_map) != None:
-                res += "\t\tm_convertable_map_[k%s].insert(k%s);\n" % (type_a, type_b)
+                res += "\t\tm_convertable_map_[k%s].insert(k%s);\n" % (type_a,
+                                                                       type_b)
 
     return res
+
 
 def genMutateHeader():
     content = ""
@@ -1343,6 +1437,7 @@ def genMutateHeader():
         content = f.read()
 
     return content
+
 
 def genMutateSrc():
     content = ""
@@ -1353,6 +1448,7 @@ def genMutateSrc():
     content = content.replace("__INIT_CONVERTABLE_TYPE_MAP__", convert_map)
 
     return content
+
 
 def genVarDefSrc():
     content = ""
@@ -1369,14 +1465,16 @@ def genVarDefSrc():
 
     for i in semanticRule["ConvertChain"]:
         for kk in range(0, len(i) - 1):
-            convert_chain += "\t" + "v_convert.push_back(make_pair(\"%s\", \"%s\")); \n" % (i[kk], i[kk + 1])
+            convert_chain += "\t" + "v_convert.push_back(make_pair(\"%s\", \"%s\")); \n" % (
+                i[kk], i[kk + 1])
 
     content = content.replace("__SEMANTIC_CONVERT_CHAIN__", convert_chain)
 
-    basic_types = ["\"%s\""% i for i in semanticRule["BasicTypes"]]
+    basic_types = ["\"%s\"" % i for i in semanticRule["BasicTypes"]]
     basic_types = ", ".join(basic_types)
     content = content.replace("__SEMANTIC_BASIC_TYPES__", basic_types)
     return content
+
 
 def genVarDefHeader():
     with open(configuration.vardef_header_template_path, 'r') as f:
@@ -1384,11 +1482,13 @@ def genVarDefHeader():
 
     return content
 
+
 def genTestHeader():
     with open(configuration.test_header_template_path, 'r') as f:
         content = f.read()
 
     return content
+
 
 def genTestSrc():
     with open(configuration.test_src_template_path, 'r') as f:
@@ -1399,14 +1499,16 @@ def genTestSrc():
     else:
         content = content.replace("__IS_WEAK_TYPE__", "false")
 
-    if(semanticRule['IsWeakType'] == 0):
+    if (semanticRule['IsWeakType'] == 0):
         content = content.replace("__FIX_IR_TYPE__", semanticRule["FixIRType"])
-        content = content.replace("__FUNCTION_ARGUMENT_UNIT__", semanticRule["FunctionArgumentUnit"])
+        content = content.replace("__FUNCTION_ARGUMENT_UNIT__",
+                                  semanticRule["FunctionArgumentUnit"])
     else:
         content = content.replace("__FIX_IR_TYPE__", "kUnknown")
         content = content.replace("__FUNCTION_ARGUMENT_UNIT__", "kUnknown")
 
     return content
+
 
 def genTypeSystemHeader():
     global semanticRule
@@ -1419,6 +1521,7 @@ def genTypeSystemHeader():
         content = content.replace("__IS_WEAK_TYPE__", "")
     return content
 
+
 def parserInferIDByDataType(filename):
     content = []
     with open(filename, 'r') as f:
@@ -1426,6 +1529,7 @@ def parserInferIDByDataType(filename):
 
     content = [i.strip().split(",") for i in content]
     return content
+
 
 def genInferIDByDataType(infer_input):
 
@@ -1444,16 +1548,16 @@ def genInferIDByDataType(infer_input):
 
     return res
 
+
 def genTypeSystemSrc():
     global semanticRule
     with open(configuration.ts_src_template_path, 'r') as f:
         content = f.read()
 
-
     basic_unit = ",".join(semanticRule['BasicUnit'])
     content = content.replace("__SEMANTIC_BASIC_UNIT__", basic_unit)
-    content = content.replace("__SEMANTIC_BUILTIN_OBJ__", "\"%s\"" % semanticRule["BuiltinObjFile"])
-
+    content = content.replace("__SEMANTIC_BUILTIN_OBJ__",
+                              "\"%s\"" % semanticRule["BuiltinObjFile"])
 
     op_rules = []
     for oprule in semanticRule['OPRule']:
@@ -1478,16 +1582,19 @@ def genTypeSystemSrc():
 
     #infer_input = parserInferIDByDataType("./c_grammar/infer_data_type_map")
     #infer_id_by_datatype_cases = genInferIDByDataType(infer_input)
-    content = content.replace("__HANDLE_BASIC_TYPES_NEW__", basic_type_handler_new)
+    content = content.replace("__HANDLE_BASIC_TYPES_NEW__",
+                              basic_type_handler_new)
     #content = content.replace("__HANDLE_BASIC_TYPES__", basic_type_handler)
     #content = content.replace("__FIX_BASIC_TYPES__", fix_basic_type_handler)
     #content = content.replace("__INFER_INDENTIFER_BY_DATATYPE__", infer_id_by_datatype_cases)
     return content
 
+
 def genOthers():
     #os.system("cp template/mutate_header_template.h include/mutate.h")
     os.system("cp template/mutate_src_template.cpp src/mutate.cpp")
     return
+
 
 def genToStringCase():
     global literalValue
@@ -1497,12 +1604,12 @@ def genToStringCase():
         tmp_set.add(underline_to_hump(c.name))
 
     res = ""
-    for (key,value) in literalValue.items():
+    for (key, value) in literalValue.items():
         for kk in value:
             kk = underline_to_hump(kk)
-            if(kk in tmp_set):
+            if (kk in tmp_set):
                 cmd = "\tcase k%s: return " % kk
-                if(key == "string"):
+                if (key == "string"):
                     cmd += "str_val_;"
                 else:
                     cmd += "std::to_string(%s_val_);" % key
@@ -1512,6 +1619,7 @@ def genToStringCase():
     res = "switch(type_){\n%s\n}" % res
     return res
 
+
 def parseScopeAction(filename):
     """
     format:
@@ -1519,14 +1627,13 @@ def parseScopeAction(filename):
     startfunction1,arg1,arg2;startfunction2,arg1,arg2...
     endfunction1,arg1,arg2;...
     """
-    if(os.path.exists(filename) == False):
+    if (os.path.exists(filename) == False):
         print("No such file")
         return None
 
     content = ""
     with open(filename, 'rb') as f:
         content = f.read().strip()
-
 
     result = dict()
     result['start'] = dict()
@@ -1545,24 +1652,25 @@ def parseScopeAction(filename):
         end_funcs = i[2].strip().split(";")
         end_funcs = [kk.split(",") for kk in end_funcs]
 
-
         result['start'][i[0]] = dict()
         for sf in start_funcs:
-            if(len(sf) > 1):
+            if (len(sf) > 1):
                 result['start'][i[0]][sf[0]] = sf[1:]
             else:
                 result['start'][i[0]][sf[0]] = []
 
         result['end'][i[0]] = dict()
         for sf in end_funcs:
-            if(len(sf) > 1):
+            if (len(sf) > 1):
                 result['end'][i[0]][sf[0]] = sf[1:]
             else:
                 result['end'][i[0]][sf[0]] = []
     #print(result)
     return result
 
+
 def format_output_files():
+
     def format_file(filename):
         formatter = "clang-format -style=\"{BasedOnStyle: LLVM, IndentWidth: 4, ColumnLimit: 1000}\" -i"
         os.system("%s %s" % (formatter, filename))
@@ -1577,9 +1685,11 @@ def format_output_files():
 
 def is_non_term_case(a_case):
     res = True
-    if len(a_case.symbolList) != 1 or a_case.symbolList[0].isTerminator == True or a_case.symbolList[0].name == "":
+    if len(a_case.symbolList) != 1 or a_case.symbolList[
+            0].isTerminator == True or a_case.symbolList[0].name == "":
         return None
     return underline_to_hump(a_case.symbolList[0].name)
+
 
 def build_convert_ir_type_map(all_class):
     result = dict()
@@ -1590,7 +1700,7 @@ def build_convert_ir_type_map(all_class):
             node = is_non_term_case(case)
             if node == None:
                 continue
-            if(result.has_key(node) == False):
+            if (result.has_key(node) == False):
                 result[node] = set()
             result[node].add(c_name)
 
@@ -1603,6 +1713,7 @@ def build_convert_ir_type_map(all_class):
     #    print("")
 
     return result
+
 
 def can_be_converted(a, b, graph):
     parent_a = set()
@@ -1619,10 +1730,9 @@ def can_be_converted(a, b, graph):
             if graph.has_key(i) == False:
                 continue
             for node in graph[i]:
-                if(node not in visited):
+                if (node not in visited):
                     new_bfs.append(node)
         bfs = new_bfs
-
 
     bfs.append(b)
     visited = set()
@@ -1636,7 +1746,7 @@ def can_be_converted(a, b, graph):
             if graph.has_key(i) == False:
                 continue
             for node in graph[i]:
-                if(node not in visited):
+                if (node not in visited):
                     new_bfs.append(node)
         bfs = new_bfs
 
@@ -1644,19 +1754,20 @@ def can_be_converted(a, b, graph):
     return None
 
 
-
 if __name__ == "__main__":
 
     parse = argparse.ArgumentParser()
-    parse.add_argument("-i", "--input", help = "Grammar description")
-    parse.add_argument("-f", "--flex", help = "path of flex.l file")
-    parse.add_argument("-b", "--bison", help = "path of bison.y file")
-    parse.add_argument("-a", "--ast", help = "name of ast file(both .cpp and .h)")
-    parse.add_argument("-t", "--token", help = "path of config file for token")
-    parse.add_argument("-d", "--destructor", help = "path of destructor for bison")
-    parse.add_argument("-D", "--datatype", help = "path of datatype collection")
-    parse.add_argument("-s", "--semantic", help = "path of semantic rule file")
-    parse.add_argument("-e", "--extraflex", help = "path of extra flex rules")
+    parse.add_argument("-i", "--input", help="Grammar description")
+    parse.add_argument("-f", "--flex", help="path of flex.l file")
+    parse.add_argument("-b", "--bison", help="path of bison.y file")
+    parse.add_argument("-a", "--ast", help="name of ast file(both .cpp and .h)")
+    parse.add_argument("-t", "--token", help="path of config file for token")
+    parse.add_argument("-d",
+                       "--destructor",
+                       help="path of destructor for bison")
+    parse.add_argument("-D", "--datatype", help="path of datatype collection")
+    parse.add_argument("-s", "--semantic", help="path of semantic rule file")
+    parse.add_argument("-e", "--extraflex", help="path of extra flex rules")
     args = parse.parse_args()
 
     class_define = ""
@@ -1669,17 +1780,24 @@ if __name__ == "__main__":
     #notKeywordSym["RD"] = ')'
     #notKeywordSym["EQUAL"] = '='
 
-    literalValue = {"float":["float_literal", "fconst"], "int":["int_literal", "iconst"], "string":["fixed_type", "identifier", "string_literal", "sconst", "guess_op","dollar_variable", "string_varname","char_literal","hex_literal", "hex_number", "pragma_directive", "expon_literal"]}
+    literalValue = {
+        "float": ["float_literal", "fconst"],
+        "int": ["int_literal", "iconst"],
+        "string": [
+            "fixed_type", "identifier", "string_literal", "sconst", "guess_op",
+            "dollar_variable", "string_varname", "char_literal", "hex_literal",
+            "hex_number", "pragma_directive", "expon_literal"
+        ]
+    }
 
-
-    if(args.semantic != None):
+    if (args.semantic != None):
         semanticRule = json.load(open(args.semantic))
 
-    if(args.input != None):
+    if (args.input != None):
         with open(args.input, "r") as input_file:
             content = input_file.read().strip()
             ptn = re.compile("Data\w+")
-            kkk = re.findall(ptn, content) #ptn.findall(c)
+            kkk = re.findall(ptn, content)  #ptn.findall(c)
             ss = set()
             ss.add("DataVarDefine")
 
@@ -1708,7 +1826,7 @@ if __name__ == "__main__":
 
             all_data_t = ["DataWhatever"] + list(ss)
 
-            if(content[-1] != '\n'):
+            if (content[-1] != '\n'):
                 content += "\n"
             content = content.replace("\r\n", "\n")
             content = content.split("---\n")
@@ -1720,7 +1838,7 @@ if __name__ == "__main__":
 
                 #print((genclass))
 
-    if(args.token != None):
+    if (args.token != None):
         with open(args.token, "r") as token_file:
             token_info = token_file.read()
             split_by_fuck = False
@@ -1734,20 +1852,23 @@ if __name__ == "__main__":
             #print(token_info)
             #print(token_info)
             for each_token in token_info:
-                if(len(each_token) < 2):
+                if (len(each_token) < 2):
                     continue
-                tokenDict[each_token[0]] = Token(each_token[0], int(each_token[1]), each_token[2], each_token[3], each_token[4])
+                tokenDict[each_token[0]] = Token(each_token[0],
+                                                 int(each_token[1]),
+                                                 each_token[2], each_token[3],
+                                                 each_token[4])
 
-    if(args.destructor != None):
+    if (args.destructor != None):
         with open(args.destructor, "r") as dest_file:
             dest_info = dest_file.read()
             dest_info = dest_info.split("---")
             for each_dest in dest_info:
                 typename = each_dest.split(":\n")[0]
                 dest_define = each_dest.split(":\n")[1].strip()
-                destructorDict[dest_define] = [i.strip() for i in typename.split(",")]
-
-
+                destructorDict[dest_define] = [
+                    i.strip() for i in typename.split(",")
+                ]
 
     pu_h = genParserUtilsHeader(tokenDict)
     with open(configuration.parser_utils_header_output_path, "wb") as f:
@@ -1830,9 +1951,6 @@ if __name__ == "__main__":
     #genOthers()
     # Test scope
     #classAPIMap["program"]
-
-
-
 """
     input_generation = InputGeneration(allClass)
 
