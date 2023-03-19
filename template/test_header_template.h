@@ -24,4 +24,8 @@ bool HandleBasicType(
         &cur_type);
 
 std::vector<std::pair<std::string, std::string>> GetConvertableTypes();
+
+std::vector<std::pair<std::string, std::string>> GetConvertChain();
+
+std::vector<std::string> GetBasicTypeStr();
 #endif

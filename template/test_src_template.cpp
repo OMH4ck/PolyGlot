@@ -46,3 +46,11 @@ bool HandleBasicType(
 std::vector<std::pair<std::string, std::string>> GetConvertableTypes() {
   return {__INIT_CONVERTABLE_TYPE_MAP__};
 }
+
+std::vector<std::pair<std::string, std::string>> GetConvertChain(){
+  return {__SEMANTIC_CONVERT_CHAIN__};
+}
+
+std::vector<std::string> GetBasicTypeStr() {
+  return {__SEMANTIC_BASIC_TYPES__};
+}

@@ -1,8 +1,7 @@
 #include "../include/ast.h"
 #include "../include/var_definition.h"
+#include "../include/test.h"
 
-// #define WEAK_TYPE
-__IS_WEAK_TYPE__
 using namespace std;
 #define NOTEXISTS 0
 #define DBG 0
@@ -73,6 +72,7 @@ shared_ptr<Scope> get_scope_root() { return g_scope_root; }
 void init_convert_chain() {
   // init instance for ALLTYPES, ALLCLASS, ALLFUNCTION ...
 
+  /*
   static vector<pair<string, string>> v_convert;
   static bool has_init = false;
 
@@ -80,8 +80,9 @@ void init_convert_chain() {
     __SEMANTIC_CONVERT_CHAIN__
     has_init = true;
   }
+  */
 
-  for (auto &rule : v_convert) {
+  for (auto &rule : GetConvertChain()) {
     auto base_var =
         get_type_by_type_id(get_basic_type_id_by_string(rule.second));
     auto derived_var =
@@ -116,8 +117,7 @@ bool is_derived_type(TYPEID dtype, TYPEID btype) {
 
 void init_basic_types() {
 
-  vector<string> v_basic_types = {__SEMANTIC_BASIC_TYPES__};
-  for (auto &line : v_basic_types) {
+  for (auto &line : GetBasicTypeStr()) {
     if (line.empty())
       continue;
     auto new_id = gen_type_id();
@@ -498,26 +498,26 @@ void Scope::add_definition(int type, const string &var_name, unsigned long id,
   if (type == 0)
     return;
 
-#ifdef WEAK_TYPE
-  if (stype != kScopeStatement) {
-    auto p = this;
-    while (p != NULL && p->scope_type_ != stype)
-      p = p->parent_.lock().get();
-    if (p == NULL)
-      p = this;
-    if (p->s_defined_variable_names_.find(var_name) !=
-        p->s_defined_variable_names_.end())
+  if (IsWeakType()) {
+    if (stype != kScopeStatement) {
+      auto p = this;
+      while (p != NULL && p->scope_type_ != stype)
+        p = p->parent_.lock().get();
+      if (p == NULL)
+        p = this;
+      if (p->s_defined_variable_names_.find(var_name) !=
+          p->s_defined_variable_names_.end())
+        return;
+
+      p->s_defined_variable_names_.insert(var_name);
+      p->m_defined_variables_[type].push_back(make_pair(var_name, id));
+
       return;
-
-    p->s_defined_variable_names_.insert(var_name);
-    p->m_defined_variables_[type].push_back(make_pair(var_name, id));
-
-    return;
-  } else {
-    m_defined_variables_[type].push_back(make_pair(var_name, id));
-    return;
+    } else {
+      m_defined_variables_[type].push_back(make_pair(var_name, id));
+      return;
+    }
   }
-#endif
 
   m_defined_variables_[type].push_back(make_pair(var_name, id));
 }

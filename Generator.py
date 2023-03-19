@@ -1369,19 +1369,19 @@ def genBasicTypeHandler(input):
     return res
 
 
-def genBasicTypeHandlerNew(input):
-    res = ""
-    for k, btypes in input.items():
-
-        k = "k" + underline_to_hump(k)
-        res += "\t\t" + "case %s:\n" % k
-        for btype in btypes:
-            res += "\t\t\t" + "res_type = get_type_id_by_string(\"%s\");\n" % btype
-            res += "\t\t\t" + "(*cur_type)[res_type].push_back(make_pair(0, 0));\n"
-            res += "\t\t\t" + "cache_inference_map_[cur] = cur_type;\n"
-            res += "\t\t\t" + "return true;\n"
-
-    return res
+#def genBasicTypeHandlerNew(input):
+#    res = ""
+#    for k, btypes in input.items():
+#
+#        k = "k" + underline_to_hump(k)
+#        res += "\t\t" + "case %s:\n" % k
+#        for btype in btypes:
+#            res += "\t\t\t" + "res_type = get_type_id_by_string(\"%s\");\n" % btype
+#            res += "\t\t\t" + "(*cur_type)[res_type].push_back(make_pair(0, 0));\n"
+#            res += "\t\t\t" + "cache_inference_map_[cur] = cur_type;\n"
+#            res += "\t\t\t" + "return true;\n"
+#
+#    return res
 
 
 def parseFixBasicType(filename):
@@ -1453,23 +1453,13 @@ def genVarDefSrc():
         content = f.read()
 
     global semanticRule
-    convert_chain = ""
 
-    if semanticRule["IsWeakType"]:
-        content = content.replace("__IS_WEAK_TYPE__", "#define WEAK_TYPE")
-    else:
-        content = content.replace("__IS_WEAK_TYPE__", "")
+    #if semanticRule["IsWeakType"]:
+    #    content = content.replace("__IS_WEAK_TYPE__", "#define WEAK_TYPE")
+    #else:
+    #    content = content.replace("__IS_WEAK_TYPE__", "")
 
-    for i in semanticRule["ConvertChain"]:
-        for kk in range(0, len(i) - 1):
-            convert_chain += "\t" + "v_convert.push_back(make_pair(\"%s\", \"%s\")); \n" % (
-                i[kk], i[kk + 1])
 
-    content = content.replace("__SEMANTIC_CONVERT_CHAIN__", convert_chain)
-
-    basic_types = ["\"%s\"" % i for i in semanticRule["BasicTypes"]]
-    basic_types = ", ".join(basic_types)
-    content = content.replace("__SEMANTIC_BASIC_TYPES__", basic_types)
     return content
 
 
@@ -1527,6 +1517,15 @@ def genTestSrc():
     convert_map = genConvertIRTypeMap()
     content = content.replace("__INIT_CONVERTABLE_TYPE_MAP__", convert_map)
 
+    convert_chain = ""
+    for i in semanticRule["ConvertChain"]:
+        for kk in range(0, len(i) - 1):
+            convert_chain += "{\"%s\", \"%s\"}," % (i[kk], i[kk + 1])
+
+    content = content.replace("__SEMANTIC_CONVERT_CHAIN__", convert_chain[:-1])
+    basic_types = ["\"%s\"" % i for i in semanticRule["BasicTypes"]]
+    basic_types = ", ".join(basic_types)
+    content = content.replace("__SEMANTIC_BASIC_TYPES__", basic_types)
     return content
 
 
