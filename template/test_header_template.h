@@ -8,4 +8,6 @@ bool IsWeakType();
 IRTYPE GetFixIRType();
 std::set<NODETYPE> GetFunctionArgNodeType();
 
+std::set<IRTYPE> GetBasicUnits();
+
 #endif

@@ -22,7 +22,7 @@ const char *member_str = ".";
 
 map<int, vector<OPRule>> TypeSystem::op_rules_;
 map<string, map<string, map<string, OPTYPE>>> TypeSystem::op_id_map_;
-set<IRTYPE> TypeSystem::s_basic_unit_ = {__SEMANTIC_BASIC_UNIT__};
+set<IRTYPE> TypeSystem::s_basic_unit_ = GetBasicUnits();
 int TypeSystem::gen_counter_;
 int TypeSystem::function_gen_counter_;
 int TypeSystem::current_fix_scope_;

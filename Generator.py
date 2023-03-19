@@ -1507,6 +1507,8 @@ def genTestSrc():
         content = content.replace("__FIX_IR_TYPE__", "kUnknown")
         content = content.replace("__FUNCTION_ARGUMENT_UNIT__", "kUnknown")
 
+    basic_unit = ",".join(semanticRule['BasicUnit'])
+    content = content.replace("__SEMANTIC_BASIC_UNIT__", basic_unit)
     return content
 
 
@@ -1554,8 +1556,6 @@ def genTypeSystemSrc():
     with open(configuration.ts_src_template_path, 'r') as f:
         content = f.read()
 
-    basic_unit = ",".join(semanticRule['BasicUnit'])
-    content = content.replace("__SEMANTIC_BASIC_UNIT__", basic_unit)
     content = content.replace("__SEMANTIC_BUILTIN_OBJ__",
                               "\"%s\"" % semanticRule["BuiltinObjFile"])
 
