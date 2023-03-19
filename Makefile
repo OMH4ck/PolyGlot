@@ -1,4 +1,4 @@
-LAN=c
+LAN=lua
 
 all: template/* Generator.py
 	@if [ ! -d "src" ]; then \

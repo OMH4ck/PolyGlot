@@ -1425,10 +1425,9 @@ def genConvertIRTypeMap():
             type_a = underline_to_hump(class_a.name)
             type_b = underline_to_hump(class_b.name)
             if can_be_converted(type_a, type_b, convert_map) != None:
-                res += "\t\tm_convertable_map_[k%s].insert(k%s);\n" % (type_a,
-                                                                       type_b)
+                res += "{\"%s\", \"%s\"}," % (type_a, type_b)
 
-    return res
+    return res[:-1]
 
 
 def genMutateHeader():
@@ -1444,8 +1443,6 @@ def genMutateSrc():
     with open(configuration.mutate_src_template_path, 'r') as f:
         content = f.read()
 
-    convert_map = genConvertIRTypeMap()
-    content = content.replace("__INIT_CONVERTABLE_TYPE_MAP__", convert_map)
 
     return content
 
@@ -1526,6 +1523,10 @@ def genTestSrc():
 
     op_rules = ", ".join(op_rules)
     content = content.replace("__SEMANTIC_OP_RULE__", op_rules)
+
+    convert_map = genConvertIRTypeMap()
+    content = content.replace("__INIT_CONVERTABLE_TYPE_MAP__", convert_map)
+
     return content
 
 

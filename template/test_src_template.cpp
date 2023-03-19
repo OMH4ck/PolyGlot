@@ -52,3 +52,7 @@ bool HandleBasicType(IRTYPE ir_type, std::shared_ptr<std::map<TYPEID, std::vecto
     return false;
   }
 }
+
+std::vector<std::pair<std::string, std::string>> GetConvertableTypes(){
+  return {__INIT_CONVERTABLE_TYPE_MAP__};
+}

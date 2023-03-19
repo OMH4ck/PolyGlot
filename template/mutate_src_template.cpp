@@ -16,6 +16,7 @@ using namespace std;
 #include "../include/define.h"
 #include "../include/mutate.h"
 #include "../include/utils.h"
+#include "test.h"
 
 #define _NON_REPLACE_
 
@@ -202,7 +203,11 @@ void Mutator::add_ir_to_library_no_deepcopy(IR *cur) {
   return;
 }
 
-void Mutator::init_convertable_ir_type_map() { __INIT_CONVERTABLE_TYPE_MAP__ }
+void Mutator::init_convertable_ir_type_map() {
+  for(auto& p: GetConvertableTypes()){
+    m_convertable_map_[get_nodetype_by_string(p.first)].insert(get_nodetype_by_string(p.second));
+  }
+}
 
 void Mutator::init_common_string(string filename) {
   common_string_library_.push_back("DO_NOT_BE_EMPTY");
