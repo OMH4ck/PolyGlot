@@ -1511,6 +1511,21 @@ def genTestSrc():
     content = content.replace("__SEMANTIC_BASIC_UNIT__", basic_unit)
     content = content.replace("__SEMANTIC_BUILTIN_OBJ__",
                               "\"%s\"" % semanticRule["BuiltinObjFile"])
+    op_rules = []
+    for oprule in semanticRule['OPRule']:
+        tmp = []
+        tmp.append(str(oprule['OperandNum']))
+        tmp += oprule['Operator']
+        tmp.append(oprule['OperandLeftType'])
+        if oprule['OperandNum'] == 2:
+            tmp.append(oprule['OperandRightType'])
+        tmp.append(oprule['ResultType'])
+        tmp.append(oprule['InferDirection'])
+        tmp += oprule['Property']
+        op_rules.append('\"%s\"' % " # ".join(tmp))
+
+    op_rules = ", ".join(op_rules)
+    content = content.replace("__SEMANTIC_OP_RULE__", op_rules)
     return content
 
 
@@ -1519,10 +1534,10 @@ def genTypeSystemHeader():
     with open(configuration.ts_header_template_path, 'r') as f:
         content = f.read()
 
-    if semanticRule["IsWeakType"] == 1:
-        content = content.replace("__IS_WEAK_TYPE__", "#define WEAK_TYPE")
-    else:
-        content = content.replace("__IS_WEAK_TYPE__", "")
+    #if semanticRule["IsWeakType"] == 1:
+    #    content = content.replace("__IS_WEAK_TYPE__", "#define WEAK_TYPE")
+    #else:
+    #    content = content.replace("__IS_WEAK_TYPE__", "")
     return content
 
 
@@ -1559,31 +1574,16 @@ def genTypeSystemSrc():
         content = f.read()
 
 
-    op_rules = []
-    for oprule in semanticRule['OPRule']:
-        tmp = []
-        tmp.append(str(oprule['OperandNum']))
-        tmp += oprule['Operator']
-        tmp.append(oprule['OperandLeftType'])
-        if oprule['OperandNum'] == 2:
-            tmp.append(oprule['OperandRightType'])
-        tmp.append(oprule['ResultType'])
-        tmp.append(oprule['InferDirection'])
-        tmp += oprule['Property']
-        op_rules.append('\"%s\"' % " # ".join(tmp))
-
-    op_rules = ", ".join(op_rules)
-    content = content.replace("__SEMANTIC_OP_RULE__", op_rules)
-    btm = parseBasicType("grammars/js_grammar/basic_type_map")
+    #btm = parseBasicType("grammars/js_grammar/basic_type_map")
     #basic_type_handler = genBasicTypeHandler(btm)
-    basic_type_handler_new = genBasicTypeHandlerNew(btm)
+    #basic_type_handler_new = genBasicTypeHandlerNew(btm)
     #fbtm = parseFixBasicType("./c_grammar/fix_basic_type_map")
     #fix_basic_type_handler = genFixBasicType(fbtm)
 
     #infer_input = parserInferIDByDataType("./c_grammar/infer_data_type_map")
     #infer_id_by_datatype_cases = genInferIDByDataType(infer_input)
-    content = content.replace("__HANDLE_BASIC_TYPES_NEW__",
-                              basic_type_handler_new)
+    #content = content.replace("__HANDLE_BASIC_TYPES_NEW__",
+    #                          basic_type_handler_new)
     #content = content.replace("__HANDLE_BASIC_TYPES__", basic_type_handler)
     #content = content.replace("__FIX_BASIC_TYPES__", fix_basic_type_handler)
     #content = content.replace("__INFER_INDENTIFER_BY_DATATYPE__", infer_id_by_datatype_cases)

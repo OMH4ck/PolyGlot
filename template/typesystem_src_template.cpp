@@ -106,7 +106,7 @@ void TypeSystem::init_type_dict() {
   // string line;
   // ifstream input_file("./js_grammar/type_dict");
 
-  vector<string> type_dict = {__SEMANTIC_OP_RULE__};
+  vector<string> type_dict = GetOpRules();
   for (auto &line : type_dict) {
     if (line.empty())
       continue;
@@ -900,7 +900,11 @@ bool TypeSystem::type_inference_new(IR *cur, int scope_type) {
     cout << "Infering: " << cur->to_string() << endl;
   if (DBG)
     cout << "Scope type: " << scope_type << endl;
-  switch (cur->type_) { __HANDLE_BASIC_TYPES_NEW__ }
+  
+  if(HandleBasicType(cur->type_, cur_type)){
+    cache_inference_map_[cur] = cur_type;
+    return true;
+  }
 
   if (cur->type_ == kIdentifier) {
     // handle here
