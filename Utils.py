@@ -196,17 +196,17 @@ class ClassGraph:
         #print "node_map: ", self.node_map
         #print "all_circles: ", self.all_circles
 
-        print "=============after merge================\n"
-        print self.all_circles
-        print "=============id_set_map=================\n"
+        print("=============after merge================\n")
+        print(self.all_circles)
+        print("=============id_set_map=================\n")
         for (key, value) in self.id_classset_map.items():
-            print "ID: %d" % key
-            print value
-        print "=============circle_graph================\n"
-        print self.circle_graph
+            print("ID: %d" % key)
+            print(value)
+        print("=============circle_graph================\n")
+        print(self.circle_graph)
 
-        print "=============topo_list================\n"
-        print self.topo_list
+        print("=============topo_list================\n")
+        print(self.topo_list)
         """
         for k, v in self.circle_graph.items():
             print "="*30

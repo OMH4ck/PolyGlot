@@ -478,7 +478,7 @@ def findOperator(symbol_list):
 
 def get_match_string(token):
     #print(token)
-    if tokenDict.has_key(token) and tokenDict[token].is_keyword == False:
+    if token in tokenDict and tokenDict[token].is_keyword == False:
         return strip_quote(tokenDict[token].match_string)
     return token
 
@@ -673,7 +673,7 @@ def genGenerateOneCase(current_class, case_idx):
 def getNotSelfContainCases(current_class):
     #print(current_class.name)
     fuck_list = {"SimpleSelect": [0, 1, 2, 3], "CExpr": [0], "AExpr": [0]}
-    if (fuck_list.has_key(current_class.name)):
+    if current_class.name in fuck_list:
         #print("YES:", fuck_list[current_class.name])
         return fuck_list[current_class.name]
     case_idx_list = []
@@ -703,7 +703,7 @@ def genGenerate(current_class):
     #print(not_self_contained_list)
     has_default = True
     if (case_nums == 0):
-        print class_name
+        print(class_name)
     if (not_len / case_nums > 0.8):
         #print("FUCK")
         has_default = False
@@ -922,7 +922,7 @@ def genFlex(token_dict):
     if args.extraflex:
         extra_rules_path = args.extraflex
     contents = ""
-    with open(extra_rules_path, 'rb') as f:
+    with open(extra_rules_path, 'r') as f:
         contents = f.read()
         ban_ptn = re.compile(r"PREFIX_([A-Z_]*)")
         ban_res = ban_ptn.findall(contents)
@@ -999,7 +999,7 @@ def genBisonPrec(token_dict):
     precdict = dict()
     for token_name, token in token_dict.items():
         if token.prec != 0:
-            if (precdict.has_key(token.prec) == False):
+            if token.prec not in precdict:
                 precdict[token.prec] = []
             precdict[token.prec].append(token_name)
 
@@ -1080,7 +1080,7 @@ def genBisonTypeDefOneCase(gen_class, caseidx):
             if sym.isTerminator == True:
                 continue
             tmp = "$$->%s_ = $%d;\n"
-            if (counter.has_key(sym.name) == False):
+            if sym.name not in counter:
                 counter[sym.name] = 0
             counter[sym.name] += 1
             if (gen_class.memberList[sym.name] == 1):
@@ -1700,7 +1700,7 @@ def build_convert_ir_type_map(all_class):
             node = is_non_term_case(case)
             if node == None:
                 continue
-            if (result.has_key(node) == False):
+            if node not in result:
                 result[node] = set()
             result[node].add(c_name)
 
@@ -1727,7 +1727,7 @@ def can_be_converted(a, b, graph):
             if i in parent_a:
                 continue
             parent_a.add(i)
-            if graph.has_key(i) == False:
+            if i not in graph:
                 continue
             for node in graph[i]:
                 if (node not in visited):
@@ -1743,7 +1743,7 @@ def can_be_converted(a, b, graph):
             if i in parent_a:
                 #print("Common parent: %s" % i)
                 return i
-            if graph.has_key(i) == False:
+            if i not in graph:
                 continue
             for node in graph[i]:
                 if (node not in visited):
@@ -1871,30 +1871,30 @@ if __name__ == "__main__":
                 ]
 
     pu_h = genParserUtilsHeader(tokenDict)
-    with open(configuration.parser_utils_header_output_path, "wb") as f:
+    with open(configuration.parser_utils_header_output_path, "w") as f:
         f.write(pu_h)
 
-    with open(configuration.flex_output_path, "wb") as flex_file:
+    with open(configuration.flex_output_path, "w") as flex_file:
         flex_file.write(genFlex(tokenDict))
         flex_file.close()
 
-    with open(configuration.bison_output_path, "wb") as bison_file:
+    with open(configuration.bison_output_path, "w") as bison_file:
         bison_file.write(genBison(allClass))
         bison_file.close()
 
-    with open(configuration.ast_header_output_path, "wb") as ast_header_file:
+    with open(configuration.ast_header_output_path, "w") as ast_header_file:
         ast_header_file.write(genAstHeader(allClass))
         ast_header_file.close()
 
-    with open(configuration.ast_src_output_path, "wb") as ast_content_file:
+    with open(configuration.ast_src_output_path, "w") as ast_content_file:
         ast_content_file.write(genAstSrc(allClass))
         ast_content_file.close()
 
-    with open(configuration.utils_header_output_path, "wb") as f:
+    with open(configuration.utils_header_output_path, "w") as f:
         f.write(genUtilsHeader())
         f.close()
 
-    with open(configuration.utils_src_output_path, "wb") as f:
+    with open(configuration.utils_src_output_path, "w") as f:
         f.write(genUtilsSrc())
         f.close()
 
@@ -1906,39 +1906,39 @@ if __name__ == "__main__":
     #        print(all_data_t)
 
     def_h = genDefineHeader(allClass, all_data_t)
-    with open(configuration.define_header_output_path, "wb") as f:
+    with open(configuration.define_header_output_path, "w") as f:
         f.write(def_h)
 
     mutate_h = genMutateHeader()
-    with open(configuration.mutate_header_output_path, "wb") as f:
+    with open(configuration.mutate_header_output_path, "w") as f:
         f.write(mutate_h)
 
     mutate_src = genMutateSrc()
-    with open(configuration.mutate_src_output_path, "wb") as f:
+    with open(configuration.mutate_src_output_path, "w") as f:
         f.write(mutate_src)
 
     ts_src = genTypeSystemSrc()
-    with open(configuration.ts_src_output_path, "wb") as f:
+    with open(configuration.ts_src_output_path, "w") as f:
         f.write(ts_src)
 
     ts_h = genTypeSystemHeader()
-    with open(configuration.ts_header_output_path, "wb") as f:
+    with open(configuration.ts_header_output_path, "w") as f:
         f.write(ts_h)
 
     xx_h = genTestHeader()
-    with open(configuration.test_header_output_path, "wb") as f:
+    with open(configuration.test_header_output_path, "w") as f:
         f.write(xx_h)
 
     xx_h = genTestSrc()
-    with open(configuration.test_src_output_path, "wb") as f:
+    with open(configuration.test_src_output_path, "w") as f:
         f.write(xx_h)
 
     vd_src = genVarDefSrc()
-    with open(configuration.vardef_src_output_path, "wb") as f:
+    with open(configuration.vardef_src_output_path, "w") as f:
         f.write(vd_src)
 
     vd_h = genVarDefHeader()
-    with open(configuration.vardef_header_output_path, "wb") as f:
+    with open(configuration.vardef_header_output_path, "w") as f:
         f.write(vd_h)
 
     format_output_files()

@@ -240,11 +240,11 @@ class Config:
         return res
 
     def gen_parser_typedef(self):
-        with open(self.bison_parser_typedef_template_path, "rb") as f:
+        with open(self.bison_parser_typedef_template_path, "r") as f:
             contents = f.read()
             contents = contents.replace("REPLACEME",
                                         self.bison_data_type_prefix)
-            with open(self.bison_parser_typedef_output_path, 'wb') as ff:
+            with open(self.bison_parser_typedef_output_path, 'w') as ff:
                 ff.write(contents)
 
 

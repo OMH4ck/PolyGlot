@@ -208,16 +208,16 @@ if __name__ == "__main__":
         fix_conflict(content)
         content = replace_data_type(content)
         hump_file_content = replace_to_hump(content)
-        print hump_file_content
+        print(hump_file_content)
     elif(sys.argv[1] == "-e"):
         symbols = get_all_symbol(content)
         for i in symbols:
-            print i
+            print(i)
     elif(sys.argv[1] == "-t"):
         symbols_replace = read_symbol_file("to_replace")
         symbols_replace["_P "] = " "
         symbols_replace["prec op"] = "prec OP"
-        print replace_all_symbol(content, symbols_replace).strip()
+        print(replace_all_symbol(content, symbols_replace).strip())
     elif(sys.argv[1] == "-c"):
         ff_info = readfile(sys.argv[3])
         prec_info = analyze_ff_info(ff_info)
@@ -229,5 +229,5 @@ if __name__ == "__main__":
        # symbols_replace["'=>'"] = "EQUALS_GREATER"
        # symbols_replace["'>='"] = "GREATER_EQUALS"
        # symbols_replace["'->'"] = "PTR_OP"
-        print generate_token_file(token_list, symbols_replace, prec_info)
+        print(generate_token_file(token_list, symbols_replace, prec_info))
 
