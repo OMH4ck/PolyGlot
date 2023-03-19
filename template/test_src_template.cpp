@@ -11,3 +11,7 @@ std::set<NODETYPE> GetFunctionArgNodeType() {
 std::set<IRTYPE> GetBasicUnits() {
   return {__SEMANTIC_BASIC_UNIT__};
 }
+
+std::string GetBuiltInObjectFilePath(){
+  return __SEMANTIC_BUILTIN_OBJ__; 
+  }

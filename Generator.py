@@ -1509,6 +1509,8 @@ def genTestSrc():
 
     basic_unit = ",".join(semanticRule['BasicUnit'])
     content = content.replace("__SEMANTIC_BASIC_UNIT__", basic_unit)
+    content = content.replace("__SEMANTIC_BUILTIN_OBJ__",
+                              "\"%s\"" % semanticRule["BuiltinObjFile"])
     return content
 
 
@@ -1556,8 +1558,6 @@ def genTypeSystemSrc():
     with open(configuration.ts_src_template_path, 'r') as f:
         content = f.read()
 
-    content = content.replace("__SEMANTIC_BUILTIN_OBJ__",
-                              "\"%s\"" % semanticRule["BuiltinObjFile"])
 
     op_rules = []
     for oprule in semanticRule['OPRule']:

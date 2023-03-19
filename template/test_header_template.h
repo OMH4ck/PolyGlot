@@ -10,4 +10,5 @@ std::set<NODETYPE> GetFunctionArgNodeType();
 
 std::set<IRTYPE> GetBasicUnits();
 
+std::string GetBuiltInObjectFilePath();
 #endif

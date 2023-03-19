@@ -22,3 +22,4 @@ gmon.out
 7
 build
 test_data/
+**/replaced_grammar

@@ -99,7 +99,7 @@ void TypeSystem::init() {
   init_basic_types();
   init_convert_chain();
   init_type_dict();
-  init_internal_obj(__SEMANTIC_BUILTIN_OBJ__);
+  init_internal_obj(GetBuiltInObjectFilePath());
 }
 
 void TypeSystem::init_type_dict() {
