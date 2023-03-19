@@ -900,8 +900,8 @@ bool TypeSystem::type_inference_new(IR *cur, int scope_type) {
     cout << "Infering: " << cur->to_string() << endl;
   if (DBG)
     cout << "Scope type: " << scope_type << endl;
-  
-  if(HandleBasicType(cur->type_, cur_type)){
+
+  if (HandleBasicType(cur->type_, cur_type)) {
     cache_inference_map_[cur] = cur_type;
     return true;
   }

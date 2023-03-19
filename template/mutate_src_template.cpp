@@ -204,8 +204,9 @@ void Mutator::add_ir_to_library_no_deepcopy(IR *cur) {
 }
 
 void Mutator::init_convertable_ir_type_map() {
-  for(auto& p: GetConvertableTypes()){
-    m_convertable_map_[get_nodetype_by_string(p.first)].insert(get_nodetype_by_string(p.second));
+  for (auto &p : GetConvertableTypes()) {
+    m_convertable_map_[get_nodetype_by_string(p.first)].insert(
+        get_nodetype_by_string(p.second));
   }
 }
 
