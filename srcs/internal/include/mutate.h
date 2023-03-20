@@ -23,20 +23,16 @@ public:
   Mutator() { srand(time(nullptr)); }
 
   ~Mutator() {
-#ifdef SYNTAX_ONLY
     for (auto &k : ir_library_) {
       for (auto ir : k.second) {
         deep_delete(ir);
       }
     }
-#endif
   }
 
   IR *deep_copy_with_record(const IR *root, const IR *record);
   unsigned long hash(IR *);
   unsigned long hash(string &);
-
-  IR *ir_random_generator(vector<IR *> v_ir_collector);
 
   vector<IR *> mutate_all(vector<IR *> &v_ir_collector); // done
   vector<IR *> mutate(IR *input);                        // done
@@ -67,56 +63,13 @@ public:
   void add_ir_to_library(IR *);         // DONE
   void add_ir_to_library_limited(IR *); // DONE
 
-  string get_a_string();           // DONE
-  unsigned long get_a_val();       // DONE
   IR *get_ir_from_library(IRTYPE); // DONE
   IR *generate_ir_by_type(IRTYPE); // Done
 
-  string get_data_by_type(DATATYPE);
-  pair<string, string> get_data_2d_by_type(DATATYPE, DATATYPE); // DONE
+  void extract_struct(IR *); // Done
 
-  void reset_data_library(); // DONE
-
-  // bool check_node_num(IR * root, unsigned int limit) const;
-  // unsigned int calc_node(IR * root) const;
-
-  string parse_data(string &); // DONE
-  void extract_struct(IR *);   // Done
-
-  // bool validate(IR * root); //done
-  bool fix(IR *root); // done
-
-  vector<IR *> split_to_stmt(IR *root, map<IR **, IR *> &m_save,
-                             set<IRTYPE> &split_set); // done
-  bool connect_back(map<IR **, IR *> &m_save);        // done
-
-  bool fix_one(IR *stmt_root,
-               map<int, map<DATATYPE, vector<IR *>>> &scope_library); // done
-
-  void analyze_scope(
-      IR *stmt_root); // done //reset define_library_ first, and fill it
-  map<IR *, vector<IR *>>
-  build_graph(IR *stmt_root,
-              map<int, map<DATATYPE, vector<IR *>>>
-                  &scope_library); // done //specify case handled here
-  bool fill_stmt_graph(map<IR *, vector<IR *>> &graph);             // done
-  void clear_scope_library(bool clear_define);                      // done
-  IR *find_closest_node(IR *stmt_root, IR *node, DATATYPE type);    // done
-  bool fill_one(IR *parent);                                        // done
-  bool fill_one_pair(IR *parent, IR *child);                        // done
-  bool fill_stmt_graph_one(map<IR *, vector<IR *>> &graph, IR *ir); // done
-  bool validate(IR *&root);                                         // done
   bool is_ir_type_connvertable(IRTYPE a, IRTYPE b);
 
-  bool replace_one_value_from_datalibray_2d(DATATYPE p_datatype,
-                                            DATATYPE c_data_type, string &p_key,
-                                            string &old_c_value,
-                                            string &new_c_value);
-  bool remove_one_pair_from_datalibrary_2d(DATATYPE p_datatype,
-                                           DATATYPE c_data_type, string &p_key);
-  bool replace_one_from_datalibrary(DATATYPE datatype, string &old_str,
-                                    string &new_str);
-  bool remove_one_from_datalibrary(DATATYPE datatype, string &key);
   //~Mutator();
   void debug(IR *root);
 
@@ -124,14 +77,9 @@ public:
 
   // private:
 
-  void add_ir_to_library_no_deepcopy(IR *); // DONE
   // IR* generate_ir_by_type(IRTYPE type);
 
-#ifdef SYNTAX_ONLY
   static const unsigned max_ir_library_size_ = 0x200;
-#else
-  static const unsigned max_ir_library_size_ = 0x200;
-#endif
   IR *record_ = NULL;
   IR *mutated_root_ = NULL;
   map<IRTYPE, vector<IR *>> ir_library_;
