@@ -35,4 +35,6 @@ bool IsFloatLiteral(NODETYPE type);
 bool IsIntLiteral(NODETYPE type);
 bool IsStringLiteral(NODETYPE type);
 // bool IsIdentifier(NODETYPE type);
+
+std::string GetInitDirPath();
 #endif

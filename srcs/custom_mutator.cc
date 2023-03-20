@@ -11,6 +11,7 @@
 #include "define.h"
 #include "var_definition.h"
 #include "typesystem.h"
+#include "test.h"
 
 #include "afl-fuzz.h"
 
@@ -87,12 +88,12 @@ void PolyGlotMutator::do_libary_initialize(){
   g_mutator.int_types_.insert(kIntLiteral);
   g_mutator.string_types_.insert(kStringLiteral);
 
-  const char* init_file_path = INIT_FILE_DIR;
-  vector<string> file_list = get_all_files_in_dir(init_file_path);
+  std::string init_file_path = GetInitDirPath();
+  vector<string> file_list = get_all_files_in_dir(init_file_path.c_str());
 
   for(auto &f : file_list){
-    cerr << "init filename: " << string(init_file_path) +f << endl;
-    g_mutator.init_ir_library_from_a_file(string(init_file_path) +f);
+    cerr << "init filename: " << init_file_path +f << endl;
+    g_mutator.init_ir_library_from_a_file(init_file_path +f);
   }
   g_mutator.init_convertable_ir_type_map();
   g_typesystem.init();

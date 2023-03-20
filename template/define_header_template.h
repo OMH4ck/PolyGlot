@@ -2,10 +2,6 @@
 #ifndef __DEFINE_H__
 #define __DEFINE_H__
 
-DEFINE_ALL_TYPE
-DEFINE_ALL_CLASS
-DEFINE_ALL_DATATYPE
-
 #define GLOBAL_SCOPE 0x1000
 #define FUNCTION_SCOPE 0x1001
 #define STATEMENT_SCOPE 0x1002
@@ -13,9 +9,9 @@ DEFINE_ALL_DATATYPE
 
 #define SYNTAX_ONLY
 
-#define INIT_FILE_DIR "__INIT_FILE_DIR__"
+//#define INIT_FILE_DIR "__INIT_FILE_DIR__"
 
-__LANG_FUZZ__
+//__LANG_FUZZ__
 
 #define SWITCHSTART switch (case_idx_) {
 

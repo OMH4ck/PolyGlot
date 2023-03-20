@@ -1189,15 +1189,47 @@ def genDataFlag():
     return helper
 
 
-def genGenIRHeader(allClass):
+def genGenIRHeader(allClass, all_datatype):
     res = "#ifndef __GEN_IR_H__\n"
     res += "#define __GEN_IR_H__\n"
-    res += "#include \"ast.h\"\n"
     res += "#include \"define.h\"\n"
+    res += "#include \"ast.h\"\n"
+
+    all_type = "#define ALLTYPE(V) \\\n"
+    all_classes = "#define ALLCLASS(V) \\\n"
+    all_data_types = "#define ALLDATATYPE(V) \\\n"
+
+    for c in allClass:
+        cname = c.name
+        all_type += "\tV(k%s) \\\n" % cname
+        all_classes += "\tV(%s) \\\n" % cname
+
+    all_type += "\tV(kUnknown) \\\n"
+    all_type += "\n"
+    all_classes += "\n"
+
+    for c in all_datatype:
+        all_data_types += "\tV(%s) \\\n" % c
+
+    all_data_types += "\n"
+
+    res += all_type + "\n"
+
+    res += all_classes
+
     res += genClassDeclaration(allClass)
     res += "\n"
 
+    res += """
+enum NODETYPE  : unsigned int {
+#define DECLARE_TYPE(v) v,
+  ALLTYPE(DECLARE_TYPE)
+#undef DECLARE_TYPE
+};
+    """
+
     res += "typedef %s TopASTNode;\n" % configuration.bison_top_input_type
+
     for each_class in allClass:
         res += genClassDef(each_class, each_class)
 
@@ -1247,34 +1279,34 @@ def genDefineHeader(all_class, all_datatype):
     with open(configuration.define_header_template_path, 'r') as f:
         content = f.read()
 
-    content = content.replace("__INIT_FILE_DIR__", semanticRule["InitFileDir"])
-    if "language" in semanticRule.keys():
-        content = content.replace(
-            "__LANG_FUZZ__", "#define " + semanticRule["language"] + "FUZZ")
-    else:
-        content = content.replace("__LANG_FUZZ__", "")
+    #content = content.replace("__INIT_FILE_DIR__", semanticRule["InitFileDir"])
+    #if "language" in semanticRule.keys():
+    #    content = content.replace(
+    #        "__LANG_FUZZ__", "#define " + semanticRule["language"] + "FUZZ")
+    #else:
+    #    content = content.replace("__LANG_FUZZ__", "")
 
-    all_type = "#define ALLTYPE(V) \\\n"
-    all_classes = "#define ALLCLASS(V) \\\n"
-    all_data_types = "#define ALLDATATYPE(V) \\\n"
+    #all_type = "#define ALLTYPE(V) \\\n"
+    #all_classes = "#define ALLCLASS(V) \\\n"
+    #all_data_types = "#define ALLDATATYPE(V) \\\n"
 
-    for c in all_class:
-        cname = c.name
-        all_type += "\tV(k%s) \\\n" % cname
-        all_classes += "\tV(%s) \\\n" % cname
+    #for c in all_class:
+    #    cname = c.name
+    #    all_type += "\tV(k%s) \\\n" % cname
+    #    all_classes += "\tV(%s) \\\n" % cname
 
-    all_type += "\tV(kUnknown) \\\n"
-    all_type += "\n"
-    all_classes += "\n"
+    #all_type += "\tV(kUnknown) \\\n"
+    #all_type += "\n"
+    #all_classes += "\n"
 
-    for c in all_datatype:
-        all_data_types += "\tV(%s) \\\n" % c
+    #for c in all_datatype:
+    #    all_data_types += "\tV(%s) \\\n" % c
 
-    all_data_types += "\n"
+    #all_data_types += "\n"
 
-    content = content.replace("DEFINE_ALL_TYPE", all_type)
-    content = content.replace("DEFINE_ALL_CLASS", all_classes)
-    content = content.replace("DEFINE_ALL_DATATYPE", all_data_types)
+    #content = content.replace("DEFINE_ALL_TYPE", all_type)
+    #content = content.replace("DEFINE_ALL_CLASS", all_classes)
+    #content = content.replace("DEFINE_ALL_DATATYPE", all_data_types)
 
     return content
 
@@ -1495,6 +1527,7 @@ def genTestSrc():
     basic_types = ", ".join(basic_types)
     content = content.replace("__SEMANTIC_BASIC_TYPES__", basic_types)
     content = genToStringCase(content)
+    content = content.replace("__INIT_FILE_DIR__", semanticRule["InitFileDir"])
     return content
 
 
@@ -1883,7 +1916,7 @@ if __name__ == "__main__":
 
     # Done
     with open(configuration.gen_ir_header_output_path, "w") as gen_ir_header_file:
-        gen_ir_header_file.write(genGenIRHeader(allClass))
+        gen_ir_header_file.write(genGenIRHeader(allClass, all_data_t))
 
     # Done
     with open(configuration.gen_ir_src_output_path, "w") as gen_ir_src_file:
@@ -1906,22 +1939,27 @@ if __name__ == "__main__":
     #        all_data_t = [i.strip() for i in a]
     #        print(all_data_t)
 
+    # Done
     def_h = genDefineHeader(allClass, all_data_t)
     with open(configuration.define_header_output_path, "w") as f:
         f.write(def_h)
 
+    # Done
     mutate_h = genMutateHeader()
     with open(configuration.mutate_header_output_path, "w") as f:
         f.write(mutate_h)
 
+    # Done
     mutate_src = genMutateSrc()
     with open(configuration.mutate_src_output_path, "w") as f:
         f.write(mutate_src)
 
+    # Done
     ts_src = genTypeSystemSrc()
     with open(configuration.ts_src_output_path, "w") as f:
         f.write(ts_src)
 
+    # Done
     ts_h = genTypeSystemHeader()
     with open(configuration.ts_header_output_path, "w") as f:
         f.write(ts_h)
@@ -1934,10 +1972,12 @@ if __name__ == "__main__":
     with open(configuration.test_src_output_path, "w") as f:
         f.write(xx_h)
 
+    # Done
     vd_src = genVarDefSrc()
     with open(configuration.vardef_src_output_path, "w") as f:
         f.write(vd_src)
 
+    # Done
     vd_h = genVarDefHeader()
     with open(configuration.vardef_header_output_path, "w") as f:
         f.write(vd_h)
