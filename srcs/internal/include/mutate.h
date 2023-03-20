@@ -2,6 +2,7 @@
 #define __MUTATOR_H__
 
 // #include <queue>
+#include "ast.h"
 #include <map>
 #include <set>
 

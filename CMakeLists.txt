@@ -24,11 +24,19 @@ set(AFLPP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/AFLplusplus/include)
 
 include_directories(${AFLPP_DIR})
 
-add_library(polyglot_mutator SHARED srcs/custom_mutator.cc ${SRC_FILES} ./parser/bison_parser.cpp  ./parser/flex_lexer.cpp gen/config.cpp gen/gen_ir.cpp)
-target_include_directories(polyglot_mutator PRIVATE ${CMAKE_SOURCE_DIR}/srcs/internal/include)
-target_include_directories(polyglot_mutator PRIVATE ${CMAKE_SOURCE_DIR}/parser)
-target_include_directories(polyglot_mutator PRIVATE ${CMAKE_SOURCE_DIR}/gen)
+add_library(polyglot_lib STATIC srcs/polyglot.cc ${SRC_FILES} ./parser/bison_parser.cpp  ./parser/flex_lexer.cpp gen/config.cpp gen/gen_ir.cpp)
+target_include_directories(polyglot_lib PUBLIC ${CMAKE_SOURCE_DIR}/srcs/internal/include)
+target_include_directories(polyglot_lib PRIVATE ${CMAKE_SOURCE_DIR}/parser)
+target_include_directories(polyglot_lib PRIVATE ${CMAKE_SOURCE_DIR}/gen)
+target_include_directories(polyglot_lib PUBLIC ${CMAKE_SOURCE_DIR}/srcs)
+target_compile_options(polyglot_lib PRIVATE -fPIC)
+target_link_options(polyglot_lib PRIVATE "-Wl,--no-undefined")
+
+add_library(polyglot_mutator SHARED srcs/custom_mutator.cc)
+target_link_libraries(polyglot_mutator PRIVATE polyglot_lib)
 target_link_options(polyglot_mutator PRIVATE "-Wl,--no-undefined")
+
+# target_compile_options(${dbms}_mutator PRIVATE -fPIC)
 # target_compile_options(${dbms}_mutator PRIVATE -fPIC)
 
 #include(lint.cmake)

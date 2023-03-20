@@ -25,3 +25,4 @@ test_data/
 **/replaced_grammar
 release
 gen/
+.cache/
