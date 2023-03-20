@@ -503,8 +503,6 @@ IR *Mutator::strategy_replace(IR *cur) {
   }
 
   MUTATEEND
-
-  return res;
 }
 
 // Need No Fix

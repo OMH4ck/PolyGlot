@@ -2106,8 +2106,6 @@ string TypeSystem::generate_expression_by_type_core(int type, IR *ir) {
 
     return *random_pick(simple_var_map[type]);
   }
-
-  return gen_random_num_string();
 }
 
 IR *TypeSystem::locate_mutated_ir(IR *root) {
