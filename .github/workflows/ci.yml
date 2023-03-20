@@ -12,6 +12,8 @@ jobs:
     env:
       AFL_SKIP_CPUFREQ: 1
       AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: 1
+      CC: clang
+      CXX: clang++
     steps:
       - uses: actions/checkout@v3
       - name: install packages

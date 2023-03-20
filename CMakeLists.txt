@@ -6,8 +6,9 @@ set(BUILD_SHARED_LIBS ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -g -O2 -fsanitize=address -Wunreachable-code-aggressive")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -g -O2 -fsanitize=address")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3")
+#add_link_options("-Wl,--no-undefined" "-fsanitize=address")
 add_link_options("-Wl,--no-undefined" "-fsanitize=address" "-shared-libasan")
 find_package(PkgConfig)
 
