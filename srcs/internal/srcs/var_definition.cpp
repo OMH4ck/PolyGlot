@@ -1,5 +1,5 @@
 #include "ast.h"
-#include "test.h"
+#include "config_misc.h"
 #include "var_definition.h"
 
 using namespace std;

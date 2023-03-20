@@ -11,7 +11,7 @@
 #include "define.h"
 #include "var_definition.h"
 #include "typesystem.h"
-#include "test.h"
+#include "config_misc.h"
 
 #include "afl-fuzz.h"
 

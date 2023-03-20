@@ -24,7 +24,7 @@ set(AFLPP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/AFLplusplus/include)
 
 include_directories(${AFLPP_DIR})
 
-add_library(polyglot_mutator SHARED srcs/custom_mutator.cc ${SRC_FILES} ./parser/bison_parser.cpp  ./parser/flex_lexer.cpp gen/test.cpp gen/gen_ir.cpp)
+add_library(polyglot_mutator SHARED srcs/custom_mutator.cc ${SRC_FILES} ./parser/bison_parser.cpp  ./parser/flex_lexer.cpp gen/config.cpp gen/gen_ir.cpp)
 target_include_directories(polyglot_mutator PRIVATE ${CMAKE_SOURCE_DIR}/srcs/internal/include)
 target_include_directories(polyglot_mutator PRIVATE ${CMAKE_SOURCE_DIR}/parser)
 target_include_directories(polyglot_mutator PRIVATE ${CMAKE_SOURCE_DIR}/gen)

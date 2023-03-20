@@ -143,10 +143,10 @@ class Config:
         #
         self.test_header_template_path = "%stest_header_template.h" % (
             self.template_path)
-        self.test_src_template_path = "%stest_src_template.cpp" % (
+        self.test_src_template_path = "%sconfig_src_template.cpp" % (
             self.template_path)
 
-        self.test_src_output_path = "gen/test.cpp"
+        self.test_src_output_path = "gen/config.cpp"
         self.test_header_output_path = "%s/test.h" % (self.include_path)
         
         # Gen IR

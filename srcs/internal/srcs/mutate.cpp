@@ -16,7 +16,7 @@ using namespace std;
 #include "define.h"
 #include "mutate.h"
 #include "utils.h"
-#include "test.h"
+#include "config_misc.h"
 
 #define _NON_REPLACE_
 
