@@ -12,11 +12,11 @@
 #include <set>
 using namespace std;
 
-#include "ast.h"
+// #include "ast.h"
+#include "config_misc.h"
 #include "define.h"
 #include "mutate.h"
 #include "utils.h"
-#include "config_misc.h"
 
 #define _NON_REPLACE_
 

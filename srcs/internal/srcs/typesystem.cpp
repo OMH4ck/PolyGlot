@@ -1,8 +1,8 @@
-#include "ast.h"
+// #include "ast.h"
+#include "typesystem.h"
+#include "config_misc.h"
 #include "define.h"
 #include "mutate.h"
-#include "config_misc.h"
-#include "typesystem.h"
 #include "utils.h"
 #include "var_definition.h"
 

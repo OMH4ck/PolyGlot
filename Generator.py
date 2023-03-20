@@ -1194,6 +1194,7 @@ def genGenIRHeader(allClass, all_datatype):
     res += "#define __GEN_IR_H__\n"
     res += "#include \"define.h\"\n"
     res += "#include \"ast.h\"\n"
+    res += "#include \"ir.h\"\n"
 
     all_type = "#define ALLTYPE(V) \\\n"
     all_classes = "#define ALLCLASS(V) \\\n"

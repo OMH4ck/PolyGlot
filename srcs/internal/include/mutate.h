@@ -2,7 +2,7 @@
 #define __MUTATOR_H__
 
 // #include <queue>
-#include "ast.h"
+#include "ir.h"
 #include <map>
 #include <set>
 

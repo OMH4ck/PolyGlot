@@ -1,6 +1,7 @@
 #ifndef __TYPESYSTEM_H__
 #define __TYPESYSTEM_H__
 
+#include "ir.h"
 #include <fcntl.h>
 #include <iterator>
 #include <map>
@@ -15,6 +16,7 @@
 
 using std::map;
 using std::set;
+using std::shared_ptr;
 using std::string;
 using std::vector;
 #define NOTEXIST 0
