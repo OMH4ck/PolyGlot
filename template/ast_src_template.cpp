@@ -1,4 +1,10 @@
-SRC_BEGIN
+#include "../include/ast.h"
+#include "../include/define.h"
+#include "../include/test.h"
+#include "../include/typesystem.h"
+#include "../include/utils.h"
+#include "../include/var_definition.h"
+#include <cassert>
 
 static bool scope_tranlation = false;
 
@@ -214,7 +220,17 @@ string IR::to_string() {
 
 string IR::to_string_core() {
   // cout << get_string_by_nodetype(this->type_) << endl;
-  __TOSTRINGCASE__
+
+  if (IsFloatLiteral(type_)) {
+    return std::to_string(float_val_);
+  } else if (IsIntLiteral(type_)) {
+    return std::to_string(int_val_);
+  } else if (IsStringLiteral(type_)) {
+    return str_val_;
+  }
+  // else if(IsIdentifier(type_)){
+  //   return str_val_;
+  // }
 
   string res;
 

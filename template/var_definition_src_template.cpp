@@ -1,6 +1,6 @@
 #include "../include/ast.h"
-#include "../include/var_definition.h"
 #include "../include/test.h"
+#include "../include/var_definition.h"
 
 using namespace std;
 #define NOTEXISTS 0

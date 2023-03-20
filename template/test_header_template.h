@@ -28,4 +28,11 @@ std::vector<std::pair<std::string, std::string>> GetConvertableTypes();
 std::vector<std::pair<std::string, std::string>> GetConvertChain();
 
 std::vector<std::string> GetBasicTypeStr();
+
+// std::string LiteralTypeToString(NODETYPE type);
+
+bool IsFloatLiteral(NODETYPE type);
+bool IsIntLiteral(NODETYPE type);
+bool IsStringLiteral(NODETYPE type);
+// bool IsIdentifier(NODETYPE type);
 #endif

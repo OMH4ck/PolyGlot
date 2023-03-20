@@ -1182,52 +1182,19 @@ def genCaseEnum(casenum):
 
 
 def genDataFlag():
-    res = "enum DATAFLAG {\n"
     helper = ""
     for (key, value) in gDataFlagMap.items():
-        res += "\t k%s = 0x%x,\n" % (key, value)
         helper += "#define is%s(a) ((a) & k%s)\n" % (key, key)
-    res += "};\n"
 
-    res += helper
-    return res
+    return helper
 
 
-def genAstHeader(allClass):
-
-    include_list = [
-        standard_header("vector"),
-        standard_header("string"),
-        normal_header("define.h"),
-        standard_header("iostream"),
-        standard_header("map"),
-        standard_header("memory"),
-        standard_header("fstream")
-    ]
-    res = """#ifndef __AST_H__\n#define __AST_H__\n"""
-
-    for i in include_list:
-        res += "#include %s\n" % i
-    res += "using namespace std;\n"
-    res += "\n"
-
-    res += genClassTypeEnum()
-    res += "\n"
-    res += genCaseEnum(configuration.case_num)
-    res += "\n"
-
-    res += genDataTypeEnum()
-    res += "\n"
-
-    with open(configuration.ast_header_template_path, 'r') as f:
-        content = f.read()
-        res = content.replace("HEADER_BEGIN", res)
-
-    res = res.replace("__ALLCLASSDECLARATION__", genClassDeclaration(allClass))
-    res = res.replace("__ALLDATAFLAG__", genDataFlag())
-    res += "\n"
-    #res = res.replace("__TOPASTNODE__", configuration.bison_top_input_type)
-
+def genGenIRHeader(allClass):
+    res = "#ifndef __GEN_IR_H__\n"
+    res += "#define __GEN_IR_H__\n"
+    res += "#include \"ast.h\"\n"
+    res += "#include \"define.h\"\n"
+    res += genClassDeclaration(allClass)
     res += "\n"
     for each_class in allClass:
         res += genClassDef(each_class, each_class)
@@ -1235,34 +1202,9 @@ def genAstHeader(allClass):
     res += "#endif\n"
     return res
 
-
-def genAstSrc(allClass):
-
-    include_list = [
-        normal_header("../include/ast.h"),
-        normal_header("../include/define.h"),
-        normal_header("../include/utils.h"),
-        standard_header("cassert"),
-        normal_header("../include/var_definition.h"),
-        normal_header("../include/typesystem.h")
-    ]
-    res = ""
-
-    res += include_all(include_list)
-    with open(configuration.ast_src_template_path, 'r') as f:
-        content = f.read()
-        res = content.replace("SRC_BEGIN", res)
-
-        res = res.replace("__TOSTRINGCASE__", genToStringCase())
-        #res = res.replace("__TOPASTNODE__", configuration.bison_top_input_type)
-
-    tmp_set = ["kDeclaration"]
-    tmp_str = ""
-    for i in tmp_set:
-        tmp_str += "\t" + "define_top_set.insert(" + i + ");\n"
-
-    res = res.replace("__INIT_TOP_DEFINE_SET__", tmp_str)
-
+def genGenIRSrc(allClass):
+    res = "#include \"gen_ir.h\"\n"
+    res = "#include \"var_definition.h\"\n"
     for each_class in allClass:
         res += genTranslate(each_class)
         res += genDeepDelete(each_class)
@@ -1270,6 +1212,30 @@ def genAstSrc(allClass):
         res += "\n\n"
 
     return res
+
+def genAstHeader(allClass):
+
+    with open(configuration.ast_header_template_path, 'r') as f:
+        content = f.read()
+    return content
+
+
+def genAstSrc(allClass):
+
+    #res += include_all(include_list)
+    with open(configuration.ast_src_template_path, 'r') as f:
+        content = f.read()
+    return content
+
+        #res = res.replace("__TOPASTNODE__", configuration.bison_top_input_type)
+
+    #tmp_set = ["kDeclaration"]
+    #tmp_str = ""
+    #for i in tmp_set:
+    #    tmp_str += "\t" + "define_top_set.insert(" + i + ");\n"
+
+    #res = res.replace("__INIT_TOP_DEFINE_SET__", tmp_str)
+
 
 
 def genDefineHeader(all_class, all_datatype):
@@ -1519,13 +1485,14 @@ def genTestSrc():
 
     convert_chain = ""
     for i in semanticRule["ConvertChain"]:
-        for kk in range(0, len(i) - 1):
+        for kk in range(len(i) - 1):
             convert_chain += "{\"%s\", \"%s\"}," % (i[kk], i[kk + 1])
 
     content = content.replace("__SEMANTIC_CONVERT_CHAIN__", convert_chain[:-1])
     basic_types = ["\"%s\"" % i for i in semanticRule["BasicTypes"]]
     basic_types = ", ".join(basic_types)
     content = content.replace("__SEMANTIC_BASIC_TYPES__", basic_types)
+    content = genToStringCase(content)
     return content
 
 
@@ -1596,28 +1563,48 @@ def genOthers():
     return
 
 
-def genToStringCase():
+def genToStringCase(content):
     global literalValue
     global allClass
     tmp_set = set()
     for c in allClass:
         tmp_set.add(underline_to_hump(c.name))
 
-    res = ""
+    #res = ""
+    basic_type_map = {}
     for (key, value) in literalValue.items():
         for kk in value:
             kk = underline_to_hump(kk)
             if (kk in tmp_set):
-                cmd = "\tcase k%s: return " % kk
-                if (key == "string"):
-                    cmd += "str_val_;"
-                else:
-                    cmd += "std::to_string(%s_val_);" % key
-                cmd += "\n"
-                res += cmd
+                if key not in basic_type_map:
+                    basic_type_map[key] = []
+                basic_type_map[key].append(kk)
+                #cmd = "\tcase k%s: return " % kk
+                #if (key == "string"):
+                #    cmd += "str_val_;"
+                #else:
+                #    cmd += "std::to_string(%s_val_);" % key
+                #cmd += "\n"
+                #res += cmd
 
-    res = "switch(type_){\n%s\n}" % res
-    return res
+    string_literal_cmp = "" 
+    float_literal_cmp = ""
+    int_literal_cmp = ""
+    for (key, value) in basic_type_map.items():
+        if key == "string":
+            for kk in value:
+                string_literal_cmp += "\tif (type == k%s) return true;\n" % kk
+        elif key == "float":
+            for kk in value:
+                float_literal_cmp += "\tif (type == k%s) return true;\n" % kk
+        elif key == "int":
+            for kk in value:
+                int_literal_cmp += "\tif (type == k%s) return true;\n" % kk
+    #res = "switch(type){\n%s\n}" % res
+    content = content.replace("__STRINGLITERALCASE__", string_literal_cmp)
+    content = content.replace("__INTLITERALCASE__", int_literal_cmp)
+    content = content.replace("__FLOATLITERALCASE__", float_literal_cmp)
+    return content
 
 
 def parseScopeAction(filename):
@@ -1889,6 +1876,12 @@ if __name__ == "__main__":
     with open(configuration.ast_src_output_path, "w") as ast_content_file:
         ast_content_file.write(genAstSrc(allClass))
         ast_content_file.close()
+
+    with open(configuration.gen_ir_header_output_path, "w") as gen_ir_header_file:
+        gen_ir_header_file.write(genGenIRHeader(allClass))
+
+    with open(configuration.gen_ir_src_output_path, "w") as gen_ir_src_file:
+        gen_ir_src_file.write(genGenIRSrc(allClass))
 
     with open(configuration.utils_header_output_path, "w") as f:
         f.write(genUtilsHeader())
