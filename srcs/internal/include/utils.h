@@ -1,15 +1,15 @@
 #ifndef __UTILS_H__
 #define __UTILS_H__
 
-#include "../parser/bison_parser.h"
-#include "../parser/flex_lexer.h"
+#include "bison_parser.h"
+#include "flex_lexer.h"
 #include <dirent.h>
 #include <string>
+#include <string_view>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <vector>
-#include <string_view>
 
 // To Fix
 #include "gen_ir.h"

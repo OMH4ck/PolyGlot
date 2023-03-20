@@ -78,9 +78,7 @@ bool IsStringLiteral(NODETYPE type) {
   return false;
 }
 
-std::string GetInitDirPath(){
-  return "__INIT_FILE_DIR__";
-}
+std::string GetInitDirPath() { return "__INIT_FILE_DIR__"; }
 /*
 bool IsIdentifier(NODETYPE type){
   __IDENTIFIERCASE__

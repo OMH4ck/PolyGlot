@@ -15,7 +15,7 @@ using namespace std;
 
 #define DONTGENNAME 1
 
-enum NODETYPE : unsigned int;   
+enum NODETYPE : unsigned int;
 typedef NODETYPE IRTYPE;
 
 enum CASEIDX {
@@ -431,24 +431,24 @@ public:
   string suffix_;
 };
 
-#define ALLDATATYPE(V) \
-	V(DataWhatever) \
-	V(DataFunctionType) \
-	V(DataClassType) \
-	V(DataInitiator) \
-	V(DataFunctionBody) \
-	V(DataFunctionArg) \
-	V(DataFunctionReturnValue) \
-	V(DataFunctionName) \
-	V(DataVarDefine) \
-	V(DataClassName) \
-	V(DataPointer) \
-	V(DataStructBody) \
-	V(DataDeclarator) \
-	V(DataVarType) \
-	V(DataFixUnit) \
-	V(DataVarName) \
-	V(DataVarScope)
+#define ALLDATATYPE(V)                                                         \
+  V(DataWhatever)                                                              \
+  V(DataFunctionType)                                                          \
+  V(DataClassType)                                                             \
+  V(DataInitiator)                                                             \
+  V(DataFunctionBody)                                                          \
+  V(DataFunctionArg)                                                           \
+  V(DataFunctionReturnValue)                                                   \
+  V(DataFunctionName)                                                          \
+  V(DataVarDefine)                                                             \
+  V(DataClassName)                                                             \
+  V(DataPointer)                                                               \
+  V(DataStructBody)                                                            \
+  V(DataDeclarator)                                                            \
+  V(DataVarType)                                                               \
+  V(DataFixUnit)                                                               \
+  V(DataVarName)                                                               \
+  V(DataVarScope)
 
 enum DATATYPE {
 #define DECLARE_TYPE(v) k##v,

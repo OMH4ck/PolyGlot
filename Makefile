@@ -1,9 +1,8 @@
 LAN=lua
 
 all: template/* Generator.py
-	@if [ ! -d "src" ]; then \
-	    mkdir src; \
-	    mkdir include; \
+	@if [ ! -d "gen" ]; then \
+	    mkdir gen; \
 	    mkdir parser; \
 	fi
 	cd grammars/${LAN}_grammar && ./replace.sh

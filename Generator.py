@@ -1905,14 +1905,14 @@ if __name__ == "__main__":
         bison_file.close()
 
     # Done
-    with open(configuration.ast_header_output_path, "w") as ast_header_file:
-        ast_header_file.write(genAstHeader(allClass))
-        ast_header_file.close()
+    #with open(configuration.ast_header_output_path, "w") as ast_header_file:
+    #    ast_header_file.write(genAstHeader(allClass))
+    #    ast_header_file.close()
 
     # Done
-    with open(configuration.ast_src_output_path, "w") as ast_content_file:
-        ast_content_file.write(genAstSrc(allClass))
-        ast_content_file.close()
+    #with open(configuration.ast_src_output_path, "w") as ast_content_file:
+    #    ast_content_file.write(genAstSrc(allClass))
+    #    ast_content_file.close()
 
     # Done
     with open(configuration.gen_ir_header_output_path, "w") as gen_ir_header_file:
@@ -1923,14 +1923,14 @@ if __name__ == "__main__":
         gen_ir_src_file.write(genGenIRSrc(allClass))
 
     # Done
-    with open(configuration.utils_header_output_path, "w") as f:
-        f.write(genUtilsHeader())
-        f.close()
+    #with open(configuration.utils_header_output_path, "w") as f:
+    #    f.write(genUtilsHeader())
+    #    f.close()
 
     # Done
-    with open(configuration.utils_src_output_path, "w") as f:
-        f.write(genUtilsSrc())
-        f.close()
+    #with open(configuration.utils_src_output_path, "w") as f:
+    #    f.write(genUtilsSrc())
+    #    f.close()
 
     #all_data_t = []
     #if(args.datatype != None):
@@ -1940,49 +1940,49 @@ if __name__ == "__main__":
     #        print(all_data_t)
 
     # Done
-    def_h = genDefineHeader(allClass, all_data_t)
-    with open(configuration.define_header_output_path, "w") as f:
-        f.write(def_h)
+    #def_h = genDefineHeader(allClass, all_data_t)
+    #with open(configuration.define_header_output_path, "w") as f:
+    #    f.write(def_h)
 
     # Done
-    mutate_h = genMutateHeader()
-    with open(configuration.mutate_header_output_path, "w") as f:
-        f.write(mutate_h)
+    #mutate_h = genMutateHeader()
+    #with open(configuration.mutate_header_output_path, "w") as f:
+    #    f.write(mutate_h)
 
     # Done
-    mutate_src = genMutateSrc()
-    with open(configuration.mutate_src_output_path, "w") as f:
-        f.write(mutate_src)
+    #mutate_src = genMutateSrc()
+    #with open(configuration.mutate_src_output_path, "w") as f:
+    #    f.write(mutate_src)
 
     # Done
-    ts_src = genTypeSystemSrc()
-    with open(configuration.ts_src_output_path, "w") as f:
-        f.write(ts_src)
+    #ts_src = genTypeSystemSrc()
+    #with open(configuration.ts_src_output_path, "w") as f:
+    #    f.write(ts_src)
 
     # Done
-    ts_h = genTypeSystemHeader()
-    with open(configuration.ts_header_output_path, "w") as f:
-        f.write(ts_h)
+    #ts_h = genTypeSystemHeader()
+    #with open(configuration.ts_header_output_path, "w") as f:
+    #    f.write(ts_h)
 
-    xx_h = genTestHeader()
-    with open(configuration.test_header_output_path, "w") as f:
-        f.write(xx_h)
+    #xx_h = genTestHeader()
+    #with open(configuration.test_header_output_path, "w") as f:
+    #    f.write(xx_h)
 
     xx_h = genTestSrc()
     with open(configuration.test_src_output_path, "w") as f:
         f.write(xx_h)
 
     # Done
-    vd_src = genVarDefSrc()
-    with open(configuration.vardef_src_output_path, "w") as f:
-        f.write(vd_src)
+    #vd_src = genVarDefSrc()
+    #with open(configuration.vardef_src_output_path, "w") as f:
+    #    f.write(vd_src)
 
     # Done
-    vd_h = genVarDefHeader()
-    with open(configuration.vardef_header_output_path, "w") as f:
-        f.write(vd_h)
+    #vd_h = genVarDefHeader()
+    #with open(configuration.vardef_header_output_path, "w") as f:
+    #    f.write(vd_h)
 
-    format_output_files()
+    #format_output_files()
 
     #convert_graph = build_convert_ir_type_map(allClass)
     #while True:

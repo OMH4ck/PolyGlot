@@ -84,7 +84,7 @@ class Config:
             % self.bison_top_input_type)
 
         self.bison_code_require_include_files = [
-            normal_header("../include/gen_ir.h"),
+            normal_header("../gen/gen_ir.h"),
             normal_header("parser_typedef.h")
         ]
 
@@ -146,12 +146,12 @@ class Config:
         self.test_src_template_path = "%stest_src_template.cpp" % (
             self.template_path)
 
-        self.test_src_output_path = "%s/test.cpp" % (self.src_path)
+        self.test_src_output_path = "gen/test.cpp"
         self.test_header_output_path = "%s/test.h" % (self.include_path)
         
         # Gen IR
-        self.gen_ir_src_output_path = "%s/gen_ir.cpp" % (self.src_path)
-        self.gen_ir_header_output_path = "%s/gen_ir.h" % (self.include_path)
+        self.gen_ir_src_output_path = "gen/gen_ir.cpp"
+        self.gen_ir_header_output_path = "gen/gen_ir.h"
         ## Others
 
         self.parser_utils_header_template_path = "%sparser_utils_header_template.h" % (

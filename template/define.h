@@ -9,7 +9,7 @@
 
 #define SYNTAX_ONLY
 
-//#define INIT_FILE_DIR "__INIT_FILE_DIR__"
+// #define INIT_FILE_DIR "__INIT_FILE_DIR__"
 
 //__LANG_FUZZ__
 
