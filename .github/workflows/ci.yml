@@ -17,8 +17,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: install packages
-        run: sudo apt-get install -y build-essential clang llvm-dev libc++-dev python3-dev python3-setuptools cmake git
+        run: sudo apt-get install -y build-essential clang llvm-dev libc++-dev python3-dev python3-setuptools cmake git python3-pip
       - name: pull submodule
         run: git submodule update --init
+      - name: install conan
+        run: pip3 install conan
+      - name: install conan profile
+        run: conan profile detect
       - name: build
         run: make && mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug && make -j

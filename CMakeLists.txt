@@ -10,14 +10,26 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -g -O2 -fsanitize=address")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3")
 #add_link_options("-Wl,--no-undefined" "-fsanitize=address")
 add_link_options("-Wl,--no-undefined" "-fsanitize=address" "-shared-libasan")
-find_package(PkgConfig)
 
-include(FetchContent)
-#find_package(yaml-cpp REQUIRED)
-# FetchContent_Declare( ${YAML_CPP_LIBRARIES} URL
-# https://github.com/jbeder/${YAML_CPP_LIBRARIES}/archive/refs/tags/${YAML_CPP_LIBRARIES}-0.7.0.zip)
-# FetchContent_MakeAvailable(${YAML_CPP_LIBRARIES})
-include_directories(${YAML_INCLUDE_DIRS})
+include(conan.cmake)
+
+conan_cmake_configure(REQUIRES gtest/1.12.1 spdlog/1.11.0 GENERATORS
+                      CMakeDeps CMakeToolchain)
+
+conan_cmake_autodetect(settings)
+
+conan_cmake_install(
+  PATH_OR_REFERENCE
+  .
+  BUILD
+  missing
+  REMOTE
+  conancenter
+  SETTINGS
+  ${settings})
+
+find_package(spdlog)
+
 file(GLOB SRC_FILES ${CMAKE_SOURCE_DIR}/srcs/internal/srcs/*.cpp)
 
 # set_target_properties(${YAML_CPP_LIBRARIES} PROPERTIES COMPILE_FLAGS "-w")
