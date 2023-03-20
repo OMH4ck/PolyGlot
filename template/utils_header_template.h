@@ -9,6 +9,10 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <vector>
+#include <string_view>
+
+// To Fix
+#include "gen_ir.h"
 
 #define get_rand_int(range) rand() % (range)
 #define vector_rand_ele_safe(a)                                                \
@@ -41,5 +45,5 @@ template <typename T> typename T::iterator random_pick(T &cc) {
 }
 // template<typename T> typename T::iterator random_pick(T &cc);
 
-__TOPASTNODE__ *parser(string sql);
+TopASTNode *parser(string sql);
 #endif

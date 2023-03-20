@@ -23,3 +23,4 @@ gmon.out
 build
 test_data/
 **/replaced_grammar
+release

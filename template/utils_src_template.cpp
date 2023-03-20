@@ -61,22 +61,22 @@ int gen_int() { return 1; }
 
 typedef unsigned long uint64_t;
 
-__TOPASTNODE__ *parser(string sql) {
+TopASTNode *parser(string sql) {
 
   yyscan_t scanner;
   YY_BUFFER_STATE state;
-  __TOPASTNODE__ *p = new __TOPASTNODE__();
+  TopASTNode *p = new TopASTNode();
   reset_scope();
 
-  if (__API_PREFIX__lex_init(&scanner)) {
+  if (ff_lex_init(&scanner)) {
     return NULL;
   }
-  state = __API_PREFIX___scan_string(sql.c_str(), scanner);
+  state = ff__scan_string(sql.c_str(), scanner);
 
-  int ret = __API_PREFIX__parse(p, scanner);
+  int ret = ff_parse(p, scanner);
 
-  __API_PREFIX___delete_buffer(state, scanner);
-  __API_PREFIX__lex_destroy(scanner);
+  ff__delete_buffer(state, scanner);
+  ff_lex_destroy(scanner);
 
   if (ret != 0) {
     p->deep_delete();

@@ -1196,6 +1196,8 @@ def genGenIRHeader(allClass):
     res += "#include \"define.h\"\n"
     res += genClassDeclaration(allClass)
     res += "\n"
+
+    res += "typedef %s TopASTNode;\n" % configuration.bison_top_input_type
     for each_class in allClass:
         res += genClassDef(each_class, each_class)
 
@@ -1283,8 +1285,8 @@ def genUtilsHeader():
         content = f.read()
 
     # content
-    content = content.replace("__TOPASTNODE__",
-                              configuration.bison_top_input_type)
+    #content = content.replace("__TOPASTNODE__",
+    #                          configuration.bison_top_input_type)
     #print content
     return content
 
@@ -1294,9 +1296,9 @@ def genUtilsSrc():
     with open(configuration.utils_src_template_path, 'r') as f:
         content = f.read()
 
-    content = content.replace("__TOPASTNODE__",
-                              configuration.bison_top_input_type)
-    content = content.replace("__API_PREFIX__", configuration.api_prefix)
+    #content = content.replace("__TOPASTNODE__",
+    #                          configuration.bison_top_input_type)
+    #content = content.replace("__API_PREFIX__", configuration.api_prefix)
 
     return content
 
@@ -1869,24 +1871,30 @@ if __name__ == "__main__":
         bison_file.write(genBison(allClass))
         bison_file.close()
 
+    # Done
     with open(configuration.ast_header_output_path, "w") as ast_header_file:
         ast_header_file.write(genAstHeader(allClass))
         ast_header_file.close()
 
+    # Done
     with open(configuration.ast_src_output_path, "w") as ast_content_file:
         ast_content_file.write(genAstSrc(allClass))
         ast_content_file.close()
 
+    # Done
     with open(configuration.gen_ir_header_output_path, "w") as gen_ir_header_file:
         gen_ir_header_file.write(genGenIRHeader(allClass))
 
+    # Done
     with open(configuration.gen_ir_src_output_path, "w") as gen_ir_src_file:
         gen_ir_src_file.write(genGenIRSrc(allClass))
 
+    # Done
     with open(configuration.utils_header_output_path, "w") as f:
         f.write(genUtilsHeader())
         f.close()
 
+    # Done
     with open(configuration.utils_src_output_path, "w") as f:
         f.write(genUtilsSrc())
         f.close()
