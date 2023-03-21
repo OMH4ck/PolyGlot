@@ -298,8 +298,6 @@ IR *Mutator::strategy_replace_with_constraint(IR *cur) {
 
   save_res->left_ = save_res_left;
   save_res->right_ = save_res_right;
-  // if(res->left_) deep_delete(res->left_);
-  // if(res->right_) deep_delete(res->right_);
 
   if (cur->left_) {
     res->left_ = deep_copy(cur->left_);
@@ -366,37 +364,17 @@ bool Mutator::lucky_enough_to_be_mutated(unsigned int mutated_times) {
 
 // Fix, if no item, generate from scratch
 IR *Mutator::get_ir_from_library(IRTYPE type) {
-  const int generate_prop = 1;
-  const int threshold = 0;
   static IR *empty_ir = new IR(kStringLiteral, "");
-  // static IR* empty_ir = NULL;//new IR(kStringLiteral, "");
-#ifdef USEGENERATE
-  if (ir_library_[type].empty() == true ||
-      (get_rand_int(400) == 0 && type != kUnknown)) {
-    auto ir = generate_ir_by_type(type);
-    add_ir_to_library_no_deepcopy(ir);
-    return ir;
-  }
-#endif
-  /*
-  if(type != kUnknown && (get_rand_int(10) == 0) &&
-  safe_generate_type_.find(type) != safe_generate_type_.end()){ auto ir =
-  generate_ir_by_type(type); add_ir_to_library_no_deepcopy(ir); return ir;
-  }
-  */
-  // cout << "TRIGGER generate" << endl;
   if (ir_library_[type].empty()) return empty_ir;
   return vector_rand_ele(ir_library_[type]);
 }
 
-// Need No Fix
 unsigned long Mutator::hash(string &sql) {
   return fucking_hash(sql.c_str(), sql.size());
 }
 
-// Need No Fix
 unsigned long Mutator::hash(IR *root) {
-  auto tmp_str = std::move(root->to_string());
+  auto tmp_str = root->to_string();
   return this->hash(tmp_str);
 }
 

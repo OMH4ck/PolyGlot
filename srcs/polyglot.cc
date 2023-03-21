@@ -53,6 +53,8 @@ size_t PolyGlotMutator::generate(const char *test_case) {
     deep_delete(ir);
   }
 
+  assert(save_test_cases_.size() > 0);
+
   return save_test_cases_.size();
 }
 

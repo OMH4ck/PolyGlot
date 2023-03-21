@@ -11,8 +11,7 @@ list(APPEND CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}")
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -g -O2 -fsanitize=address")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3")
-#add_link_options("-Wl,--no-undefined" "-fsanitize=address")
-add_link_options("-Wl,--no-undefined" "-fsanitize=address" "-shared-libasan")
+add_link_options("-Wl,--no-undefined")
 
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
   message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
@@ -56,9 +55,11 @@ target_include_directories(polyglot_lib PRIVATE ${CMAKE_SOURCE_DIR}/gen)
 target_include_directories(polyglot_lib PUBLIC ${CMAKE_SOURCE_DIR}/srcs)
 target_compile_options(polyglot_lib PRIVATE -fPIC)
 target_link_libraries(polyglot_lib PRIVATE spdlog::spdlog)
+target_link_options(polyglot_lib PRIVATE $<$<CONFIG:DEBUG>: -fsanitize=address -shared-libasan>)
 
 add_library(polyglot_mutator SHARED srcs/custom_mutator.cc)
 target_link_libraries(polyglot_mutator PRIVATE polyglot_lib)
+target_link_options(polyglot_mutator PRIVATE $<$<CONFIG:DEBUG>: -fsanitize=address -shared-libasan>)
 
 
 include(lint.cmake)
