@@ -6,7 +6,7 @@ all: template/* Generator.py
 	    mkdir parser; \
 	fi
 	cd grammars/${LAN}_grammar && ./replace.sh
-	python3 Generator.py -i grammars/${LAN}_grammar/replaced_grammar -t grammars/${LAN}_grammar/tokens -d data/destructor -D data/datatype -e data/extra_flex_rule_${LAN} -s grammars/${LAN}_grammar/semantic.json
+	python3 Generator.py -i grammars/${LAN}_grammar/replaced_grammar -t grammars/${LAN}_grammar/tokens -e data/extra_flex_rule_${LAN} -s grammars/${LAN}_grammar/semantic.json
 	./update.sh
 
 gen: template/* Generator.py
