@@ -1,8 +1,10 @@
 #ifndef __TYPESYSTEM_H__
 #define __TYPESYSTEM_H__
 
-#include "ir.h"
 #include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
 #include <iterator>
 #include <map>
 #include <memory>
@@ -10,9 +12,9 @@
 #include <set>
 #include <stack>
 #include <string>
-#include <sys/stat.h>
-#include <sys/types.h>
 #include <vector>
+
+#include "ir.h"
 
 using std::map;
 using std::set;
@@ -42,12 +44,18 @@ enum OPRuleProperty {
 };
 
 class OPRule {
-public:
+ public:
   OPRule(int op_id, int result, int left)
-      : op_id_(op_id), result_(result), left_(left), right_(0),
+      : op_id_(op_id),
+        result_(result),
+        left_(left),
+        right_(0),
         operand_num_(1) {}
   OPRule(int op_id, int result, int left, int right)
-      : op_id_(op_id), result_(result), left_(left), right_(right),
+      : op_id_(op_id),
+        result_(result),
+        left_(left),
+        right_(right),
         operand_num_(2) {}
   int left_, right_, result_;
   int op_id_;
@@ -63,7 +71,7 @@ public:
 };
 
 class TypeSystem {
-private:
+ private:
   static map<string, map<string, map<string, int>>> op_id_map_;
   static map<int, vector<OPRule>> op_rules_;
   // static map<string, int> basic_types_;
@@ -72,7 +80,7 @@ private:
   static bool contain_used_;
   static set<IRTYPE> s_basic_unit_;
 
-public:
+ public:
   // static map<IR*, map<int, vector<pair<int,int>>>> cache_inference_map_;
   static map<IR *, shared_ptr<map<int, vector<pair<int, int>>>>>
       cache_inference_map_;
@@ -81,13 +89,13 @@ public:
   static int gen_id();
   static void init_type_dict();
 
-  static void
-  split_to_basic_unit(IR *root, std::queue<IR *> &q, map<IR **, IR *> &m_save,
-                      set<IRTYPE> &s_basic_unit_ptr = s_basic_unit_);
+  static void split_to_basic_unit(
+      IR *root, std::queue<IR *> &q, map<IR **, IR *> &m_save,
+      set<IRTYPE> &s_basic_unit_ptr = s_basic_unit_);
 
   static void connect_back(map<IR **, IR *> &m_save);
 
-  static FIXORDER get_fix_order(int type); // need to finish
+  static FIXORDER get_fix_order(int type);  // need to finish
 
   static bool type_fix_framework(IR *root);
 
@@ -105,10 +113,10 @@ public:
                                                       set<int> &visit);
   static string get_class_member(int type_id);
   static vector<string> get_op_by_optype(OPTYPE op_type);
-  static pair<OPTYPE, vector<int>>
-  collect_sat_op_by_result_type(int type, map<int, vector<set<int>>> &a,
-                                map<int, vector<string>> &function_map,
-                                map<int, vector<string>> &compound_var_map);
+  static pair<OPTYPE, vector<int>> collect_sat_op_by_result_type(
+      int type, map<int, vector<set<int>>> &a,
+      map<int, vector<string>> &function_map,
+      map<int, vector<string>> &compound_var_map);
 
   static DATATYPE find_define_type(IR *cur);
 
@@ -123,8 +131,8 @@ public:
   static bool collect_definition(IR *cur);
   static string generate_expression_by_type(int type, IR *ir);
   static string generate_expression_by_type_core(int type, IR *ir);
-  static vector<map<int, vector<string>>>
-  collect_all_var_definition_by_type(IR *cur);
+  static vector<map<int, vector<string>>> collect_all_var_definition_by_type(
+      IR *cur);
 
   static bool simple_fix(IR *ir, int type);
   static bool validate(IR *&root);
@@ -138,31 +146,29 @@ public:
 
   static bool filter_compound_type(map<int, vector<string>> &compound_var_map,
                                    int type);
-  static bool
-  filter_function_type(map<int, vector<string>> &function_map,
-                       const map<int, vector<string>> &compound_var_map,
-                       const map<int, vector<string>> &simple_type, int type);
+  static bool filter_function_type(
+      map<int, vector<string>> &function_map,
+      const map<int, vector<string>> &compound_var_map,
+      const map<int, vector<string>> &simple_type, int type);
   static set<int> calc_satisfiable_functions(const set<int> &function_type_set,
                                              const set<int> &available_types);
-  static map<int, vector<set<int>>>
-  collect_satisfiable_types(IR *ir, map<int, vector<string>> &simple_var_map,
-                            map<int, vector<string>> &compound_var_map,
-                            map<int, vector<string>> &function_map);
+  static map<int, vector<set<int>>> collect_satisfiable_types(
+      IR *ir, map<int, vector<string>> &simple_var_map,
+      map<int, vector<string>> &compound_var_map,
+      map<int, vector<string>> &function_map);
   static set<int> calc_possible_types_from_structure(int structure_type);
-  static string
-  function_call_gen_handler(map<int, vector<string>> &function_map, IR *ir);
-  static string
-  structure_member_gen_handler(map<int, vector<string>> &compound_var_map,
-                               int member_type);
+  static string function_call_gen_handler(
+      map<int, vector<string>> &function_map, IR *ir);
+  static string structure_member_gen_handler(
+      map<int, vector<string>> &compound_var_map, int member_type);
   static void update_pointer_var(map<int, vector<string>> &pointer_var_map,
                                  map<int, vector<string>> &simple_var_map,
                                  map<int, vector<string>> &compound_var_map);
 
-  static string
-  expression_gen_handler(int type,
-                         map<int, vector<set<int>>> &all_satisfiable_types,
-                         map<int, vector<string>> &function_map,
-                         map<int, vector<string>> &compound_var_map, IR *ir);
+  static string expression_gen_handler(
+      int type, map<int, vector<set<int>>> &all_satisfiable_types,
+      map<int, vector<string>> &function_map,
+      map<int, vector<string>> &compound_var_map, IR *ir);
   static OPRule parse_op_rule(string s);
   // static OPRule* get_op_rule_by_op_id(int);
   static bool is_op1(int);

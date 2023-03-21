@@ -49,5 +49,5 @@ add_library(polyglot_mutator SHARED srcs/custom_mutator.cc)
 target_link_libraries(polyglot_mutator PRIVATE polyglot_lib)
 
 
-#include(lint.cmake)
-#add_subdirectory(tests)
+include(lint.cmake)
+add_subdirectory(tests)

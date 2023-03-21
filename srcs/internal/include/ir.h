@@ -1,14 +1,15 @@
 #ifndef __IR_H__
 #define __IR_H__
 
-#include "ast.h"
-#include "define.h"
 #include <fstream>
 #include <iostream>
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
+
+#include "ast.h"
+#include "define.h"
 
 using namespace std;
 // HEADER_BEGIN
@@ -19,7 +20,7 @@ enum NODETYPE : unsigned int;
 typedef NODETYPE IRTYPE;
 
 class IROperator {
-public:
+ public:
   IROperator(string prefix = "", string middle = "", string suffix = "")
       : prefix_(prefix), middle_(middle), suffix_(suffix) {}
 
@@ -29,7 +30,7 @@ public:
 };
 
 class IR {
-public:
+ public:
   IR(IRTYPE type, IROperator *op, IR *left = NULL, IR *right = NULL,
      DATATYPE data_type = kDataWhatever);
 

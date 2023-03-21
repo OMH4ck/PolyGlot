@@ -1,11 +1,13 @@
 #include "ast.h"
+
+#include <cassert>
+
 #include "config_misc.h"
 #include "define.h"
 #include "ir.h"
 #include "typesystem.h"
 #include "utils.h"
 #include "var_definition.h"
-#include <cassert>
 
 /*
 static bool scope_tranlation = false;
@@ -24,9 +26,8 @@ static unsigned long id_counter;
 */
 
 Node *generate_ast_node_by_type(IRTYPE type) {
-#define DECLARE_CASE(classname)                                                \
-  if (type == k##classname)                                                    \
-    return new classname();
+#define DECLARE_CASE(classname) \
+  if (type == k##classname) return new classname();
 
   ALLCLASS(DECLARE_CASE);
 #undef DECLARE_CASE
@@ -34,9 +35,8 @@ Node *generate_ast_node_by_type(IRTYPE type) {
 }
 
 NODETYPE get_nodetype_by_string(string s) {
-#define DECLARE_CASE(datatypename)                                             \
-  if (s == #datatypename)                                                      \
-    return k##datatypename;
+#define DECLARE_CASE(datatypename) \
+  if (s == #datatypename) return k##datatypename;
 
   ALLCLASS(DECLARE_CASE);
 
@@ -45,9 +45,8 @@ NODETYPE get_nodetype_by_string(string s) {
 }
 
 string get_string_by_nodetype(NODETYPE tt) {
-#define DECLARE_CASE(datatypename)                                             \
-  if (tt == k##datatypename)                                                   \
-    return string(#datatypename);
+#define DECLARE_CASE(datatypename) \
+  if (tt == k##datatypename) return string(#datatypename);
 
   ALLCLASS(DECLARE_CASE);
 
@@ -56,9 +55,8 @@ string get_string_by_nodetype(NODETYPE tt) {
 }
 
 string get_string_by_datatype(DATATYPE tt) {
-#define DECLARE_CASE(datatypename)                                             \
-  if (tt == k##datatypename)                                                   \
-    return string(#datatypename);
+#define DECLARE_CASE(datatypename) \
+  if (tt == k##datatypename) return string(#datatypename);
 
   ALLDATATYPE(DECLARE_CASE);
 
@@ -67,9 +65,8 @@ string get_string_by_datatype(DATATYPE tt) {
 }
 
 DATATYPE get_datatype_by_string(string s) {
-#define DECLARE_CASE(datatypename)                                             \
-  if (s == #datatypename)                                                      \
-    return k##datatypename;
+#define DECLARE_CASE(datatypename) \
+  if (s == #datatypename) return k##datatypename;
 
   ALLDATATYPE(DECLARE_CASE);
 

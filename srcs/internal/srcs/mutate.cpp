@@ -1,11 +1,12 @@
 // #include <queue>
-#include <algorithm>
 #include <assert.h>
+#include <fcntl.h>
+
+#include <algorithm>
 #include <cfloat>
 #include <climits>
 #include <cstdio>
 #include <deque>
-#include <fcntl.h>
 #include <fstream>
 #include <iterator>
 #include <map>
@@ -36,11 +37,11 @@ IR *Mutator::deep_copy_with_record(const IR *root, const IR *record) {
 
   if (root->left_)
     left = deep_copy_with_record(
-        root->left_, record); // do you have a second version for deep_copy that
-                              // accept only one argument?
+        root->left_, record);  // do you have a second version for deep_copy
+                               // that accept only one argument?
   if (root->right_)
     right = deep_copy_with_record(root->right_,
-                                  record); // no I forget to update here
+                                  record);  // no I forget to update here
 
   if (root->op_ != NULL)
     copy_res =
@@ -71,8 +72,7 @@ vector<IR *> Mutator::mutate_all(vector<IR *> &v_ir_collector) {
   auto tmp_str = root->to_string();
   res_hash.insert(hash(tmp_str));
   for (auto ir : v_ir_collector) {
-    if (ir == root)
-      continue;
+    if (ir == root) continue;
     if (ir->type_ == kUnknown ||
         not_mutatable_types_.find(ir->type_) != not_mutatable_types_.end() ||
         is_leaf(ir) || !can_be_mutated(ir))
@@ -141,10 +141,8 @@ void Mutator::add_ir_to_library_limited(IR *cur) {
   ir_library_[type].push_back(deep_copy(cur));
   ir_library_hash_[type].insert(h);
 
-  if (cur->left_)
-    add_ir_to_library_limited(cur->left_);
-  if (cur->right_)
-    add_ir_to_library_limited(cur->right_);
+  if (cur->left_) add_ir_to_library_limited(cur->left_);
+  if (cur->right_) add_ir_to_library_limited(cur->right_);
 }
 
 void Mutator::init_convertable_ir_type_map() {
@@ -183,7 +181,7 @@ vector<IR *> Mutator::mutate(IR *input) {
 
   if (!lucky_enough_to_be_mutated(input->mutated_times_)) {
     assert(0);
-    return res; // return a empty set if the IR is not mutated
+    return res;  // return a empty set if the IR is not mutated
   }
 
   for (int i = 0; i < 0x6; i++) {
@@ -218,8 +216,7 @@ vector<IR *> Mutator::mutate(IR *input) {
 
   input->mutated_times_ += res.size();
   for (auto i : res) {
-    if (i == NULL)
-      continue;
+    if (i == NULL) continue;
     i->mutated_times_ = input->mutated_times_;
   }
   return res;
@@ -261,7 +258,7 @@ IR *Mutator::strategy_delete(IR *cur) {
   if (res->left_ != NULL && res->left_->type_ != kUnknown)
 #endif
     deep_delete(res->left_);
-  res->left_ = NULL; // memory leak
+  res->left_ = NULL;  // memory leak
 
   DORIGHT
   res = deep_copy(cur);
@@ -350,8 +347,7 @@ IR *Mutator::strategy_insert(IR *cur) {
 }
 
 bool Mutator::is_ir_type_connvertable(IRTYPE a, IRTYPE b) {
-  if (a == b)
-    return true;
+  if (a == b) return true;
   if (m_convertable_map_.find(a) == m_convertable_map_.end()) {
     return false;
   }
@@ -515,7 +511,6 @@ bool Mutator::lucky_enough_to_be_mutated(unsigned int mutated_times) {
 
 // Fix, if no item, generate from scratch
 IR *Mutator::get_ir_from_library(IRTYPE type) {
-
   const int generate_prop = 1;
   const int threshold = 0;
   static IR *empty_ir = new IR(kStringLiteral, "");
@@ -535,8 +530,7 @@ IR *Mutator::get_ir_from_library(IRTYPE type) {
   }
   */
   // cout << "TRIGGER generate" << endl;
-  if (ir_library_[type].empty())
-    return empty_ir;
+  if (ir_library_[type].empty()) return empty_ir;
   return vector_rand_ele(ir_library_[type]);
 }
 
@@ -590,8 +584,7 @@ void Mutator::extract_struct(IR *root) {
   }
 #endif
 
-  if (root->left_ || root->right_)
-    return;
+  if (root->left_ || root->right_) return;
 
   /*
 #ifdef SYNTAX_ONLY
@@ -618,10 +611,8 @@ void Mutator::extract_struct(IR *root) {
 
 unsigned int calc_node(IR *root) {
   unsigned int res = 0;
-  if (root->left_)
-    res += calc_node(root->left_);
-  if (root->right_)
-    res += calc_node(root->right_);
+  if (root->left_) res += calc_node(root->left_);
+  if (root->right_) res += calc_node(root->right_);
 
   return res + 1;
 }
@@ -635,10 +626,8 @@ bool Mutator::can_be_mutated(IR *cur) {
       cur->data_type_ == kDataVarType || cur->data_type_ == kDataClassType) {
     return false;
   }
-  if (cur->left_)
-    res = res && can_be_mutated(cur->left_);
-  if (cur->right_)
-    res = res && can_be_mutated(cur->right_);
+  if (cur->left_) res = res && can_be_mutated(cur->left_);
+  if (cur->right_) res = res && can_be_mutated(cur->right_);
   return res;
   // #endif
 }

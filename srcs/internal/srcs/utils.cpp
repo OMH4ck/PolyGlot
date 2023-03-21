@@ -1,6 +1,7 @@
+#include "utils.h"
+
 #include "ast.h"
 #include "typesystem.h"
-#include "utils.h"
 #include "var_definition.h"
 
 using std::string;
@@ -62,7 +63,6 @@ int gen_int() { return 1; }
 typedef unsigned long uint64_t;
 
 TopASTNode *parser(string sql) {
-
   yyscan_t scanner;
   YY_BUFFER_STATE state;
   TopASTNode *p = new TopASTNode();
@@ -87,7 +87,6 @@ TopASTNode *parser(string sql) {
 }
 
 vector<string> get_all_files_in_dir(const char *dir_name) {
-
   vector<string> file_list;
   if (NULL == dir_name) {
     cout << " dir_name is null ! " << endl;
@@ -101,8 +100,8 @@ vector<string> get_all_files_in_dir(const char *dir_name) {
     return file_list;
   }
 
-  struct dirent *filename; // return value for readdir()
-  DIR *dir;                // return value for opendir()
+  struct dirent *filename;  // return value for readdir()
+  DIR *dir;                 // return value for opendir()
   dir = opendir(dir_name);
   if (NULL == dir) {
     cout << "Can not open dir " << dir_name << endl;
@@ -143,21 +142,21 @@ uint64_t fucking_hash(const void *key, int len) {
   const unsigned char *data2 = (const unsigned char *)data;
 
   switch (len & 7) {
-  case 7:
-    h ^= uint64_t(data2[6]) << 48;
-  case 6:
-    h ^= uint64_t(data2[5]) << 40;
-  case 5:
-    h ^= uint64_t(data2[4]) << 32;
-  case 4:
-    h ^= uint64_t(data2[3]) << 24;
-  case 3:
-    h ^= uint64_t(data2[2]) << 16;
-  case 2:
-    h ^= uint64_t(data2[1]) << 8;
-  case 1:
-    h ^= uint64_t(data2[0]);
-    h *= m;
+    case 7:
+      h ^= uint64_t(data2[6]) << 48;
+    case 6:
+      h ^= uint64_t(data2[5]) << 40;
+    case 5:
+      h ^= uint64_t(data2[4]) << 32;
+    case 4:
+      h ^= uint64_t(data2[3]) << 24;
+    case 3:
+      h ^= uint64_t(data2[2]) << 16;
+    case 2:
+      h ^= uint64_t(data2[1]) << 8;
+    case 1:
+      h ^= uint64_t(data2[0]);
+      h *= m;
   };
 
   h ^= h >> r;

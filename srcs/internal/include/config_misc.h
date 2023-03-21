@@ -1,11 +1,12 @@
 #ifndef __TEST__
 #define __TEST__
 
-#include "ast.h"
 #include <map>
 #include <memory>
 #include <set>
 #include <vector>
+
+#include "ast.h"
 
 bool IsWeakType();
 IRTYPE GetFixIRType();

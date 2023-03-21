@@ -1,6 +1,7 @@
+#include "var_definition.h"
+
 #include "ast.h"
 #include "config_misc.h"
-#include "var_definition.h"
 
 using namespace std;
 #define NOTEXISTS 0
@@ -16,33 +17,30 @@ set<int> all_internal_functions;
 set<int> all_internal_class_methods;
 map<TYPEID, shared_ptr<VarType>> internal_type_map;
 
-map<TYPEID, map<int, TYPEID>> pointer_map; // original_type:<level: typeid>
+map<TYPEID, map<int, TYPEID>> pointer_map;  // original_type:<level: typeid>
 static map<TYPEID, shared_ptr<VarType>> type_map;
 static map<string, shared_ptr<VarType>> basic_types;
-set<TYPEID> basic_types_set; // For faster search
+set<TYPEID> basic_types_set;  // For faster search
 
 bool is_internal_obj_setup = false;
 bool is_in_class = false;
 
 bool is_builtin_type(TYPEID type_id) {
   for (auto i : internal_type_map) {
-    if (i.first == type_id)
-      return true;
+    if (i.first == type_id) return true;
   }
   return false;
 }
 
 map<TYPEID, vector<string>> &get_all_builtin_simple_var_types() {
   static map<TYPEID, vector<string>> res;
-  if (res.size() > 0)
-    return res;
+  if (res.size() > 0) return res;
 
   return res;
 }
 map<TYPEID, vector<string>> &get_all_builtin_compound_types() {
   static map<TYPEID, vector<string>> res;
-  if (res.size() > 0)
-    return res;
+  if (res.size() > 0) return res;
 
   for (auto type_id : all_internal_compound_types) {
     auto ptype = internal_type_map[type_id];
@@ -54,8 +52,7 @@ map<TYPEID, vector<string>> &get_all_builtin_compound_types() {
 
 map<TYPEID, vector<string>> &get_all_builtin_function_types() {
   static map<TYPEID, vector<string>> res;
-  if (res.size() > 0)
-    return res;
+  if (res.size() > 0) return res;
 
   for (auto type_id : all_internal_functions) {
     auto ptype = internal_type_map[type_id];
@@ -100,8 +97,7 @@ bool is_derived_type(TYPEID dtype, TYPEID btype) {
   auto derived_type = get_type_by_type_id(dtype);
   auto base_type = get_type_by_type_id(btype);
 
-  if (base_type == derived_type)
-    return true;
+  if (base_type == derived_type) return true;
   // if(derived_type == NULL || base_type == NULL) return false;
   assert(derived_type && base_type);
 
@@ -116,10 +112,8 @@ bool is_derived_type(TYPEID dtype, TYPEID btype) {
 }
 
 void init_basic_types() {
-
   for (auto &line : GetBasicTypeStr()) {
-    if (line.empty())
-      continue;
+    if (line.empty()) continue;
     auto new_id = gen_type_id();
     auto ptr = make_shared<VarType>();
     ptr->type_id_ = new_id;
@@ -127,8 +121,7 @@ void init_basic_types() {
     basic_types[line] = ptr;
     basic_types_set.insert(new_id);
     type_map[new_id] = ptr;
-    if (DBG)
-      cout << "Basic types: " << line << ", type id: " << new_id << endl;
+    if (DBG) cout << "Basic types: " << line << ", type id: " << new_id << endl;
   }
 
   make_basic_type_add_map(ALLTYPES, "ALLTYPES");
@@ -204,8 +197,7 @@ shared_ptr<Scope> get_scope_by_id(int scope_id) {
 }
 
 shared_ptr<VarType> get_type_by_type_id(TYPEID type_id) {
-  if (type_map.find(type_id) != type_map.end())
-    return type_map[type_id];
+  if (type_map.find(type_id) != type_map.end()) return type_map[type_id];
 
   if (internal_type_map.find(type_id) != internal_type_map.end())
     return internal_type_map[type_id];
@@ -239,13 +231,11 @@ bool is_compound_type(TYPEID type_id) {
 
 TYPEID get_compound_type_id_by_string(const string &s) {
   for (auto k : all_compound_types) {
-    if (type_map[k]->type_name_ == s)
-      return k;
+    if (type_map[k]->type_name_ == s) return k;
   }
 
   for (auto k : all_internal_compound_types) {
-    if (internal_type_map[k]->type_name_ == s)
-      return k;
+    if (internal_type_map[k]->type_name_ == s) return k;
   }
 
   return NOTEXISTS;
@@ -267,28 +257,21 @@ bool is_basic_type(const string &s) {
 }
 
 TYPEID get_basic_type_id_by_string(const string &s) {
-  if (s == "ALLTYPES")
-    return ALLTYPES;
-  if (s == "ALLCOMPOUNDTYPE")
-    return ALLCOMPOUNDTYPE;
-  if (s == "ALLFUNCTION")
-    return ALLFUNCTION;
-  if (s == "ANYTYPE")
-    return ANYTYPE;
-  if (is_basic_type(s) == false)
-    return NOTEXISTS;
+  if (s == "ALLTYPES") return ALLTYPES;
+  if (s == "ALLCOMPOUNDTYPE") return ALLCOMPOUNDTYPE;
+  if (s == "ALLFUNCTION") return ALLFUNCTION;
+  if (s == "ANYTYPE") return ANYTYPE;
+  if (is_basic_type(s) == false) return NOTEXISTS;
   return basic_types[s]->get_type_id();
 }
 
 TYPEID get_type_id_by_string(const string &s) {
   for (auto iter : type_map) {
-    if (iter.second->type_name_ == s)
-      return iter.first;
+    if (iter.second->type_name_ == s) return iter.first;
   }
 
   for (auto iter : internal_type_map) {
-    if (iter.second->type_name_ == s)
-      return iter.first;
+    if (iter.second->type_name_ == s) return iter.first;
   }
   return NOTEXISTS;
 }
@@ -343,8 +326,7 @@ shared_ptr<VarType> make_basic_type(TYPEID id, const string &s) {
 }
 
 void forward_add_compound_type(string &structure_name) {
-  if (DBG)
-    cout << "pre define compound type" << endl;
+  if (DBG) cout << "pre define compound type" << endl;
   auto res = make_shared<CompoundType>();
   res->type_id_ = gen_type_id();
   res->type_name_ = structure_name;
@@ -361,8 +343,7 @@ shared_ptr<CompoundType> make_compound_type_by_scope(shared_ptr<Scope> scope,
   shared_ptr<CompoundType> res = nullptr;
 
   auto tid = get_compound_type_id_by_string(structure_name);
-  if (tid != NOTEXISTS)
-    res = get_compound_type_by_type_id(tid);
+  if (tid != NOTEXISTS) res = get_compound_type_by_type_id(tid);
   if (res == nullptr) {
     res = make_shared<CompoundType>();
     res->type_id_ = gen_type_id();
@@ -375,8 +356,8 @@ shared_ptr<CompoundType> make_compound_type_by_scope(shared_ptr<Scope> scope,
       all_compound_type->derived_type_.push_back(res);
       res->base_type_.push_back(all_compound_type);
     } else {
-      all_compound_types.insert(res->type_id_); // here
-      type_map[res->type_id_] = res;            // here
+      all_compound_types.insert(res->type_id_);  // here
+      type_map[res->type_id_] = res;             // here
       auto all_compound_type = get_type_by_type_id(ALLCOMPOUNDTYPE);
       assert(all_compound_type);
       all_compound_type->derived_type_.push_back(res);
@@ -391,8 +372,7 @@ shared_ptr<CompoundType> make_compound_type_by_scope(shared_ptr<Scope> scope,
       g_scope_root->add_definition(pfunc->type_id_, structure_name, 0);
       if (DBG) {
         for (auto i : g_scope_root->m_defined_variables_) {
-          for (auto j : i.second)
-            cout << "member: " << j.first << endl;
+          for (auto j : i.second) cout << "member: " << j.first << endl;
         }
       }
     }
@@ -438,8 +418,8 @@ shared_ptr<FunctionType> make_function_type(string &function_name,
     all_function_type->derived_type_.push_back(res);
     res->base_type_.push_back(all_function_type);
   } else {
-    type_map[res->type_id_] = res;       // here
-    all_functions.insert(res->type_id_); // here
+    type_map[res->type_id_] = res;        // here
+    all_functions.insert(res->type_id_);  // here
     auto all_function_type = get_type_by_type_id(ALLFUNCTION);
     all_function_type->derived_type_.push_back(res);
     res->base_type_.push_back(all_function_type);
@@ -449,7 +429,7 @@ shared_ptr<FunctionType> make_function_type(string &function_name,
 }
 
 shared_ptr<FunctionType> make_function_type_by_scope(shared_ptr<Scope> scope) {
-  return nullptr; // may be useless
+  return nullptr;  // may be useless
   /*
   auto res = make_shared<FunctionType>();
   res->type_id_ = gen_type_id();
@@ -482,29 +462,24 @@ shared_ptr<FunctionType> make_function_type_by_scope(shared_ptr<Scope> scope) {
 }
 
 void Scope::add_definition(int type, IR *ir) {
-  if (type == 0)
-    return;
+  if (type == 0) return;
   m_define_ir_[type].push_back(ir);
 }
 
 void Scope::add_definition(int type, const string &var_name, unsigned long id) {
-  if (type == 0)
-    return;
+  if (type == 0) return;
   m_defined_variables_[type].push_back(make_pair(var_name, id));
 }
 
 void Scope::add_definition(int type, const string &var_name, unsigned long id,
                            ScopeType stype) {
-  if (type == 0)
-    return;
+  if (type == 0) return;
 
   if (IsWeakType()) {
     if (stype != kScopeStatement) {
       auto p = this;
-      while (p != NULL && p->scope_type_ != stype)
-        p = p->parent_.lock().get();
-      if (p == NULL)
-        p = this;
+      while (p != NULL && p->scope_type_ != stype) p = p->parent_.lock().get();
+      if (p == NULL) p = this;
       if (p->s_defined_variable_names_.find(var_name) !=
           p->s_defined_variable_names_.end())
         return;
@@ -523,13 +498,11 @@ void Scope::add_definition(int type, const string &var_name, unsigned long id,
 }
 
 void fuck_debug() {
-  if (DBG)
-    cout << "g_scope_root: " << g_scope_root << endl;
+  if (DBG) cout << "g_scope_root: " << g_scope_root << endl;
   debug_scope_tree(g_scope_root);
 }
 
 TYPEID least_upper_common_type(TYPEID type1, TYPEID type2) {
-
   if (type1 == type2) {
     return type1;
   }
@@ -542,75 +515,74 @@ TYPEID least_upper_common_type(TYPEID type1, TYPEID type2) {
 }
 
 TYPEID convert_to_real_type_id(TYPEID type1, TYPEID type2) {
-
   if (type1 > ALLUPPERBOUND) {
     return type1;
   }
 
   switch (type1) {
-  case ALLTYPES: {
-    if (type2 == ALLTYPES || type2 == NOTEXISTS) {
-      /* FIX ME
-      if(DBG) cout << "Map size: " << type_map.size() << endl;
-      auto pick_ptr = random_pick(type_map);
-      return pick_ptr->first;
-      */
-      auto pick_ptr = random_pick(basic_types_set);
-      return *pick_ptr;
-    } else if (type2 == ALLCOMPOUNDTYPE) {
-      if (all_compound_types.empty()) {
-        if (DBG)
-          cout << "empty me" << endl;
-        break;
-      }
-      auto res = random_pick(all_compound_types);
-      return *res;
-    } else if (is_basic_type(type2)) {
-      return type2;
-    } else {
-      auto parent_type_ptr = static_pointer_cast<CompoundType>(type_map[type2]);
-      if (parent_type_ptr->v_members_.empty()) {
-        break;
-      }
-      auto res = random_pick(parent_type_ptr->v_members_);
-      return res->first;
-    }
-  }
-  case ALLFUNCTION: {
-    auto res = *random_pick(all_functions);
-    return res;
-  }
-
-  case ALLCOMPOUNDTYPE: {
-    if (type2 == ALLTYPES || type2 == ALLCOMPOUNDTYPE || is_basic_type(type2) ||
-        type2 == NOTEXISTS) {
-      if (all_compound_types.empty()) {
-        if (DBG)
-          cout << "empty me" << endl;
-        break;
-      }
-      auto res = random_pick(all_compound_types);
-      return *res;
-    } else {
-      assert(is_compound_type(type2));
-      auto parent_type_ptr = static_pointer_cast<CompoundType>(type_map[type2]);
-      if (parent_type_ptr->v_members_.empty()) {
-        break;
-      }
-
-      int counter = 0;
-      auto res = NOTEXISTS;
-      for (auto &iter : parent_type_ptr->v_members_) {
-        if (is_compound_type(iter.first)) {
-          if (rand() % (counter + 1) < 1) {
-            res = iter.first;
-          }
-          counter++;
+    case ALLTYPES: {
+      if (type2 == ALLTYPES || type2 == NOTEXISTS) {
+        /* FIX ME
+        if(DBG) cout << "Map size: " << type_map.size() << endl;
+        auto pick_ptr = random_pick(type_map);
+        return pick_ptr->first;
+        */
+        auto pick_ptr = random_pick(basic_types_set);
+        return *pick_ptr;
+      } else if (type2 == ALLCOMPOUNDTYPE) {
+        if (all_compound_types.empty()) {
+          if (DBG) cout << "empty me" << endl;
+          break;
         }
+        auto res = random_pick(all_compound_types);
+        return *res;
+      } else if (is_basic_type(type2)) {
+        return type2;
+      } else {
+        auto parent_type_ptr =
+            static_pointer_cast<CompoundType>(type_map[type2]);
+        if (parent_type_ptr->v_members_.empty()) {
+          break;
+        }
+        auto res = random_pick(parent_type_ptr->v_members_);
+        return res->first;
       }
+    }
+    case ALLFUNCTION: {
+      auto res = *random_pick(all_functions);
       return res;
     }
-  }
+
+    case ALLCOMPOUNDTYPE: {
+      if (type2 == ALLTYPES || type2 == ALLCOMPOUNDTYPE ||
+          is_basic_type(type2) || type2 == NOTEXISTS) {
+        if (all_compound_types.empty()) {
+          if (DBG) cout << "empty me" << endl;
+          break;
+        }
+        auto res = random_pick(all_compound_types);
+        return *res;
+      } else {
+        assert(is_compound_type(type2));
+        auto parent_type_ptr =
+            static_pointer_cast<CompoundType>(type_map[type2]);
+        if (parent_type_ptr->v_members_.empty()) {
+          break;
+        }
+
+        int counter = 0;
+        auto res = NOTEXISTS;
+        for (auto &iter : parent_type_ptr->v_members_) {
+          if (is_compound_type(iter.first)) {
+            if (rand() % (counter + 1) < 1) {
+              res = iter.first;
+            }
+            counter++;
+          }
+        }
+        return res;
+      }
+    }
   }
   return NOTEXISTS;
 }
@@ -623,70 +595,54 @@ string CompoundType::get_member_by_type(TYPEID type) {
 }
 
 void debug_scope_tree(shared_ptr<Scope> cur) {
-
-  if (cur == nullptr)
-    return;
+  if (cur == nullptr) return;
   for (auto &child : cur->children_) {
     debug_scope_tree(child.second);
   }
 
-  if (DBG)
-    cout << cur->scope_id_ << ":" << endl;
+  if (DBG) cout << cur->scope_id_ << ":" << endl;
   /*
   if(DBG) cout << "IR set: " << endl;
   for(auto &ir :cur->v_ir_set_){
       if(DBG) cout << "\t" << ir->print() << endl;
   }
   */
-  if (DBG)
-    cout << "Definition set: " << endl;
+  if (DBG) cout << "Definition set: " << endl;
   for (auto &iter : cur->m_defined_variables_) {
-    if (DBG)
-      cout << "Type id:" << iter.first << endl;
+    if (DBG) cout << "Type id:" << iter.first << endl;
     auto tt = get_type_by_type_id(iter.first);
-    if (tt == nullptr)
-      continue;
-    if (DBG)
-      cout << "Type name: " << tt->type_name_ << endl;
+    if (tt == nullptr) continue;
+    if (DBG) cout << "Type name: " << tt->type_name_ << endl;
     for (auto &name : iter.second) {
-      if (DBG)
-        cout << "\t" << name.first << endl;
+      if (DBG) cout << "\t" << name.first << endl;
     }
   }
-  if (DBG)
-    cout << "------------------------" << endl;
+  if (DBG) cout << "------------------------" << endl;
 }
 
 void enter_scope(ScopeType scope_type) {
-  if (get_scope_translation_flag() == false)
-    return;
+  if (get_scope_translation_flag() == false) return;
   auto new_scope = gen_scope(scope_type);
   if (g_scope_root == NULL) {
-    if (DBG)
-      cout << "set g_scope_root, g_scope_current: " << new_scope << endl;
+    if (DBG) cout << "set g_scope_root, g_scope_current: " << new_scope << endl;
     g_scope_root = g_scope_current = new_scope;
     // return;
   } else {
     new_scope->parent_ = g_scope_current;
-    if (DBG)
-      cout << "use g_scope_current: " << g_scope_current << endl;
+    if (DBG) cout << "use g_scope_current: " << g_scope_current << endl;
     g_scope_current->children_[new_scope->scope_id_] = new_scope;
     g_scope_current = new_scope;
     if (DBG)
       cout << "[enter]change g_scope_current: " << g_scope_current << endl;
   }
-  if (DBG)
-    cout << "Entering new scope: " << g_scope << endl;
+  if (DBG) cout << "Entering new scope: " << g_scope << endl;
 }
 
 void exit_scope() {
-  if (get_scope_translation_flag() == false)
-    return;
-  if (DBG)
-    cout << "Exit scope: " << g_scope_current->scope_id_ << endl;
+  if (get_scope_translation_flag() == false) return;
+  if (DBG) cout << "Exit scope: " << g_scope_current->scope_id_ << endl;
   g_scope_current = g_scope_current->parent_.lock();
-  if (DBG)
-    cout << "[exit]change g_scope_current: " << g_scope_current << endl;
+  if (DBG) cout << "[exit]change g_scope_current: " << g_scope_current << endl;
   // g_scope_root = NULL;
 }
 
@@ -703,10 +659,8 @@ void CompoundType::remove_unfix(IR *ir) {
 }
 
 string get_type_name_by_id(TYPEID type_id) {
-  if (type_id == 0)
-    return "NOEXISTS";
-  if (DBG)
-    cout << "get_type name: Type: " << type_id << endl;
+  if (type_id == 0) return "NOEXISTS";
+  if (DBG) cout << "get_type name: Type: " << type_id << endl;
   if (DBG)
     cout << "get_type name: Str: " << type_map[type_id]->type_name_ << endl;
 
@@ -721,7 +675,6 @@ string get_type_name_by_id(TYPEID type_id) {
 }
 
 int generate_pointer_type(int original_type, int pointer_level) {
-
   // must be a positive level
   assert(pointer_level);
   if (pointer_map[original_type].count(pointer_level))
@@ -777,8 +730,7 @@ int get_or_create_pointer_type(int type) {
         break;
       }
     }
-    if (outter_flag)
-      break;
+    if (outter_flag) break;
   }
 
   if (is_found == true) {
@@ -829,39 +781,30 @@ int get_or_create_pointer_type(int type) {
 }
 
 bool is_pointer_type(int type) {
-  if (DBG)
-    cout << "is_pointer_type: " << type << endl;
+  if (DBG) cout << "is_pointer_type: " << type << endl;
   auto type_ptr = get_type_by_type_id(type);
   return type_ptr->is_pointer_type();
 }
 
 shared_ptr<PointerType> get_pointer_type_by_type_id(TYPEID type_id) {
-  if (type_map.find(type_id) == type_map.end())
-    return nullptr;
+  if (type_map.find(type_id) == type_map.end()) return nullptr;
 
   auto res = static_pointer_cast<PointerType>(type_map[type_id]);
-  if (res->is_pointer_type() == false)
-    return nullptr;
+  if (res->is_pointer_type() == false) return nullptr;
 
   return res;
 }
 
 void debug_pointer_type(shared_ptr<PointerType> &p) {
-  if (DBG)
-    cout << "------new_pointer_type-------" << endl;
-  if (DBG)
-    cout << "type id: " << p->type_id_ << endl;
-  if (DBG)
-    cout << "basic_type: " << p->basic_type_ << endl;
-  if (DBG)
-    cout << "reference_level: " << p->reference_level_ << endl;
-  if (DBG)
-    cout << "-----------------------------" << endl;
+  if (DBG) cout << "------new_pointer_type-------" << endl;
+  if (DBG) cout << "type id: " << p->type_id_ << endl;
+  if (DBG) cout << "basic_type: " << p->basic_type_ << endl;
+  if (DBG) cout << "reference_level: " << p->reference_level_ << endl;
+  if (DBG) cout << "-----------------------------" << endl;
 }
 
 void reset_scope() {
-  if (DBG)
-    cout << "call reset_scope" << endl;
+  if (DBG) cout << "call reset_scope" << endl;
   g_scope_current = NULL;
   g_scope_root = NULL;
   scope_id_map.clear();

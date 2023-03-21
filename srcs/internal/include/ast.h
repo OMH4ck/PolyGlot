@@ -1,14 +1,14 @@
 #ifndef __AST_H__
 #define __AST_H__
 
-#include "define.h"
-
 #include <fstream>
 #include <iostream>
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
+
+#include "define.h"
 
 using namespace std;
 // HEADER_BEGIN
@@ -18,23 +18,23 @@ using namespace std;
 enum NODETYPE : unsigned int;
 typedef NODETYPE IRTYPE;
 
-#define ALLDATATYPE(V)                                                         \
-  V(DataWhatever)                                                              \
-  V(DataFunctionType)                                                          \
-  V(DataClassType)                                                             \
-  V(DataInitiator)                                                             \
-  V(DataFunctionBody)                                                          \
-  V(DataFunctionArg)                                                           \
-  V(DataFunctionReturnValue)                                                   \
-  V(DataFunctionName)                                                          \
-  V(DataVarDefine)                                                             \
-  V(DataClassName)                                                             \
-  V(DataPointer)                                                               \
-  V(DataStructBody)                                                            \
-  V(DataDeclarator)                                                            \
-  V(DataVarType)                                                               \
-  V(DataFixUnit)                                                               \
-  V(DataVarName)                                                               \
+#define ALLDATATYPE(V)       \
+  V(DataWhatever)            \
+  V(DataFunctionType)        \
+  V(DataClassType)           \
+  V(DataInitiator)           \
+  V(DataFunctionBody)        \
+  V(DataFunctionArg)         \
+  V(DataFunctionReturnValue) \
+  V(DataFunctionName)        \
+  V(DataVarDefine)           \
+  V(DataClassName)           \
+  V(DataPointer)             \
+  V(DataStructBody)          \
+  V(DataDeclarator)          \
+  V(DataVarType)             \
+  V(DataFixUnit)             \
+  V(DataVarName)             \
   V(DataVarScope)
 
 enum DATATYPE {
@@ -74,7 +74,7 @@ enum DATAFLAG {
 class IR;
 // AST Node
 class Node {
-public:
+ public:
   void set_sub_type(unsigned int i) { case_idx_ = i; }
   NODETYPE type_;
   DATATYPE data_type_;

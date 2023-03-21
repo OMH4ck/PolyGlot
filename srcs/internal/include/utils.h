@@ -1,21 +1,23 @@
 #ifndef __UTILS_H__
 #define __UTILS_H__
 
-#include "bison_parser.h"
-#include "flex_lexer.h"
 #include <dirent.h>
-#include <string>
-#include <string_view>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#include <string>
+#include <string_view>
 #include <vector>
+
+#include "bison_parser.h"
+#include "flex_lexer.h"
 
 // To Fix
 #include "gen_ir.h"
 
 #define get_rand_int(range) rand() % (range)
-#define vector_rand_ele_safe(a)                                                \
+#define vector_rand_ele_safe(a) \
   (a.size() != 0 ? a[get_rand_int(a.size())] : gen_id_name())
 #define vector_rand_ele(a) (a[get_rand_int(a.size())])
 
@@ -38,7 +40,8 @@ uint64_t fucking_hash(const void *key, int len);
 
 vector<string> get_all_files_in_dir(const char *dir_name);
 
-template <typename T> typename T::iterator random_pick(T &cc) {
+template <typename T>
+typename T::iterator random_pick(T &cc) {
   typename T::iterator iter = cc.begin();
   advance(iter, rand() % (cc.size()));
   return iter;

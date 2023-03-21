@@ -1,5 +1,6 @@
 // #include "ast.h"
 #include "typesystem.h"
+
 #include "config_misc.h"
 #include "define.h"
 #include "mutate.h"
@@ -10,9 +11,8 @@ using namespace std;
 
 #define DBG 0
 #define SOLIDITYFUZZ
-#define dbg_cout                                                               \
-  if (DBG)                                                                     \
-  cout
+#define dbg_cout \
+  if (DBG) cout
 
 #ifdef PHPFUZZ
 const char *member_str = "->";
@@ -65,9 +65,7 @@ void TypeSystem::init_internal_obj(string dirname) {
 }
 
 void TypeSystem::init_one_internal_obj(string filename) {
-
-  if (DBG)
-    cout << "Initting builtin file: " << filename << endl;
+  if (DBG) cout << "Initting builtin file: " << filename << endl;
   char content[0x4000] = {0};
   auto fd = open(filename.c_str(), 0);
 
@@ -108,8 +106,7 @@ void TypeSystem::init_type_dict() {
 
   vector<string> type_dict = GetOpRules();
   for (auto &line : type_dict) {
-    if (line.empty())
-      continue;
+    if (line.empty()) continue;
 
     OPRule rule = parse_op_rule(line);
     op_rules_[rule.op_id_].push_back(rule);
@@ -123,15 +120,13 @@ int TypeSystem::gen_id() {
 void TypeSystem::split_to_basic_unit(IR *root, queue<IR *> &q,
                                      map<IR **, IR *> &m_save,
                                      set<IRTYPE> &s_basic_unit) {
-
   if (root->left_ &&
       s_basic_unit.find(root->left_->type_) != s_basic_unit.end()) {
     m_save[&root->left_] = root->left_;
     q.push(root->left_);
     root->left_ = NULL;
   }
-  if (root->left_)
-    split_to_basic_unit(root->left_, q, m_save, s_basic_unit);
+  if (root->left_) split_to_basic_unit(root->left_, q, m_save, s_basic_unit);
 
   if (root->right_ &&
       s_basic_unit.find(root->right_->type_) != s_basic_unit.end()) {
@@ -139,8 +134,7 @@ void TypeSystem::split_to_basic_unit(IR *root, queue<IR *> &q,
     q.push(root->right_);
     root->right_ = NULL;
   }
-  if (root->right_)
-    split_to_basic_unit(root->right_, q, m_save, s_basic_unit);
+  if (root->right_) split_to_basic_unit(root->right_, q, m_save, s_basic_unit);
 }
 
 void TypeSystem::connect_back(map<IR **, IR *> &m_save) {
@@ -179,10 +173,8 @@ bool TypeSystem::type_fix_framework(IR *root) {
         return false;
       }
     }
-    if (DBG)
-      cout << "[splitted] " << cur->to_string() << endl;
-    if (is_contain_definition(cur))
-      collect_definition(cur);
+    if (DBG) cout << "[splitted] " << cur->to_string() << endl;
+    if (is_contain_definition(cur)) collect_definition(cur);
     q.pop();
   }
   connect_back(m_save);
@@ -203,8 +195,7 @@ FIXORDER TypeSystem::get_fix_order(int op) {
 }
 
 int TypeSystem::get_op_value(IROperator *op) {
-  if (op == NULL)
-    return 0;
+  if (op == NULL) return 0;
   return op_id_map_[op->prefix_][op->middle_][op->suffix_];
 }
 
@@ -225,10 +216,8 @@ bool TypeSystem::is_contain_definition(IR *cur) {
     if (cur->data_type_ == kDataVarDefine || isDefine(cur->data_flag_)) {
       return true;
     }
-    if (cur->right_)
-      stk.push(cur->right_);
-    if (cur->left_)
-      stk.push(cur->left_);
+    if (cur->right_) stk.push(cur->right_);
+    if (cur->left_) stk.push(cur->left_);
   }
   return res;
 }
@@ -261,32 +250,27 @@ IR *search_by_data_type(IR *cur, DATATYPE type,
   } else {
     if (cur->left_) {
       auto res = search_by_data_type(cur->left_, type, forbit_type);
-      if (res != NULL)
-        return res;
+      if (res != NULL) return res;
     }
     if (cur->right_) {
       auto res = search_by_data_type(cur->right_, type, forbit_type);
-      if (res != NULL)
-        return res;
+      if (res != NULL) return res;
     }
   }
   return NULL;
 }
 
 ScopeType scope_js(const string &s) {
-  if (s.find("var") != string::npos)
-    return kScopeFunction;
+  if (s.find("var") != string::npos) return kScopeFunction;
   if (s.find("let") != string::npos || s.find("const") != string::npos)
     return kScopeStatement;
-  for (int i = 0; i < 0x1000; i++)
-    cout << s << endl;
+  for (int i = 0; i < 0x1000; i++) cout << s << endl;
   assert(0);
   return kScopeStatement;
 }
 
 void TypeSystem::collect_simple_variable_defintion_wt(IR *cur) {
-  if (DBG)
-    cout << "Collecting: " << cur->to_string() << endl;
+  if (DBG) cout << "Collecting: " << cur->to_string() << endl;
 
   auto var_scope = search_by_data_type(cur, kDataVarScope);
   ScopeType scope_type = kScopeGlobal;
@@ -303,8 +287,7 @@ void TypeSystem::collect_simple_variable_defintion_wt(IR *cur) {
   search_by_data_type(cur, kDataVarName, name_vec);
   search_by_data_type(cur, kDataInitiator, init_vec);
   if (name_vec.empty()) {
-    if (DBG)
-      cout << "fail to search for the name" << endl;
+    if (DBG) cout << "fail to search for the name" << endl;
     return;
   } else if (name_vec.size() != init_vec.size()) {
     for (auto i = 0; i < name_vec.size(); i++) {
@@ -318,8 +301,7 @@ void TypeSystem::collect_simple_variable_defintion_wt(IR *cur) {
         type = cache_inference_map_[t]->begin()->first;
       }
       // cout << "Infer type: " << type << endl;
-      if (type == ALLTYPES || type == NOTEXIST)
-        type = ANYTYPE;
+      if (type == ALLTYPES || type == NOTEXIST) type = ANYTYPE;
       type_vec.push_back(type);
     }
   }
@@ -328,12 +310,9 @@ void TypeSystem::collect_simple_variable_defintion_wt(IR *cur) {
   for (auto i = 0; i < name_vec.size(); i++) {
     auto name_ir = name_vec[i];
     auto type = type_vec[i];
-    if (DBG)
-      cout << "Adding: " << name_ir->to_string() << endl;
-    if (DBG)
-      cout << "Scope: " << scope_type << endl;
-    if (DBG)
-      cout << "Type:" << get_type_name_by_id(type) << endl;
+    if (DBG) cout << "Adding: " << name_ir->to_string() << endl;
+    if (DBG) cout << "Scope: " << scope_type << endl;
+    if (DBG) cout << "Type:" << get_type_name_by_id(type) << endl;
     if (cur_scope->scope_type_ == kScopeClass) {
       if (DBG) {
         cout << "Adding in class: " << name_ir->to_string() << endl;
@@ -348,8 +327,7 @@ void TypeSystem::collect_simple_variable_defintion_wt(IR *cur) {
 }
 
 void TypeSystem::collect_function_definition_wt(IR *cur) {
-  if (DBG)
-    cout << "Collecting " << cur->to_string() << endl;
+  if (DBG) cout << "Collecting " << cur->to_string() << endl;
   auto function_name_ir = search_by_data_type(cur, kDataFunctionName);
   auto function_args_ir = search_by_data_type(cur, kDataFunctionArg);
   // assert(function_name_ir || function_args_ir);
@@ -366,20 +344,17 @@ void TypeSystem::collect_function_definition_wt(IR *cur) {
   if (function_args_ir) {
     search_by_data_type(function_args_ir, kDataVarName, args);
     num_function_args = args.size();
-    if (DBG)
-      cout << "Num arg: " << num_function_args << endl;
+    if (DBG) cout << "Num arg: " << num_function_args << endl;
     for (auto i : args) {
       arg_names.push_back(i->to_string());
-      if (DBG)
-        cout << "Arg:" << i->to_string() << endl;
+      if (DBG) cout << "Arg:" << i->to_string() << endl;
       arg_types.push_back(ANYTYPE);
     }
     // assert(num_function_args == 3);
   }
 
   auto cur_scope = get_scope_by_id(cur->scope_id_);
-  if (function_name.empty())
-    function_name = "Anoynmous" + to_string(cur->id_);
+  if (function_name.empty()) function_name = "Anoynmous" + to_string(cur->id_);
   auto function_type = make_function_type(function_name, ANYTYPE, arg_types);
   if (DBG) {
     cout << "Collecing function name: " << function_name << endl;
@@ -412,20 +387,17 @@ void TypeSystem::collect_structure_definition_wt(IR *cur, IR *root) {
 
     search_by_data_type(cur, kDataClassName, structure_name);
     auto struct_body = search_by_data_type(cur, kDataStructBody);
-    if (struct_body == NULL)
-      return;
+    if (struct_body == NULL) return;
     shared_ptr<CompoundType> new_compound;
     string current_compound_name;
     if (structure_name.size() > 0) {
-      if (DBG)
-        cout << "not anonymous " << structure_name[0]->str_val_ << endl;
+      if (DBG) cout << "not anonymous " << structure_name[0]->str_val_ << endl;
       // not anonymous
       new_compound = make_compound_type_by_scope(
           get_scope_by_id(struct_body->scope_id_), structure_name[0]->str_val_);
       current_compound_name = structure_name[0]->str_val_;
     } else {
-      if (DBG)
-        cout << "anonymous" << endl;
+      if (DBG) cout << "anonymous" << endl;
       // anonymous structure
       static int anonymous_idx = 1;
       string compound_name = string("ano") + std::to_string(anonymous_idx++);
@@ -433,8 +405,7 @@ void TypeSystem::collect_structure_definition_wt(IR *cur, IR *root) {
           get_scope_by_id(struct_body->scope_id_), compound_name);
       current_compound_name = compound_name;
     }
-    if (DBG)
-      cout << struct_body->to_string() << endl;
+    if (DBG) cout << struct_body->to_string() << endl;
     is_in_class = true;
     type_fix_framework(struct_body);
     is_in_class = false;
@@ -442,18 +413,15 @@ void TypeSystem::collect_structure_definition_wt(IR *cur, IR *root) {
     new_compound = make_compound_type_by_scope(
         get_scope_by_id(struct_body->scope_id_), current_compound_name);
   } else {
-    if (cur->left_)
-      collect_structure_definition_wt(cur->left_, root);
-    if (cur->right_)
-      collect_structure_definition_wt(cur->right_, root);
+    if (cur->left_) collect_structure_definition_wt(cur->left_, root);
+    if (cur->right_) collect_structure_definition_wt(cur->right_, root);
   }
 }
 
 void collect_simple_variable_defintion(IR *cur) {
   string var_type;
 
-  if (DBG)
-    cout << "Collecting: " << cur->to_string() << endl;
+  if (DBG) cout << "Collecting: " << cur->to_string() << endl;
   vector<IR *> ir_vec;
 
   search_by_data_type(cur, kDataVarType, ir_vec);
@@ -489,47 +457,38 @@ void collect_simple_variable_defintion(IR *cur) {
   ir_vec.clear();
 
   search_by_data_type(cur, kDataDeclarator, ir_vec);
-  if (ir_vec.empty())
-    return;
+  if (ir_vec.empty()) return;
 
   for (auto ir : ir_vec) {
-    if (DBG)
-      cout << "var: " << ir->to_string() << endl;
+    if (DBG) cout << "var: " << ir->to_string() << endl;
     auto name_ir = search_by_data_type(ir, kDataVarName);
     auto new_type = type;
     vector<IR *> tmp_vec;
     search_by_data_type(ir, kDataPointer, tmp_vec, kDataWhatever, true);
 
     if (!tmp_vec.empty()) {
-      if (DBG)
-        cout << "This is a pointer definition" << endl;
-      if (DBG)
-        cout << "Pointer level " << tmp_vec.size() << endl;
+      if (DBG) cout << "This is a pointer definition" << endl;
+      if (DBG) cout << "Pointer level " << tmp_vec.size() << endl;
       new_type = generate_pointer_type(type, tmp_vec.size());
     } else {
-      if (DBG)
-        cout << "This is not a pointer definition" << endl;
+      if (DBG) cout << "This is not a pointer definition" << endl;
       // handle other
     }
-    if (name_ir == NULL || cur_scope == NULL)
-      return;
+    if (name_ir == NULL || cur_scope == NULL) return;
     cur_scope->add_definition(new_type, name_ir->str_val_, name_ir->id_);
   }
 }
 
 void TypeSystem::collect_structure_definition(IR *cur, IR *root) {
-
   if (cur->data_type_ == kDataClassType) {
-    if (DBG)
-      cout << "to_string: " << cur->to_string() << endl;
+    if (DBG) cout << "to_string: " << cur->to_string() << endl;
     if (DBG)
       cout << "[collect_structure_definition] data_type_ = kDataClassType"
            << endl;
     auto cur_scope = get_scope_by_id(cur->scope_id_);
 
-    if (isDefine(cur->data_flag_)) { // with structure define
-      if (DBG)
-        cout << "data_flag = Define" << endl;
+    if (isDefine(cur->data_flag_)) {  // with structure define
+      if (DBG) cout << "data_flag = Define" << endl;
       vector<IR *> structure_name, strucutre_variable_name, structure_body;
       search_by_data_type(cur, kDataClassName, structure_name);
 
@@ -540,16 +499,14 @@ void TypeSystem::collect_structure_definition(IR *cur, IR *root) {
       // type_fix_framework(struct_body);
       string current_compound_name;
       if (structure_name.size() > 0) {
-        if (DBG)
-          cout << "not anonymous" << endl;
+        if (DBG) cout << "not anonymous" << endl;
         // not anonymous
         new_compound =
             make_compound_type_by_scope(get_scope_by_id(struct_body->scope_id_),
                                         structure_name[0]->str_val_);
         current_compound_name = structure_name[0]->str_val_;
       } else {
-        if (DBG)
-          cout << "anonymous" << endl;
+        if (DBG) cout << "anonymous" << endl;
         // anonymous structure
         static int anonymous_idx = 1;
         string compound_name = string("ano") + std::to_string(anonymous_idx++);
@@ -567,12 +524,9 @@ void TypeSystem::collect_structure_definition(IR *cur, IR *root) {
       vector<IR *> structure_pointer_var;
       search_by_data_type(root, kDataDeclarator, strucutre_variable_unit,
                           kDataStructBody);
-      if (DBG)
-        cout << strucutre_variable_unit.size() << endl;
-      if (DBG)
-        cout << root->to_string() << endl;
-      if (DBG)
-        cout << get_string_by_nodetype(root->type_) << endl;
+      if (DBG) cout << strucutre_variable_unit.size() << endl;
+      if (DBG) cout << root->to_string() << endl;
+      if (DBG) cout << get_string_by_nodetype(root->type_) << endl;
 
       // for each class variable define unit, collect all kDataPointer.
       // it will be the reference level, if empty, it is not a pointer
@@ -581,7 +535,7 @@ void TypeSystem::collect_structure_definition(IR *cur, IR *root) {
                             structure_pointer_var, kDataWhatever, true);
         auto var_name = search_by_data_type(var_define_unit, kDataVarName);
         assert(var_name);
-        if (structure_pointer_var.size() == 0) { // not a pointer
+        if (structure_pointer_var.size() == 0) {  // not a pointer
           cur_scope->add_definition(compound_id, var_name->str_val_,
                                     var_name->id_);
           if (DBG)
@@ -599,9 +553,8 @@ void TypeSystem::collect_structure_definition(IR *cur, IR *root) {
         }
         structure_pointer_var.clear();
       }
-    } else if (isUse(cur->data_flag_)) { // only strucutre variable define
-      if (DBG)
-        cout << "data_flag = Use" << endl;
+    } else if (isUse(cur->data_flag_)) {  // only strucutre variable define
+      if (DBG) cout << "data_flag = Use" << endl;
       vector<IR *> structure_name, strucutre_variable_name;
       search_by_data_type(cur, kDataClassName, structure_name);
       // search_by_data_type(root, kDataVarName, strucutre_variable_name,
@@ -613,8 +566,7 @@ void TypeSystem::collect_structure_definition(IR *cur, IR *root) {
         cout << structure_name[0]->str_val_ << endl;
         cout << "TYpe id: " << compound_id << endl;
       }
-      if (compound_id == 0)
-        return;
+      if (compound_id == 0) return;
       // if(compound_id == 0)
       // forward_add_compound_type(structure_name[0]->str_val_);
 
@@ -623,12 +575,9 @@ void TypeSystem::collect_structure_definition(IR *cur, IR *root) {
       vector<IR *> structure_pointer_var;
       search_by_data_type(root, kDataDeclarator, strucutre_variable_unit,
                           kDataStructBody);
-      if (DBG)
-        cout << strucutre_variable_unit.size() << endl;
-      if (DBG)
-        cout << root->to_string() << endl;
-      if (DBG)
-        cout << get_string_by_nodetype(root->type_) << endl;
+      if (DBG) cout << strucutre_variable_unit.size() << endl;
+      if (DBG) cout << root->to_string() << endl;
+      if (DBG) cout << get_string_by_nodetype(root->type_) << endl;
 
       // for each class variable define unit, collect all kDataPointer.
       // it will be the reference level, if empty, it is not a pointer
@@ -637,7 +586,7 @@ void TypeSystem::collect_structure_definition(IR *cur, IR *root) {
                             structure_pointer_var, kDataWhatever, true);
         auto var_name = search_by_data_type(var_define_unit, kDataVarName);
         assert(var_name);
-        if (structure_pointer_var.size() == 0) { // not a pointer
+        if (structure_pointer_var.size() == 0) {  // not a pointer
           cur_scope->add_definition(compound_id, var_name->str_val_,
                                     var_name->id_);
           if (DBG)
@@ -657,10 +606,8 @@ void TypeSystem::collect_structure_definition(IR *cur, IR *root) {
       }
     }
   } else {
-    if (cur->left_)
-      collect_structure_definition(cur->left_, root);
-    if (cur->right_)
-      collect_structure_definition(cur->right_, root);
+    if (cur->left_) collect_structure_definition(cur->left_, root);
+    if (cur->right_) collect_structure_definition(cur->right_, root);
   }
 }
 
@@ -700,8 +647,7 @@ void TypeSystem::collect_function_definition(IR *cur) {
   }
 
 #ifdef SOLIDITYFUZZ
-  if (return_type == NOTEXIST)
-    return_type = ANYTYPE;
+  if (return_type == NOTEXIST) return_type = ANYTYPE;
 #else
 #endif
 
@@ -746,10 +692,8 @@ void TypeSystem::collect_function_definition(IR *cur) {
       var_type = var_type.substr(0, var_type.size() - 1);
       var_name = ir_vec_name[0]->to_string();
       auto idx = ir_vec_name[0]->id_;
-      if (DBG)
-        cout << "Type string: " << var_type << endl;
-      if (DBG)
-        cout << "Arg name: " << var_name << endl;
+      if (DBG) cout << "Type string: " << var_type << endl;
+      if (DBG) cout << "Arg name: " << var_name << endl;
       if (!var_type.empty()) {
         int type = get_basic_type_id_by_string(var_type);
         if (type == 0) {
@@ -772,26 +716,21 @@ void TypeSystem::collect_function_definition(IR *cur) {
 
     connect_back(m_save);
   }
-  if (DBG)
-    cout << "Function name: " << function_name_str << endl;
+  if (DBG) cout << "Function name: " << function_name_str << endl;
   if (DBG)
     cout << "return value type: " << return_value_type_str
          << "id:" << return_type << endl;
-  if (DBG)
-    cout << "Args type: " << endl;
+  if (DBG) cout << "Args type: " << endl;
   for (auto i : arg_types) {
-    if (DBG)
-      cout << "typeid" << endl;
-    if (DBG)
-      cout << get_type_by_type_id(i)->type_name_ << endl;
+    if (DBG) cout << "typeid" << endl;
+    if (DBG) cout << get_type_by_type_id(i)->type_name_ << endl;
   }
 
   auto cur_scope = get_scope_by_id(cur->scope_id_);
   if (return_type) {
     auto function_ptr =
         make_function_type(function_name_str, return_type, arg_types);
-    if (function_ptr == NULL || function_name_ir == NULL)
-      return;
+    if (function_ptr == NULL || function_name_ir == NULL) return;
     // if(DBG) cout << cur_scope << ", " << function_ptr << endl;
     cur_scope->add_definition(function_ptr->type_id_, function_ptr->type_name_,
                               function_name_ir->id_);
@@ -814,14 +753,12 @@ DATATYPE TypeSystem::find_define_type(IR *cur) {
 
   if (cur->left_) {
     auto res = find_define_type(cur->left_);
-    if (res != kDataWhatever)
-      return res;
+    if (res != kDataWhatever) return res;
   }
 
   if (cur->right_) {
     auto res = find_define_type(cur->right_);
-    if (res != kDataWhatever)
-      return res;
+    if (res != kDataWhatever) return res;
   }
 
   return kDataWhatever;
@@ -833,57 +770,46 @@ bool TypeSystem::collect_definition(IR *cur) {
     auto define_type = find_define_type(cur);
 
     switch (define_type) {
-    case kDataVarType:
-      if (DBG)
-        cout << "kDataVarType" << endl;
-      if (IsWeakType()) {
+      case kDataVarType:
+        if (DBG) cout << "kDataVarType" << endl;
+        if (IsWeakType()) {
+          collect_simple_variable_defintion_wt(cur);
+        } else {
+          collect_simple_variable_defintion(cur);
+        }
+        return true;
 
-        collect_simple_variable_defintion_wt(cur);
-      } else {
+      case kDataClassType:
+        if (DBG) cout << "kDataClassType" << endl;
+        if (IsWeakType()) {
+          collect_structure_definition_wt(cur, cur);
+        } else {
+          collect_structure_definition(cur, cur);
+        }
+        return true;
 
-        collect_simple_variable_defintion(cur);
-      }
-      return true;
+      case kDataFunctionType:
+        if (DBG) cout << "kDataFunctionType" << endl;
+        if (IsWeakType()) {
+          collect_function_definition_wt(cur);
+        } else {
+          collect_function_definition(cur);
+        }
+        return true;
+      default:
+        if (DBG) cout << "fuck default" << endl;
+        // handle structure and function ,array ,etc..
+        if (IsWeakType()) {
+          collect_simple_variable_defintion_wt(cur);
+        } else {
+          collect_simple_variable_defintion(cur);
+        }
 
-    case kDataClassType:
-      if (DBG)
-        cout << "kDataClassType" << endl;
-      if (IsWeakType()) {
-
-        collect_structure_definition_wt(cur, cur);
-      } else {
-
-        collect_structure_definition(cur, cur);
-      }
-      return true;
-
-    case kDataFunctionType:
-      if (DBG)
-        cout << "kDataFunctionType" << endl;
-      if (IsWeakType()) {
-        collect_function_definition_wt(cur);
-      } else {
-
-        collect_function_definition(cur);
-      }
-      return true;
-    default:
-      if (DBG)
-        cout << "fuck default" << endl;
-      // handle structure and function ,array ,etc..
-      if (IsWeakType()) {
-        collect_simple_variable_defintion_wt(cur);
-      } else {
-        collect_simple_variable_defintion(cur);
-      }
-
-      break;
+        break;
     }
   } else {
-    if (cur->left_)
-      res = collect_definition(cur->left_) && res;
-    if (cur->right_)
-      res = collect_definition(cur->right_) && res;
+    if (cur->left_) res = collect_definition(cur->left_) && res;
+    if (cur->right_) res = collect_definition(cur->right_) && res;
   }
 
   return res;
@@ -896,10 +822,8 @@ bool TypeSystem::type_inference_new(IR *cur, int scope_type) {
   auto cur_type = make_shared<map<TYPEID, vector<pair<TYPEID, TYPEID>>>>();
   int res_type = NOTEXIST;
   bool flag;
-  if (DBG)
-    cout << "Infering: " << cur->to_string() << endl;
-  if (DBG)
-    cout << "Scope type: " << scope_type << endl;
+  if (DBG) cout << "Infering: " << cur->to_string() << endl;
+  if (DBG) cout << "Scope type: " << scope_type << endl;
 
   if (HandleBasicType(cur->type_, cur_type)) {
     cache_inference_map_[cur] = cur_type;
@@ -908,11 +832,9 @@ bool TypeSystem::type_inference_new(IR *cur, int scope_type) {
 
   if (cur->type_ == kIdentifier) {
     // handle here
-    if (DBG)
-      cout << "Reach here" << endl;
+    if (DBG) cout << "Reach here" << endl;
     if (cur->str_val_ == "FIXME") {
-      if (DBG)
-        cout << "See a fixme!" << endl;
+      if (DBG) cout << "See a fixme!" << endl;
       auto v_usable_type = collect_usable_type(cur);
       // auto cur_type = make_shared<map<TYPEID, vector<pair<TYPEID,
       // TYPEID>>>>();
@@ -921,8 +843,7 @@ bool TypeSystem::type_inference_new(IR *cur, int scope_type) {
       // if(DBG) cout << "collect_usable_type.size(): " << v_usable_type.size()
       // << endl;
       for (auto t : v_usable_type) {
-        if (DBG)
-          cout << "Type: " << get_type_name_by_id(t) << endl;
+        if (DBG) cout << "Type: " << get_type_name_by_id(t) << endl;
         assert(t);
         (*cur_type)[t].push_back(make_pair(t, 0));
       }
@@ -935,14 +856,11 @@ bool TypeSystem::type_inference_new(IR *cur, int scope_type) {
       // match name in cur->scope_
 
       res_type = locate_defined_variable_by_name(cur->str_val_, cur->scope_id_);
-      if (DBG)
-        cout << "Name: " << cur->str_val_ << endl;
-      if (DBG)
-        cout << "Type: " << res_type << endl;
+      if (DBG) cout << "Name: " << cur->str_val_ << endl;
+      if (DBG) cout << "Type: " << res_type << endl;
       // auto cur_type = make_shared<map<TYPEID, vector<pair<TYPEID,
       // TYPEID>>>>();
-      if (!res_type)
-        res_type = ANYTYPE; // should fix
+      if (!res_type) res_type = ANYTYPE;  // should fix
       (*cur_type)[res_type].push_back(make_pair(res_type, 0));
       cache_inference_map_[cur] = cur_type;
       return true;
@@ -951,8 +869,7 @@ bool TypeSystem::type_inference_new(IR *cur, int scope_type) {
     } else {
       // match name in scope_type
       // currently only class/struct is possible
-      if (DBG)
-        cout << "Scope type: " << scope_type << endl;
+      if (DBG) cout << "Scope type: " << scope_type << endl;
       if (is_compound_type(scope_type) == false) {
         if (is_function_type(scope_type)) {
           auto ret_type =
@@ -970,8 +887,7 @@ bool TypeSystem::type_inference_new(IR *cur, int scope_type) {
       for (auto &iter : ct->v_members_) {
         for (auto &member : iter.second) {
           if (cur->str_val_ == member) {
-            if (DBG)
-              cout << "Match member" << endl;
+            if (DBG) cout << "Match member" << endl;
             // auto cur_type = make_shared<map<TYPEID, vector<pair<TYPEID,
             // TYPEID>>>>();
             assert(iter.first);
@@ -983,22 +899,18 @@ bool TypeSystem::type_inference_new(IR *cur, int scope_type) {
           }
         }
       }
-      if (DBG)
-        cout << get_type_name_by_id(scope_type) << endl;
-      if (DBG)
-        cout << cur->str_val_ << endl;
-      return false; // cannot find member
+      if (DBG) cout << get_type_name_by_id(scope_type) << endl;
+      if (DBG) cout << cur->str_val_ << endl;
+      return false;  // cannot find member
     }
   }
 
   if (is_op_null(cur->op_)) {
     if (cur->left_ && cur->right_) {
       flag = type_inference_new(cur->left_, scope_type);
-      if (!flag)
-        return flag;
+      if (!flag) return flag;
       flag = type_inference_new(cur->right_, scope_type);
-      if (!flag)
-        return flag;
+      if (!flag) return flag;
       for (auto &left : *(cache_inference_map_[cur->left_])) {
         for (auto &right : *(cache_inference_map_[cur->right_])) {
           auto res_type = least_upper_common_type(left.first, right.first);
@@ -1008,17 +920,13 @@ bool TypeSystem::type_inference_new(IR *cur, int scope_type) {
       cache_inference_map_[cur] = cur_type;
     } else if (cur->left_) {
       flag = type_inference_new(cur->left_, scope_type);
-      if (!flag || cache_inference_map_[cur->left_]->empty())
-        return false;
-      if (DBG)
-        cout << "Left: " << cur->left_->to_string() << endl;
+      if (!flag || cache_inference_map_[cur->left_]->empty()) return false;
+      if (DBG) cout << "Left: " << cur->left_->to_string() << endl;
       assert(cache_inference_map_[cur->left_]->size());
       cache_inference_map_[cur] = cache_inference_map_[cur->left_];
     } else {
-      if (DBG)
-        cout << cur->to_string() << endl;
-      if (DBG)
-        cout << get_string_by_nodetype(cur->type_) << endl;
+      if (DBG) cout << cur->to_string() << endl;
+      if (DBG) cout << get_string_by_nodetype(cur->type_) << endl;
       return false;
       assert(0);
     }
@@ -1029,13 +937,11 @@ bool TypeSystem::type_inference_new(IR *cur, int scope_type) {
 
   auto cur_op = get_op_value(cur->op_);
   if (cur_op == NOTEXIST) {
-    if (DBG)
-      cout << cur->to_string() << endl;
+    if (DBG) cout << cur->to_string() << endl;
     if (DBG)
       cout << cur->op_->prefix_ << ", " << cur->op_->middle_ << ", "
            << cur->op_->suffix_ << endl;
-    if (DBG)
-      cout << "OP not exist!" << endl;
+    if (DBG) cout << "OP not exist!" << endl;
     return false;
     assert(0);
   }
@@ -1046,113 +952,99 @@ bool TypeSystem::type_inference_new(IR *cur, int scope_type) {
       return false;
     }
     flag = type_inference_new(cur->left_, scope_type);
-    if (!flag)
-      return flag;
+    if (!flag) return flag;
     // auto cur_type = make_shared<map<TYPEID, vector<pair<TYPEID, TYPEID>>>>();
     for (auto &left : *(cache_inference_map_[cur->left_])) {
       auto left_type = left.first;
-      if (DBG)
-        cout << "Reaching op1" << endl;
+      if (DBG) cout << "Reaching op1" << endl;
       if (DBG)
         cout << cur->op_->prefix_ << ", " << cur->op_->middle_ << ", "
              << cur->op_->suffix_ << endl;
       res_type = query_result_type(cur_op, left_type);
-      if (DBG)
-        cout << "Result_type: " << res_type << endl;
+      if (DBG) cout << "Result_type: " << res_type << endl;
       if (res_type != NOTEXIST) {
         (*cur_type)[res_type].push_back(make_pair(left_type, 0));
       }
     }
     cache_inference_map_[cur] = cur_type;
   } else if (is_op2(cur_op)) {
-    if (!(cur->left_ && cur->right_))
-      return false;
+    if (!(cur->left_ && cur->right_)) return false;
     // auto cur_type = make_shared<map<TYPEID, vector<pair<TYPEID, TYPEID>>>>();
     switch (get_fix_order(cur_op)) {
-    case LEFT_TO_RIGHT: {
-      // this shouldn't contain "FIXME"
-      if (DBG)
-        cout << "Left to right" << endl;
-      flag = type_inference_new(cur->left_, scope_type);
-      if (!flag)
-        return flag;
-      if (cache_inference_map_[cur->left_]->empty())
-        return false;
-      auto left_type = cache_inference_map_[cur->left_]->begin()->first;
-      auto new_left_type = left_type;
-      // if(cur->op_->middle_ == "->"){
-      if (get_op_property(cur_op) == OP_PROP_Dereference) {
-        auto tmp_ptr = get_type_by_type_id(left_type);
-        assert(tmp_ptr->is_pointer_type());
-        if (DBG)
-          cout << "left type of -> is : " << left_type << endl;
-        auto type_ptr = static_pointer_cast<PointerType>(tmp_ptr);
-        if (DBG)
-          cout << "Type ptr: " << type_ptr->type_name_ << endl;
-        assert(type_ptr);
-        new_left_type = type_ptr->orig_type_;
-      }
-      flag = type_inference_new(cur->right_, new_left_type);
-      if (!flag)
-        return flag;
-      auto right_type = cache_inference_map_[cur->right_]->begin()->first;
-      res_type = right_type;
-      (*cur_type)[res_type].push_back(make_pair(left_type, right_type));
-      break;
-    }
-    // Rui Test
-    case RIGHT_TO_LEFT: {
-      assert(0);
-      break;
-    }
-    default: {
-      // handle a + b Here
-      flag = type_inference_new(cur->left_, scope_type);
-      if (!flag)
-        return flag;
-      flag = type_inference_new(cur->right_, scope_type);
-      if (!flag)
-        return flag;
-      auto left_type = cache_inference_map_[cur->left_];
-      auto right_type = cache_inference_map_[cur->right_];
-      // handle function call case-by-case
-
-      if (left_type->size() == 1 &&
-          is_function_type(left_type->begin()->first)) {
-        res_type = get_function_type_by_type_id(left_type->begin()->first)
-                       ->return_type_;
-        if (DBG)
-          cout << "get_function_type_by_type_id: " << res_type << endl;
-        (*cur_type)[res_type].push_back(
-            make_pair(0, 0)); // just 0, 0 is ok now, we won't fix it.
+      case LEFT_TO_RIGHT: {
+        // this shouldn't contain "FIXME"
+        if (DBG) cout << "Left to right" << endl;
+        flag = type_inference_new(cur->left_, scope_type);
+        if (!flag) return flag;
+        if (cache_inference_map_[cur->left_]->empty()) return false;
+        auto left_type = cache_inference_map_[cur->left_]->begin()->first;
+        auto new_left_type = left_type;
+        // if(cur->op_->middle_ == "->"){
+        if (get_op_property(cur_op) == OP_PROP_Dereference) {
+          auto tmp_ptr = get_type_by_type_id(left_type);
+          assert(tmp_ptr->is_pointer_type());
+          if (DBG) cout << "left type of -> is : " << left_type << endl;
+          auto type_ptr = static_pointer_cast<PointerType>(tmp_ptr);
+          if (DBG) cout << "Type ptr: " << type_ptr->type_name_ << endl;
+          assert(type_ptr);
+          new_left_type = type_ptr->orig_type_;
+        }
+        flag = type_inference_new(cur->right_, new_left_type);
+        if (!flag) return flag;
+        auto right_type = cache_inference_map_[cur->right_]->begin()->first;
+        res_type = right_type;
+        (*cur_type)[res_type].push_back(make_pair(left_type, right_type));
         break;
       }
+      // Rui Test
+      case RIGHT_TO_LEFT: {
+        assert(0);
+        break;
+      }
+      default: {
+        // handle a + b Here
+        flag = type_inference_new(cur->left_, scope_type);
+        if (!flag) return flag;
+        flag = type_inference_new(cur->right_, scope_type);
+        if (!flag) return flag;
+        auto left_type = cache_inference_map_[cur->left_];
+        auto right_type = cache_inference_map_[cur->right_];
+        // handle function call case-by-case
 
-      // res_type = query_type_dict(cur_op, left_type, right_type);
-      for (auto &left_cahce : *(cache_inference_map_[cur->left_])) {
-        for (auto &right_cache : *(cache_inference_map_[cur->right_])) {
-          auto a_left_type = left_cahce.first;
-          auto a_right_type = right_cache.first;
-          if (DBG)
-            cout << "[a+b] left_type = " << a_left_type << ":"
-                 << get_type_name_by_id(a_left_type)
-                 << " ,right_type = " << a_right_type << ":"
-                 << get_type_name_by_id(a_right_type) << ", op = " << cur_op
-                 << endl;
-          if (DBG)
-            cout << "Left to alltype: "
-                 << is_derived_type(a_left_type, ALLTYPES)
-                 << ", right to alltype: "
-                 << is_derived_type(a_right_type, ALLTYPES) << endl;
-          auto t = query_result_type(cur_op, a_left_type, a_right_type);
-          if (t != NOTEXIST) {
+        if (left_type->size() == 1 &&
+            is_function_type(left_type->begin()->first)) {
+          res_type = get_function_type_by_type_id(left_type->begin()->first)
+                         ->return_type_;
+          if (DBG) cout << "get_function_type_by_type_id: " << res_type << endl;
+          (*cur_type)[res_type].push_back(
+              make_pair(0, 0));  // just 0, 0 is ok now, we won't fix it.
+          break;
+        }
+
+        // res_type = query_type_dict(cur_op, left_type, right_type);
+        for (auto &left_cahce : *(cache_inference_map_[cur->left_])) {
+          for (auto &right_cache : *(cache_inference_map_[cur->right_])) {
+            auto a_left_type = left_cahce.first;
+            auto a_right_type = right_cache.first;
             if (DBG)
-              cout << "Adding" << endl;
-            (*cur_type)[t].push_back(make_pair(a_left_type, a_right_type));
+              cout << "[a+b] left_type = " << a_left_type << ":"
+                   << get_type_name_by_id(a_left_type)
+                   << " ,right_type = " << a_right_type << ":"
+                   << get_type_name_by_id(a_right_type) << ", op = " << cur_op
+                   << endl;
+            if (DBG)
+              cout << "Left to alltype: "
+                   << is_derived_type(a_left_type, ALLTYPES)
+                   << ", right to alltype: "
+                   << is_derived_type(a_right_type, ALLTYPES) << endl;
+            auto t = query_result_type(cur_op, a_left_type, a_right_type);
+            if (t != NOTEXIST) {
+              if (DBG) cout << "Adding" << endl;
+              (*cur_type)[t].push_back(make_pair(a_left_type, a_right_type));
+            }
           }
         }
       }
-    }
     }
   } else {
     assert(0);
@@ -1200,8 +1092,7 @@ set<int> TypeSystem::collect_usable_type(IR *cur) {
         }
         */
         auto type_ptr = get_type_by_type_id(tmp_type);
-        if (type_ptr == NULL)
-          continue;
+        if (type_ptr == NULL) continue;
         for (auto &kk : iter.second) {
           if (ir_id > kk.second) {
             flag = true;
@@ -1235,8 +1126,8 @@ set<int> TypeSystem::collect_usable_type(IR *cur) {
   return result;
 }
 
-vector<map<int, vector<string>>>
-TypeSystem::collect_all_var_definition_by_type(IR *cur) {
+vector<map<int, vector<string>>> TypeSystem::collect_all_var_definition_by_type(
+    IR *cur) {
   vector<map<int, vector<string>>> result;
   map<int, vector<string>> simple_var;
   map<int, vector<string>> functions;
@@ -1251,8 +1142,7 @@ TypeSystem::collect_all_var_definition_by_type(IR *cur) {
       for (auto &iter : current_scope->m_defined_variables_) {
         auto tmp_type = iter.first;
         auto type_ptr = get_type_by_type_id(tmp_type);
-        if (type_ptr == NULL)
-          continue;
+        if (type_ptr == NULL) continue;
         if (type_ptr->is_function_type()) {
           for (auto &var : iter.second) {
             if (var.second < ir_id) {
@@ -1263,8 +1153,7 @@ TypeSystem::collect_all_var_definition_by_type(IR *cur) {
         } else if (type_ptr->is_compound_type()) {
           for (auto &var : iter.second) {
             if (var.second < ir_id) {
-              if (DBG)
-                cout << "Collecting compound: " << var.first << endl;
+              if (DBG) cout << "Collecting compound: " << var.first << endl;
               compound_types[tmp_type].push_back(var.first);
             }
           }
@@ -1278,8 +1167,7 @@ TypeSystem::collect_all_var_definition_by_type(IR *cur) {
           }
           for (auto &var : iter.second) {
             if (var.second < ir_id) {
-              if (DBG)
-                cout << "Collecting simple var: " << var.first << endl;
+              if (DBG) cout << "Collecting simple var: " << var.first << endl;
               simple_var[tmp_type].push_back(var.first);
             }
           }
@@ -1296,8 +1184,7 @@ TypeSystem::collect_all_var_definition_by_type(IR *cur) {
   // if(add_prop == 0) add_prop = 1;
   for (auto &k : builtin_func) {
     for (auto &n : k.second) {
-      if (get_rand_int(add_prop) == 0)
-        functions[k.first].push_back(n);
+      if (get_rand_int(add_prop) == 0) functions[k.first].push_back(n);
     }
   }
 
@@ -1314,8 +1201,7 @@ TypeSystem::collect_all_var_definition_by_type(IR *cur) {
   // if(add_prop == 0) add_prop = 1;
   for (auto &k : builtin_compounds) {
     for (auto &n : k.second) {
-      if (get_rand_int(add_prop) == 0)
-        compound_types[k.first].push_back(n);
+      if (get_rand_int(add_prop) == 0) compound_types[k.first].push_back(n);
     }
   }
 
@@ -1332,8 +1218,7 @@ TypeSystem::collect_all_var_definition_by_type(IR *cur) {
   // if(add_prop == 0) add_prop = 1;
   for (auto &k : builtin_simple_var) {
     for (auto &n : k.second) {
-      if (get_rand_int(add_prop) == 0)
-        simple_var[k.first].push_back(n);
+      if (get_rand_int(add_prop) == 0) simple_var[k.first].push_back(n);
     }
   }
 
@@ -1355,7 +1240,7 @@ pair<OPTYPE, vector<int>> TypeSystem::collect_sat_op_by_result_type(
     map<int, vector<string>> &function_map,
     map<int, vector<string>> &compound_var_map) {
   static map<int, vector<vector<int>>>
-      cache; // map<type, vector<pair<opid, int<operand_1, operand_2>>>
+      cache;  // map<type, vector<pair<opid, int<operand_1, operand_2>>>
   auto res = make_pair(0, move(vector<int>(2, 0)));
 
   if (cache.empty()) {
@@ -1370,12 +1255,10 @@ pair<OPTYPE, vector<int>> TypeSystem::collect_sat_op_by_result_type(
     }
   }
   assert(cache.empty() == false);
-  if (DBG)
-    cout << "result type: " << type << endl;
+  if (DBG) cout << "result type: " << type << endl;
   int counter = 0;
   for (auto &iter : cache) {
-    if (DBG)
-      cout << "OP result type: " << iter.first << endl;
+    if (DBG) cout << "OP result type: " << iter.first << endl;
     if (is_derived_type(type, iter.first)) {
       for (auto &v : iter.second) {
         int left = 0, right = 0;
@@ -1384,21 +1267,20 @@ pair<OPTYPE, vector<int>> TypeSystem::collect_sat_op_by_result_type(
           continue;
         }
         switch (v[1]) {
-        case ALLTYPES:
-          left = type;
-          break;
-        case ALLFUNCTION:
-          if (function_map.empty())
-            continue;
-          left = random_pick(function_map)->first;
-          break;
-        case ALLCOMPOUNDTYPE:
-        //    break;
-        default:
-          if (all_satisfiable_types.find(v[1]) == all_satisfiable_types.end())
-            continue;
-          left = v[1];
-          break;
+          case ALLTYPES:
+            left = type;
+            break;
+          case ALLFUNCTION:
+            if (function_map.empty()) continue;
+            left = random_pick(function_map)->first;
+            break;
+          case ALLCOMPOUNDTYPE:
+          //    break;
+          default:
+            if (all_satisfiable_types.find(v[1]) == all_satisfiable_types.end())
+              continue;
+            left = v[1];
+            break;
         }
         // left = v[1] < ALLUPPERBOUND? type: v[1];
 
@@ -1423,12 +1305,10 @@ pair<OPTYPE, vector<int>> TypeSystem::collect_sat_op_by_result_type(
 }
 
 vector<string> TypeSystem::get_op_by_optype(OPTYPE op_type) {
-
   for (auto &s1 : op_id_map_) {
     for (auto &s2 : s1.second) {
       for (auto &s3 : s2.second) {
-        if (s3.second == op_type)
-          return {s1.first, s2.first, s3.first};
+        if (s3.second == op_type) return {s1.first, s2.first, s3.first};
       }
     }
   }
@@ -1455,8 +1335,7 @@ string TypeSystem::get_class_member_by_type_no_duplicate(int type,
   string res1;
   for (auto &member : type_ptr->v_members_) {
     if (is_compound_type(member.first)) {
-      if (visit.find(member.first) != visit.end())
-        continue;
+      if (visit.find(member.first) != visit.end()) continue;
       auto tmp_res = get_class_member_by_type_no_duplicate(member.first,
                                                            target_type, visit);
       if (tmp_res.size()) {
@@ -1470,8 +1349,7 @@ string TypeSystem::get_class_member_by_type_no_duplicate(int type,
         all_sol.push_back(res1);
       } else {
         auto pfunc = get_function_type_by_type_id(member.first);
-        if (pfunc->return_type_ != target_type)
-          continue;
+        if (pfunc->return_type_ != target_type) continue;
         func_sol.push_back(pfunc);
       }
     }
@@ -1524,8 +1402,7 @@ bool TypeSystem::filter_compound_type(
 
 set<int> get_all_types_from_compound_type(int compound_type, set<int> &visit) {
   set<int> res;
-  if (visit.find(compound_type) != visit.end())
-    return res;
+  if (visit.find(compound_type) != visit.end()) return res;
   visit.insert(compound_type);
 
   auto compound_ptr = get_compound_type_by_type_id(compound_type);
@@ -1539,7 +1416,6 @@ set<int> get_all_types_from_compound_type(int compound_type, set<int> &visit) {
     } else if (is_function_type(member_type)) {
       // assert(0);
       if (IsWeakType()) {
-
         auto pfunc = get_function_type_by_type_id(member_type);
         res.insert(pfunc->return_type_);
         res.insert(member_type);
@@ -1548,7 +1424,6 @@ set<int> get_all_types_from_compound_type(int compound_type, set<int> &visit) {
       res.insert(member_type);
     } else {
       if (IsWeakType()) {
-
         res.insert(member_type);
       }
     }
@@ -1587,15 +1462,13 @@ bool TypeSystem::filter_function_type(
   }
 
   // collect simple types into current_types
-  for (auto &simple : simple_type)
-    current_types.insert(simple.first);
+  for (auto &simple : simple_type) current_types.insert(simple.first);
 
   // collect all types from compound type into current_types
   set<int> visit;
   for (auto &compound : compound_var_map) {
     auto compound_res = get_all_types_from_compound_type(compound.first, visit);
-    for (auto &i : compound_res)
-      current_types.insert(i);
+    for (auto &i : compound_res) current_types.insert(i);
   }
 
   // traverse function graph
@@ -1621,16 +1494,14 @@ bool TypeSystem::filter_function_type(
 
   // unsatisfied function remain in func_map
   for (auto &f : func_map) {
-    if (DBG)
-      cout << "remove function: " << f.first << endl;
+    if (DBG) cout << "remove function: " << f.first << endl;
     function_map.erase(f.first);
   }
   return true;
 }
 
-set<int>
-TypeSystem::calc_satisfiable_functions(const set<int> &function_type_set,
-                                       const set<int> &available_types) {
+set<int> TypeSystem::calc_satisfiable_functions(
+    const set<int> &function_type_set, const set<int> &available_types) {
   map<int, set<int>> func_map;
   set<int> current_types = available_types;
   set<int> res = function_type_set;
@@ -1665,8 +1536,7 @@ TypeSystem::calc_satisfiable_functions(const set<int> &function_type_set,
 
   // unsatisfied function remain in func_map
   for (auto &f : func_map) {
-    if (DBG)
-      cout << "remove function: " << f.first << endl;
+    if (DBG) cout << "remove function: " << f.first << endl;
     res.erase(f.first);
   }
   return res;
@@ -1692,7 +1562,6 @@ map<int, vector<set<int>>> TypeSystem::collect_satisfiable_types(
     IR *ir, map<int, vector<string>> &simple_var_map,
     map<int, vector<string>> &compound_var_map,
     map<int, vector<string>> &function_map) {
-
   map<int, vector<set<int>>> res;
   // auto var_maps = collect_all_var_definition_by_type(ir);
   // auto &simple_var_map = var_maps[0];
@@ -1737,7 +1606,6 @@ map<int, vector<set<int>>> TypeSystem::collect_satisfiable_types(
   auto satisfiable_functions =
       calc_satisfiable_functions(function_types, current_types);
   for (auto type : satisfiable_functions) {
-
     auto func_ptr = get_function_type_by_type_id(type);
     auto return_type = func_ptr->return_type_;
     if (res.find(return_type) == res.end()) {
@@ -1749,16 +1617,13 @@ map<int, vector<set<int>>> TypeSystem::collect_satisfiable_types(
   return res;
 }
 
-string
-TypeSystem::function_call_gen_handler(map<int, vector<string>> &function_map,
-                                      IR *ir) {
+string TypeSystem::function_call_gen_handler(
+    map<int, vector<string>> &function_map, IR *ir) {
   string res;
   assert(function_map.size());
-  if (DBG)
-    cout << "function handler" << endl;
+  if (DBG) cout << "function handler" << endl;
   auto pick_func = *random_pick(function_map);
-  if (DBG)
-    cout << "Function type: " << pick_func.first << endl;
+  if (DBG) cout << "Function type: " << pick_func.first << endl;
   shared_ptr<FunctionType> choice_ptr =
       get_function_type_by_type_id(pick_func.first);
 
@@ -1780,8 +1645,7 @@ TypeSystem::function_call_gen_handler(map<int, vector<string>> &function_map,
 
 string TypeSystem::structure_member_gen_handler(
     map<int, vector<string>> &compound_var_map, int member_type) {
-  if (DBG)
-    cout << "Structure handler" << endl;
+  if (DBG) cout << "Structure handler" << endl;
 
   string res;
 
@@ -1797,7 +1661,6 @@ string TypeSystem::structure_member_gen_handler(
   if (res.empty()) {
     assert(member_type == compound_type);
     if (IsWeakType()) {
-
       if (is_builtin_type(compound_type) && get_rand_int(4)) {
         auto compound_ptr = get_type_by_type_id(compound_type);
         if (compound_ptr != nullptr && compound_var == compound_ptr->type_name_)
@@ -1818,8 +1681,7 @@ string TypeSystem::get_class_member(TYPEID type_id) {
   string res;
   auto compound_ptr = get_compound_type_by_type_id(type_id);
 
-  if (compound_ptr == nullptr)
-    return "";
+  if (compound_ptr == nullptr) return "";
   while (true) {
     auto var_info = *random_pick(compound_ptr->v_members_);
     auto var_type = var_info.first;
@@ -1845,10 +1707,8 @@ void TypeSystem::update_pointer_var(
     map<int, vector<string>> &pointer_var_map,
     map<int, vector<string>> &simple_var_map,
     map<int, vector<string>> &compound_var_map) {
-
   for (auto pointer_type : pointer_var_map) {
-    if (pointer_type.second.size() == 0)
-      break;
+    if (pointer_type.second.size() == 0) break;
     auto pointer_id = pointer_type.first;
     auto pointer_ptr = get_pointer_type_by_type_id(pointer_id);
     if (is_basic_type(pointer_ptr->basic_type_)) {
@@ -1874,17 +1734,16 @@ string TypeSystem::expression_gen_handler(
   string res;
   auto sat_op = collect_sat_op_by_result_type(
       type, all_satisfiable_types, function_map,
-      compound_var_map); // map<OPTYPE, vector<typeid>>
-  if (DBG)
-    cout << "OP id: " << sat_op.first << endl;
+      compound_var_map);  // map<OPTYPE, vector<typeid>>
+  if (DBG) cout << "OP id: " << sat_op.first << endl;
   if (sat_op.first == 0) {
     return gen_random_num_string();
   }
   assert(sat_op.first);
 
   auto op = get_op_by_optype(
-      sat_op.first); // vector<string> for prefix, middle, suffix
-  assert(op.size()); // should not be an empty operator
+      sat_op.first);  // vector<string> for prefix, middle, suffix
+  assert(op.size());  // should not be an empty operator
   if (is_op1(sat_op.first)) {
     auto arg1_type = sat_op.second[0];
     auto arg1 = generate_expression_by_type_core(arg1_type, ir);
@@ -1927,8 +1786,7 @@ string TypeSystem::generate_expression_by_type_core(int type, IR *ir) {
     }
   }
 
-  if (gen_counter_ > 50)
-    return gen_random_num_string();
+  if (gen_counter_ > 50) return gen_random_num_string();
   gen_counter_++;
   if (DBG)
     cout << "Generating type:" << get_type_name_by_id(type)
@@ -1946,7 +1804,6 @@ string TypeSystem::generate_expression_by_type_core(int type, IR *ir) {
   auto function_size = function_map.size();
 
   if (!IsWeakType()) {
-
     // add pointer into *_var_map
     update_pointer_var(pointer_var_map, simple_var_map, compound_var_map);
   }
@@ -2037,51 +1894,42 @@ string TypeSystem::generate_expression_by_type_core(int type, IR *ir) {
     return gen_random_num_string();
   }
 
-  if (expression_size == 0)
-    expression_size = 1;
+  if (expression_size == 0) expression_size = 1;
   if (is_function_type(type) || is_compound_type(type))
     expression_size =
-        0; // when meeting a function size, we do not use it in operation.
+        0;  // when meeting a function size, we do not use it in operation.
 
-  if (DBG)
-    cout << "Function size: " << function_size << endl;
-  if (DBG)
-    cout << "Compound size: " << compound_var_size << endl;
-  if (DBG)
-    cout << "Simple var size: " << simple_var_size << endl;
+  if (DBG) cout << "Function size: " << function_size << endl;
+  if (DBG) cout << "Compound size: " << compound_var_size << endl;
+  if (DBG) cout << "Simple var size: " << simple_var_size << endl;
   expression_size <<= EXPRESSION_WEIGHT;
   function_size <<= FUNCTION_WEIGHT;
   compound_var_size <<= COMPOUND_VAR_WEIGHT;
   simple_var_size <<= SIMPLE_VAR_WEIGHT;
-  if (gen_counter_ > 3)
-    expression_size >>= 2;
+  if (gen_counter_ > 3) expression_size >>= 2;
   if (gen_counter_ > 15) {
     simple_var_size <<= 0x10;
     expression_size = 0;
   }
-  if (function_gen_counter_ > 2)
-    function_size >>= (function_gen_counter_ >> 2);
+  if (function_gen_counter_ > 2) function_size >>= (function_gen_counter_ >> 2);
   unsigned long prob[] = {expression_size, function_size, compound_var_size,
                           simple_var_size};
 
   auto total_size = simple_var_size + function_size + compound_var_size;
-  if (total_size == 0)
-    return gen_random_num_string();
+  if (total_size == 0) return gen_random_num_string();
   auto choice = get_rand_int(total_size);
   if (DBG)
     cout << "choice: " << choice << "/"
          << simple_var_size + function_size + compound_var_size +
                 expression_size
          << endl;
-  if (DBG)
-    cout << expression_size << endl;
+  if (DBG) cout << expression_size << endl;
   // assert(expression_size);
   // if(expression_size == 0){
   //     return "";
   // }
   if (0 <= choice && choice < prob[0]) {
-    if (DBG)
-      cout << "exp op exp handler" << endl;
+    if (DBG) cout << "exp op exp handler" << endl;
     res = expression_gen_handler(type, all_satisfiable_types, function_map,
                                  compound_var_map, ir);
     return res;
@@ -2099,8 +1947,7 @@ string TypeSystem::generate_expression_by_type_core(int type, IR *ir) {
     return structure_member_gen_handler(compound_var_map, type);
   } else {
     // handle simple var here
-    if (DBG)
-      cout << "simple_type handler" << endl;
+    if (DBG) cout << "simple_type handler" << endl;
 
     assert(!simple_var_map[type].empty());
 
@@ -2124,33 +1971,26 @@ IR *TypeSystem::locate_mutated_ir(IR *root) {
     return root;
   }
 
-  if (contain_fixme(root))
-    return root;
+  if (contain_fixme(root)) return root;
   return NULL;
 }
 
 bool TypeSystem::simple_fix(IR *ir, int type) {
-
   // if (contain_fixme(ir) == false)
   //     return true;
 
-  if (type == 0)
-    return false;
-  if (DBG)
-    cout << "NodeType: " << get_string_by_nodetype(ir->type_) << endl;
-  if (DBG)
-    cout << "Type: " << type << endl;
+  if (type == 0) return false;
+  if (DBG) cout << "NodeType: " << get_string_by_nodetype(ir->type_) << endl;
+  if (DBG) cout << "Type: " << type << endl;
 
   // if (ir->type_ == kIdentifier && ir->str_val_ == "FIXME")
   if (ir->str_val_.empty() == false && ir->str_val_ == "FIXME") {
-    if (DBG)
-      cout << "Reach here" << endl;
+    if (DBG) cout << "Reach here" << endl;
     ir->str_val_ = generate_expression_by_type(type, ir);
     return true;
   }
 
   if (!IsWeakType()) {
-
     if ((*cache_inference_map_[ir]).find(type) ==
         (*cache_inference_map_[ir]).end()) {
       auto new_type = NOTEXIST;
@@ -2170,8 +2010,7 @@ bool TypeSystem::simple_fix(IR *ir, int type) {
       if (DBG)
         cout << "NodeType: " << get_string_by_nodetype(ir->type_) << endl;
     }
-    if ((*cache_inference_map_[ir])[type].size() == 0)
-      return false;
+    if ((*cache_inference_map_[ir])[type].size() == 0) return false;
     assert((*cache_inference_map_[ir])[type].size());
     if (ir->left_) {
       auto iter = random_pick((*cache_inference_map_[ir])[type]);
@@ -2183,11 +2022,8 @@ bool TypeSystem::simple_fix(IR *ir, int type) {
       }
     }
   } else {
-
-    if (ir->left_)
-      simple_fix(ir->left_, type);
-    if (ir->right_)
-      simple_fix(ir->right_, type);
+    if (ir->left_) simple_fix(ir->left_, type);
+    if (ir->right_) simple_fix(ir->right_, type);
   }
   return true;
 }
@@ -2203,7 +2039,6 @@ bool TypeSystem::top_fix(IR *root) {
     root = stk.top();
     stk.pop();
     if (IsWeakType()) {
-
       // if(root->type_ == kSingleExpression){
       if (root->str_val_ == "FIXME") {
         int type = ALLTYPES;
@@ -2213,17 +2048,13 @@ bool TypeSystem::top_fix(IR *root) {
 
         res = simple_fix(root, type);
       } else {
-        if (root->right_)
-          stk.push(root->right_);
-        if (root->left_)
-          stk.push(root->left_);
+        if (root->right_) stk.push(root->right_);
+        if (root->left_) stk.push(root->left_);
       }
     } else {
-
       // if (root->type_ == kAssignmentExpression)
       if (root->type_ == GetFixIRType() || root->str_val_ == "FIXME") {
-        if (contain_fixme(root) == false)
-          continue;
+        if (contain_fixme(root) == false) continue;
 
         bool flag = type_inference_new(root, 0);
         if (!flag) {
@@ -2234,10 +2065,8 @@ bool TypeSystem::top_fix(IR *root) {
         auto t = iter->first;
         res = simple_fix(root, t);
       } else {
-        if (root->right_)
-          stk.push(root->right_);
-        if (root->left_)
-          stk.push(root->left_);
+        if (root->right_) stk.push(root->right_);
+        if (root->left_) stk.push(root->left_);
       }
     }
   }
@@ -2297,7 +2126,6 @@ bool TypeSystem::validate(IR *&root) {
   vector<IR *> ivec;
 
   if (!IsWeakType()) {
-
     ast->translate(ivec);
     ast->deep_delete();
     deep_delete(root);
@@ -2317,7 +2145,6 @@ bool TypeSystem::validate(IR *&root) {
     deep_delete(root);
     root = ivec.back();
   } else {
-
     set_scope_translation_flag(true);
     ast->translate(ivec);
     ast->deep_delete();
@@ -2332,7 +2159,6 @@ bool TypeSystem::validate(IR *&root) {
     deep_delete(root);
     root = NULL;
   } else {
-
     res = top_fix(root);
     if (res == false) {
       top_fix_fail_counter++;
@@ -2360,8 +2186,7 @@ string TypeSystem::generate_definition(string &var_name, int type) {
 }
 
 string TypeSystem::generate_definition(vector<string> &var_name, int type) {
-  if (DBG)
-    cout << "Generating definitions for type: " << type << endl;
+  if (DBG) cout << "Generating definitions for type: " << type << endl;
   auto type_ptr = get_type_by_type_id(type);
   assert(type_ptr != nullptr);
   assert(var_name.size());
@@ -2387,24 +2212,23 @@ int OPRule::apply(int arg1, int arg2) {
   }
   if (is_op1()) {
     switch (property_) {
-    case OP_PROP_Reference:
-      return get_or_create_pointer_type(arg1);
-    case OP_PROP_Dereference:
-      if (is_pointer_type(arg1) == false)
-        return NOTEXIST;
-      return get_pointer_type_by_type_id(arg1)->orig_type_;
-    case OP_PROP_FunctionCall:
-      if (is_function_type(arg1) == false) {
-        break;
-      }
-      // cout << get_function_type_by_type_id(arg1)->return_type_ << endl;
-      // assert(0);
-      // cout << "reach here" << endl;
-      return get_function_type_by_type_id(arg1)->return_type_;
-    case OP_PROP_Default:
-      return arg1;
-    default:
-      assert(0);
+      case OP_PROP_Reference:
+        return get_or_create_pointer_type(arg1);
+      case OP_PROP_Dereference:
+        if (is_pointer_type(arg1) == false) return NOTEXIST;
+        return get_pointer_type_by_type_id(arg1)->orig_type_;
+      case OP_PROP_FunctionCall:
+        if (is_function_type(arg1) == false) {
+          break;
+        }
+        // cout << get_function_type_by_type_id(arg1)->return_type_ << endl;
+        // assert(0);
+        // cout << "reach here" << endl;
+        return get_function_type_by_type_id(arg1)->return_type_;
+      case OP_PROP_Default:
+        return arg1;
+      default:
+        assert(0);
     }
   } else {
   }
@@ -2422,34 +2246,28 @@ int TypeSystem::query_result_type(int op, int arg1, int arg2) {
   OPRule *rule = NULL;
   int left = 0, right = 0, result_type = 0;
 
-  for (auto &r : op_rules_[op]) { // exact match
-    if (r.is_op1() != isop1)
-      continue;
+  for (auto &r : op_rules_[op]) {  // exact match
+    if (r.is_op1() != isop1) continue;
 
     if (isop1) {
-      if (r.left_ == arg1)
-        return r.apply(arg1);
+      if (r.left_ == arg1) return r.apply(arg1);
     } else {
-      if (r.left_ == arg1 && r.right_ == arg2)
-        return r.apply(arg1, arg2);
+      if (r.left_ == arg1 && r.right_ == arg2) return r.apply(arg1, arg2);
     }
   }
 
-  for (auto &r : op_rules_[op]) { // derived type match
-    if (r.is_op1() != isop1)
-      continue;
+  for (auto &r : op_rules_[op]) {  // derived type match
+    if (r.is_op1() != isop1) continue;
 
     if (isop1) {
-      if (is_derived_type(arg1, r.left_))
-        return r.apply(arg1);
+      if (is_derived_type(arg1, r.left_)) return r.apply(arg1);
     } else {
       if (is_derived_type(arg1, r.left_) && is_derived_type(arg2, r.right_))
         return r.apply(arg1, arg2);
     }
   }
 
-  if (DBG)
-    cout << "Here , no exist" << endl;
+  if (DBG) cout << "Here , no exist" << endl;
   return NOTEXIST;
 }
 
@@ -2503,12 +2321,10 @@ OPRule TypeSystem::parse_op_rule(string s) {
   int cur_id = op_id_map_[v_strbuf[1]][v_strbuf[2]][v_strbuf[3]];
   if (cur_id == 0) {
     cur_id = op_id_map_[v_strbuf[1]][v_strbuf[2]][v_strbuf[3]] = gen_id();
-    if (DBG)
-      cout << cur_id << endl;
+    if (DBG) cout << cur_id << endl;
   }
 
-  if (DBG)
-    cout << s << endl;
+  if (DBG) cout << s << endl;
   if (v_strbuf[0][0] == '2') {
     auto left = get_basic_type_id_by_string(v_strbuf[4]);
     auto right = get_basic_type_id_by_string(v_strbuf[5]);
@@ -2528,8 +2344,7 @@ OPRule TypeSystem::parse_op_rule(string s) {
     return move(res);
   } else {
     assert(v_strbuf[0][0] == '1');
-    if (DBG)
-      cout << "Here: " << v_strbuf[4] << endl;
+    if (DBG) cout << "Here: " << v_strbuf[4] << endl;
     auto left = get_basic_type_id_by_string(v_strbuf[4]);
     auto result = get_basic_type_id_by_string(v_strbuf[5]);
 
@@ -2552,8 +2367,7 @@ bool TypeSystem::insert_definition(int scope_id, int type_id, string var_name) {
   auto type_ptr = get_type_by_type_id(type_id);
   IR *insert_target = NULL;
 
-  if (!scope_ptr || !type_ptr)
-    return false;
+  if (!scope_ptr || !type_ptr) return false;
 
   for (auto ir : scope_ptr->v_ir_set_) {
     if (isInsertable(ir->data_flag_)) {
@@ -2562,8 +2376,7 @@ bool TypeSystem::insert_definition(int scope_id, int type_id, string var_name) {
     }
   }
 
-  if (!insert_target)
-    return false;
+  if (!insert_target) return false;
 
   auto def_str = generate_definition(var_name, type_id);
   auto def_ir = new IR(kIdentifier, def_str, kDataWhatever);

@@ -4,11 +4,10 @@
 #include <memory>
 #include <stack>
 #include <string>
+#include <string_view>
 
 #include "afl-fuzz.h"
 #include "polyglot.h"
-
-#include <string_view>
 
 /*
 class PolyGlotMutator {
@@ -125,7 +124,7 @@ unsigned int afl_custom_fuzz_count(PolyGlotMutator *mutator,
 
 size_t afl_custom_fuzz(PolyGlotMutator *mutator, uint8_t *buf, size_t buf_size,
                        u8 **out_buf, uint8_t *add_buf,
-                       size_t add_buf_size, // add_buf can be NULL
+                       size_t add_buf_size,  // add_buf can be NULL
                        size_t max_size) {
   mutator->get_next_test_case();
   std::string_view current_input = mutator->get_next_test_case();

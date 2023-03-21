@@ -1,10 +1,12 @@
 #include "ir.h"
+
+#include <cassert>
+
 #include "config_misc.h"
 #include "define.h"
 #include "typesystem.h"
 #include "utils.h"
 #include "var_definition.h"
-#include <cassert>
 
 static bool scope_tranlation = false;
 
@@ -12,40 +14,63 @@ static unsigned long id_counter;
 // name_ = gen_id_name();
 #define GEN_NAME() id_ = id_counter++;
 
-#define STORE_IR_SCOPE()                                                       \
-  if (scope_tranlation) {                                                      \
-    if (g_scope_current == NULL)                                               \
-      return;                                                                  \
-    g_scope_current->v_ir_set_.push_back(this);                                \
-    this->scope_id_ = g_scope_current->scope_id_;                              \
+#define STORE_IR_SCOPE()                          \
+  if (scope_tranlation) {                         \
+    if (g_scope_current == NULL) return;          \
+    g_scope_current->v_ir_set_.push_back(this);   \
+    this->scope_id_ = g_scope_current->scope_id_; \
   }
 
 IR::IR(IRTYPE type, IROperator *op, IR *left, IR *right, DATATYPE data_type)
-    : type_(type), op_(op), left_(left), right_(right),
-      operand_num_((!!right) + (!!left)), data_type_(data_type) {
+    : type_(type),
+      op_(op),
+      left_(left),
+      right_(right),
+      operand_num_((!!right) + (!!left)),
+      data_type_(data_type) {
   GEN_NAME();
   STORE_IR_SCOPE();
 }
 
 IR::IR(IRTYPE type, string str_val, DATATYPE data_type, int scope,
        DATAFLAG flag)
-    : type_(type), str_val_(str_val), op_(NULL), left_(NULL), right_(NULL),
-      operand_num_(0), data_type_(data_type), scope_(scope), data_flag_(flag) {
+    : type_(type),
+      str_val_(str_val),
+      op_(NULL),
+      left_(NULL),
+      right_(NULL),
+      operand_num_(0),
+      data_type_(data_type),
+      scope_(scope),
+      data_flag_(flag) {
   GEN_NAME();
   STORE_IR_SCOPE();
 }
 
 IR::IR(IRTYPE type, const char *str_val, DATATYPE data_type, int scope,
        DATAFLAG flag)
-    : type_(type), str_val_(str_val), op_(NULL), left_(NULL), right_(NULL),
-      operand_num_(0), data_type_(data_type), scope_(scope), data_flag_(flag) {
+    : type_(type),
+      str_val_(str_val),
+      op_(NULL),
+      left_(NULL),
+      right_(NULL),
+      operand_num_(0),
+      data_type_(data_type),
+      scope_(scope),
+      data_flag_(flag) {
   GEN_NAME();
   STORE_IR_SCOPE();
 }
 
 IR::IR(IRTYPE type, bool b_val, DATATYPE data_type, int scope, DATAFLAG flag)
-    : type_(type), bool_val_(b_val), left_(NULL), op_(NULL), right_(NULL),
-      operand_num_(0), data_type_(kDataWhatever), scope_(scope),
+    : type_(type),
+      bool_val_(b_val),
+      left_(NULL),
+      op_(NULL),
+      right_(NULL),
+      operand_num_(0),
+      data_type_(kDataWhatever),
+      scope_(scope),
       data_flag_(flag) {
   GEN_NAME();
   STORE_IR_SCOPE();
@@ -53,24 +78,42 @@ IR::IR(IRTYPE type, bool b_val, DATATYPE data_type, int scope, DATAFLAG flag)
 
 IR::IR(IRTYPE type, unsigned long long_val, DATATYPE data_type, int scope,
        DATAFLAG flag)
-    : type_(type), long_val_(long_val), left_(NULL), op_(NULL), right_(NULL),
-      operand_num_(0), data_type_(kDataWhatever), scope_(scope),
+    : type_(type),
+      long_val_(long_val),
+      left_(NULL),
+      op_(NULL),
+      right_(NULL),
+      operand_num_(0),
+      data_type_(kDataWhatever),
+      scope_(scope),
       data_flag_(flag) {
   GEN_NAME();
   STORE_IR_SCOPE();
 }
 
 IR::IR(IRTYPE type, int int_val, DATATYPE data_type, int scope, DATAFLAG flag)
-    : type_(type), int_val_(int_val), left_(NULL), op_(NULL), right_(NULL),
-      operand_num_(0), data_type_(kDataWhatever), scope_(scope),
+    : type_(type),
+      int_val_(int_val),
+      left_(NULL),
+      op_(NULL),
+      right_(NULL),
+      operand_num_(0),
+      data_type_(kDataWhatever),
+      scope_(scope),
       data_flag_(flag) {
   GEN_NAME();
   STORE_IR_SCOPE();
 }
 
 IR::IR(IRTYPE type, double f_val, DATATYPE data_type, int scope, DATAFLAG flag)
-    : type_(type), float_val_(f_val), left_(NULL), op_(NULL), right_(NULL),
-      operand_num_(0), data_type_(kDataWhatever), scope_(scope),
+    : type_(type),
+      float_val_(f_val),
+      left_(NULL),
+      op_(NULL),
+      right_(NULL),
+      operand_num_(0),
+      data_type_(kDataWhatever),
+      scope_(scope),
       data_flag_(flag) {
   GEN_NAME();
   STORE_IR_SCOPE();
@@ -79,10 +122,18 @@ IR::IR(IRTYPE type, double f_val, DATATYPE data_type, int scope, DATAFLAG flag)
 IR::IR(IRTYPE type, IROperator *op, IR *left, IR *right, double f_val,
        string str_val, string name, unsigned int mutated_times, int scope,
        DATAFLAG flag)
-    : type_(type), op_(op), left_(left), right_(right),
-      operand_num_((!!right) + (!!left)), name_(name), str_val_(str_val),
-      float_val_(f_val), mutated_times_(mutated_times),
-      data_type_(kDataWhatever), scope_(scope), data_flag_(flag) {
+    : type_(type),
+      op_(op),
+      left_(left),
+      right_(right),
+      operand_num_((!!right) + (!!left)),
+      name_(name),
+      str_val_(str_val),
+      float_val_(f_val),
+      mutated_times_(mutated_times),
+      data_type_(kDataWhatever),
+      scope_(scope),
+      data_flag_(flag) {
   STORE_IR_SCOPE();
 }
 
@@ -107,15 +158,11 @@ IR::IR(const IR *ir, IR *left, IR *right) {
 }
 
 void deep_delete(IR *root) {
-  if (root == NULL)
-    return;
-  if (root->left_)
-    deep_delete(root->left_);
-  if (root->right_)
-    deep_delete(root->right_);
+  if (root == NULL) return;
+  if (root->left_) deep_delete(root->left_);
+  if (root->right_) deep_delete(root->right_);
 
-  if (root->op_)
-    delete root->op_;
+  if (root->op_) delete root->op_;
 
   delete root;
 }
@@ -124,10 +171,10 @@ IR *deep_copy(const IR *root) {
   IR *left = NULL, *right = NULL, *copy_res;
 
   if (root->left_)
-    left = deep_copy(root->left_); // do you have a second version for deep_copy
-                                   // that accept only one argument?
+    left = deep_copy(root->left_);  // do you have a second version for
+                                    // deep_copy that accept only one argument?
   if (root->right_)
-    right = deep_copy(root->right_); // no I forget to update here
+    right = deep_copy(root->right_);  // no I forget to update here
 
   copy_res = new IR(root, left, right);
 
@@ -144,16 +191,11 @@ string IR::print() {
     res += "int(" + std::to_string(this->int_val_) + ")";
     return res;
   }
-  if (this->op_)
-    res += this->op_->prefix_;
-  if (this->left_)
-    res += this->left_->name_;
-  if (this->op_)
-    res += this->op_->middle_;
-  if (this->right_)
-    res += this->right_->name_;
-  if (this->op_)
-    res += this->op_->suffix_;
+  if (this->op_) res += this->op_->prefix_;
+  if (this->left_) res += this->left_->name_;
+  if (this->op_) res += this->op_->middle_;
+  if (this->right_) res += this->right_->name_;
+  if (this->op_) res += this->op_->suffix_;
 
   return res;
 }
@@ -191,15 +233,13 @@ string IR::to_string_core() {
     // res += left_->to_string() + " ";
     res += left_->to_string_core() + " ";
   // cout << "OP_2_" << op_ << endl;
-  if (op_ != NULL)
-    res += op_->middle_ + " ";
+  if (op_ != NULL) res += op_->middle_ + " ";
   // cout << "OP_3_" << op_ << endl;
   if (right_ != NULL)
     // res += right_->to_string() + " ";
     res += right_->to_string_core() + " ";
   // cout << "OP_4_" << op_ << endl;
-  if (op_ != NULL)
-    res += op_->suffix_;
+  if (op_ != NULL) res += op_->suffix_;
 
   // cout << "FUCK" << endl;
   // cout << "RETURN" << endl;
@@ -209,13 +249,10 @@ string IR::to_string_core() {
 static int cal_list_num_dfs(IR *ir, IRTYPE type) {
   int res = 0;
 
-  if (ir->type_ == type)
-    res++;
+  if (ir->type_ == type) res++;
 
-  if (ir->left_)
-    res += cal_list_num_dfs(ir->left_, type);
-  if (ir->right_)
-    res += cal_list_num_dfs(ir->right_, type);
+  if (ir->left_) res += cal_list_num_dfs(ir->left_, type);
+  if (ir->right_) res += cal_list_num_dfs(ir->right_, type);
 
   return res;
 }
@@ -225,15 +262,12 @@ void trim_list_to_num(IR *ir, int num) { return; }
 int cal_list_num(IR *ir) { return cal_list_num_dfs(ir, ir->type_); }
 
 IR *locate_parent(IR *root, IR *old_ir) {
-  if (root->left_ == old_ir || root->right_ == old_ir)
-    return root;
+  if (root->left_ == old_ir || root->right_ == old_ir) return root;
 
   if (root->left_ != NULL)
-    if (auto res = locate_parent(root->left_, old_ir))
-      return res;
+    if (auto res = locate_parent(root->left_, old_ir)) return res;
   if (root->right_ != NULL)
-    if (auto res = locate_parent(root->right_, old_ir))
-      return res;
+    if (auto res = locate_parent(root->right_, old_ir)) return res;
 
   return NULL;
 }

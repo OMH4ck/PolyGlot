@@ -1,13 +1,14 @@
 #ifndef __VAR_DEFINITION_H__
 #define __VAR_DEFINITION_H__
 
-#include "define.h"
-#include "utils.h"
 #include <cassert>
 #include <map>
 #include <memory>
 #include <set>
 #include <vector>
+
+#include "define.h"
+#include "utils.h"
 
 typedef int TYPEID;
 
@@ -25,16 +26,16 @@ enum ScopeType {
 };
 
 class Scope {
-public:
+ public:
   Scope(int scope_id, ScopeType scope_type)
       : scope_id_(scope_id), scope_type_(scope_type) {}
   ~Scope() {}
-  vector<IR *> v_ir_set_; // all the irs in this scope;
+  vector<IR *> v_ir_set_;  // all the irs in this scope;
   map<int, vector<IR *>> m_define_ir_;
   int scope_id_;
   map<int, shared_ptr<Scope>> children_;
   weak_ptr<Scope> parent_;
-  ScopeType scope_type_; // for what type of scope
+  ScopeType scope_type_;  // for what type of scope
 
   map<int, vector<pair<string, unsigned long>>> m_defined_variables_;
   set<string> s_defined_variable_names_;
@@ -46,7 +47,7 @@ public:
 };
 
 class VarType {
-public:
+ public:
   TYPEID type_id_;
   string type_name_;
   vector<shared_ptr<VarType>> base_type_;
@@ -58,7 +59,7 @@ public:
 };
 
 class FunctionType : public VarType {
-public:
+ public:
   // pair<TYPEID, string> return_value_;
   vector<IR *> return_value_ir_;
   IR *return_definition_ir_;
@@ -76,7 +77,7 @@ public:
 };
 
 class CompoundType : public VarType {
-public:
+ public:
   vector<TYPEID> parent_class_;
   map<TYPEID, vector<string>> v_members_;
   set<IR *> can_be_fixed_ir_;
@@ -90,7 +91,7 @@ public:
 };
 
 class PointerType : public VarType {
-public:
+ public:
   int orig_type_;
   int basic_type_;
   int reference_level_;
