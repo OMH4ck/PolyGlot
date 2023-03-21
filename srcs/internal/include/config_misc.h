@@ -8,6 +8,10 @@
 
 #include "ast.h"
 
+namespace polyglot {
+
+namespace gen {
+
 bool IsWeakType();
 IRTYPE GetFixIRType();
 std::set<NODETYPE> GetFunctionArgNodeType();
@@ -38,4 +42,7 @@ bool IsStringLiteral(NODETYPE type);
 // bool IsIdentifier(NODETYPE type);
 
 std::string GetInitDirPath();
+
+}  // namespace gen
+}  // namespace polyglot
 #endif

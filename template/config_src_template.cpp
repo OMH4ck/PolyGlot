@@ -1,6 +1,11 @@
+#include <set>
+
 #include "config_misc.h"
 #include "var_definition.h"
-#include <set>
+
+namespace polyglot {
+
+namespace gen {
 
 bool IsWeakType() { return __IS_WEAK_TYPE__; }
 
@@ -23,23 +28,23 @@ bool HandleBasicType(
         &cur_type) {
   int res_type = NOTEXIST;
   switch (ir_type) {
-  case kStringLiteral:
-    res_type = get_type_id_by_string("ANYTYPE");
-    (*cur_type)[res_type].push_back(make_pair(0, 0));
-    // cache_inference_map_[cur] = cur_type;
-    return true;
-  case kIntLiteral:
-    res_type = get_type_id_by_string("ANYTYPE");
-    (*cur_type)[res_type].push_back(make_pair(0, 0));
-    // cache_inference_map_[cur] = cur_type;
-    return true;
-  case kFloatLiteral:
-    res_type = get_type_id_by_string("ANYTYPE");
-    (*cur_type)[res_type].push_back(make_pair(0, 0));
-    // cache_inference_map_[cur] = cur_type;
-    return true;
-  default:
-    return false;
+    case kStringLiteral:
+      res_type = get_type_id_by_string("ANYTYPE");
+      (*cur_type)[res_type].push_back(make_pair(0, 0));
+      // cache_inference_map_[cur] = cur_type;
+      return true;
+    case kIntLiteral:
+      res_type = get_type_id_by_string("ANYTYPE");
+      (*cur_type)[res_type].push_back(make_pair(0, 0));
+      // cache_inference_map_[cur] = cur_type;
+      return true;
+    case kFloatLiteral:
+      res_type = get_type_id_by_string("ANYTYPE");
+      (*cur_type)[res_type].push_back(make_pair(0, 0));
+      // cache_inference_map_[cur] = cur_type;
+      return true;
+    default:
+      return false;
   }
 }
 
@@ -85,3 +90,5 @@ bool IsIdentifier(NODETYPE type){
   return false;
 }
 */
+}  // namespace gen
+}  // namespace polyglot

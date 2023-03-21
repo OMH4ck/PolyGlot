@@ -59,17 +59,12 @@ size_t PolyGlotMutator::generate(const char *test_case) {
 void PolyGlotMutator::do_libary_initialize() {
   vector<IR *> ir_set;
 
-  g_mutator.float_types_.insert(kFloatLiteral);
-  g_mutator.int_types_.insert(kIntLiteral);
-  g_mutator.string_types_.insert(kStringLiteral);
-
-  std::string init_file_path = GetInitDirPath();
+  std::string init_file_path = polyglot::gen::GetInitDirPath();
   vector<string> file_list = get_all_files_in_dir(init_file_path.c_str());
 
   for (auto &f : file_list) {
     cerr << "init filename: " << init_file_path + f << endl;
     g_mutator.init_ir_library_from_a_file(init_file_path + f);
   }
-  g_mutator.init_convertable_ir_type_map();
   g_typesystem.init();
 }

@@ -8,7 +8,7 @@
 #include "var_definition.h"
 
 using namespace std;
-
+using namespace polyglot;
 #define DBG 0
 #define SOLIDITYFUZZ
 #define dbg_cout \
@@ -22,7 +22,7 @@ const char *member_str = ".";
 
 map<int, vector<OPRule>> TypeSystem::op_rules_;
 map<string, map<string, map<string, OPTYPE>>> TypeSystem::op_id_map_;
-set<IRTYPE> TypeSystem::s_basic_unit_ = GetBasicUnits();
+set<IRTYPE> TypeSystem::s_basic_unit_ = gen::GetBasicUnits();
 int TypeSystem::gen_counter_;
 int TypeSystem::function_gen_counter_;
 int TypeSystem::current_fix_scope_;
@@ -97,14 +97,14 @@ void TypeSystem::init() {
   init_basic_types();
   init_convert_chain();
   init_type_dict();
-  init_internal_obj(GetBuiltInObjectFilePath());
+  init_internal_obj(gen::GetBuiltInObjectFilePath());
 }
 
 void TypeSystem::init_type_dict() {
   // string line;
   // ifstream input_file("./js_grammar/type_dict");
 
-  vector<string> type_dict = GetOpRules();
+  vector<string> type_dict = gen::GetOpRules();
   for (auto &line : type_dict) {
     if (line.empty()) continue;
 
@@ -164,7 +164,7 @@ bool TypeSystem::type_fix_framework(IR *root) {
   while (!q.empty()) {
     auto cur = q.front();
     if (recursive_counter == 1) {
-      int tmp_count = calc_node(cur);
+      int tmp_count = calc_node_num(cur);
       node_count += tmp_count;
       if ((tmp_count > 250 || node_count > 1500) &&
           is_internal_obj_setup == false) {
@@ -659,8 +659,8 @@ void TypeSystem::collect_function_definition(IR *cur) {
     map<IR **, IR *> m_save;
     set<NODETYPE> ss;
     // ss.insert(kParameterDeclaration);
-    if (!IsWeakType()) {
-      ss = GetFunctionArgNodeType();
+    if (!gen::IsWeakType()) {
+      ss = gen::GetFunctionArgNodeType();
     }
 
     // q.push(function_arg_ir);
@@ -772,7 +772,7 @@ bool TypeSystem::collect_definition(IR *cur) {
     switch (define_type) {
       case kDataVarType:
         if (DBG) cout << "kDataVarType" << endl;
-        if (IsWeakType()) {
+        if (gen::IsWeakType()) {
           collect_simple_variable_defintion_wt(cur);
         } else {
           collect_simple_variable_defintion(cur);
@@ -781,7 +781,7 @@ bool TypeSystem::collect_definition(IR *cur) {
 
       case kDataClassType:
         if (DBG) cout << "kDataClassType" << endl;
-        if (IsWeakType()) {
+        if (gen::IsWeakType()) {
           collect_structure_definition_wt(cur, cur);
         } else {
           collect_structure_definition(cur, cur);
@@ -790,7 +790,7 @@ bool TypeSystem::collect_definition(IR *cur) {
 
       case kDataFunctionType:
         if (DBG) cout << "kDataFunctionType" << endl;
-        if (IsWeakType()) {
+        if (gen::IsWeakType()) {
           collect_function_definition_wt(cur);
         } else {
           collect_function_definition(cur);
@@ -799,7 +799,7 @@ bool TypeSystem::collect_definition(IR *cur) {
       default:
         if (DBG) cout << "fuck default" << endl;
         // handle structure and function ,array ,etc..
-        if (IsWeakType()) {
+        if (gen::IsWeakType()) {
           collect_simple_variable_defintion_wt(cur);
         } else {
           collect_simple_variable_defintion(cur);
@@ -825,7 +825,7 @@ bool TypeSystem::type_inference_new(IR *cur, int scope_type) {
   if (DBG) cout << "Infering: " << cur->to_string() << endl;
   if (DBG) cout << "Scope type: " << scope_type << endl;
 
-  if (HandleBasicType(cur->type_, cur_type)) {
+  if (gen::HandleBasicType(cur->type_, cur_type)) {
     cache_inference_map_[cur] = cur_type;
     return true;
   }
@@ -1415,7 +1415,7 @@ set<int> get_all_types_from_compound_type(int compound_type, set<int> &visit) {
       res.insert(member_type);
     } else if (is_function_type(member_type)) {
       // assert(0);
-      if (IsWeakType()) {
+      if (gen::IsWeakType()) {
         auto pfunc = get_function_type_by_type_id(member_type);
         res.insert(pfunc->return_type_);
         res.insert(member_type);
@@ -1423,7 +1423,7 @@ set<int> get_all_types_from_compound_type(int compound_type, set<int> &visit) {
     } else if (is_basic_type(member_type)) {
       res.insert(member_type);
     } else {
-      if (IsWeakType()) {
+      if (gen::IsWeakType()) {
         res.insert(member_type);
       }
     }
@@ -1660,7 +1660,7 @@ string TypeSystem::structure_member_gen_handler(
   res = get_class_member_by_type(compound_type, member_type);
   if (res.empty()) {
     assert(member_type == compound_type);
-    if (IsWeakType()) {
+    if (gen::IsWeakType()) {
       if (is_builtin_type(compound_type) && get_rand_int(4)) {
         auto compound_ptr = get_type_by_type_id(compound_type);
         if (compound_ptr != nullptr && compound_var == compound_ptr->type_name_)
@@ -1803,7 +1803,7 @@ string TypeSystem::generate_expression_by_type_core(int type, IR *ir) {
   auto compound_var_size = compound_var_map.size();
   auto function_size = function_map.size();
 
-  if (!IsWeakType()) {
+  if (!gen::IsWeakType()) {
     // add pointer into *_var_map
     update_pointer_var(pointer_var_map, simple_var_map, compound_var_map);
   }
@@ -1990,7 +1990,7 @@ bool TypeSystem::simple_fix(IR *ir, int type) {
     return true;
   }
 
-  if (!IsWeakType()) {
+  if (!gen::IsWeakType()) {
     if ((*cache_inference_map_[ir]).find(type) ==
         (*cache_inference_map_[ir]).end()) {
       auto new_type = NOTEXIST;
@@ -2038,7 +2038,7 @@ bool TypeSystem::top_fix(IR *root) {
   while (res && !stk.empty()) {
     root = stk.top();
     stk.pop();
-    if (IsWeakType()) {
+    if (gen::IsWeakType()) {
       // if(root->type_ == kSingleExpression){
       if (root->str_val_ == "FIXME") {
         int type = ALLTYPES;
@@ -2053,7 +2053,7 @@ bool TypeSystem::top_fix(IR *root) {
       }
     } else {
       // if (root->type_ == kAssignmentExpression)
-      if (root->type_ == GetFixIRType() || root->str_val_ == "FIXME") {
+      if (root->type_ == gen::GetFixIRType() || root->str_val_ == "FIXME") {
         if (contain_fixme(root) == false) continue;
 
         bool flag = type_inference_new(root, 0);
@@ -2093,7 +2093,7 @@ bool TypeSystem::validate_syntax_only(IR *root) {
   while (!q.empty()) {
     auto cur = q.front();
     q.pop();
-    int tmp_count = calc_node(cur);
+    int tmp_count = calc_node_num(cur);
     node_count += tmp_count;
     if (tmp_count > 250 || node_count > 1500) {
       connect_back(m_save);

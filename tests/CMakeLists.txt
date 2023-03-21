@@ -1,6 +1,6 @@
-find_package(GTest)
+#find_package(GTest)
 
-enable_testing()
+#enable_testing()
 
 #add_executable(
 #  manager_test
@@ -12,5 +12,5 @@ enable_testing()
 #  GTest::gtest_main
 #)
 
-include(GoogleTest)
+#include(GoogleTest)
 #gtest_discover_tests(manager_test)

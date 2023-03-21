@@ -10,14 +10,16 @@
 #include <fstream>
 #include <iterator>
 #include <map>
-#include <set>
+#include <unordered_set>
 using namespace std;
 
 // #include "ast.h"
 #include "config_misc.h"
 #include "define.h"
 #include "mutate.h"
+#include "spdlog/spdlog.h"
 #include "utils.h"
+using namespace polyglot;
 
 #define _NON_REPLACE_
 
@@ -31,6 +33,13 @@ static inline bool is_leaf(IR *r) {
   return r->left_ == NULL && r->right_ == NULL;
 }
 
+Mutator::Mutator() {
+  srand(time(nullptr));
+  float_types_.insert(kFloatLiteral);
+  int_types_.insert(kIntLiteral);
+  string_types_.insert(kStringLiteral);
+  init_convertable_ir_type_map();
+}
 // Need No fix
 IR *Mutator::deep_copy_with_record(const IR *root, const IR *record) {
   IR *left = NULL, *right = NULL, *copy_res;
@@ -63,38 +72,37 @@ IR *Mutator::deep_copy_with_record(const IR *root, const IR *record) {
   return copy_res;
 }
 
+bool Mutator::should_mutate(IR *cur) {
+  if (cur->type_ == kUnknown) return false;
+  if (not_mutatable_types_.find(cur->type_) != not_mutatable_types_.end())
+    return false;
+  if (is_leaf(cur)) return false;
+  if (!can_be_mutated(cur)) return false;
+  return true;
+}
+
 vector<IR *> Mutator::mutate_all(vector<IR *> &v_ir_collector) {
   vector<IR *> res;
-  set<unsigned long> res_hash;
+  std::unordered_set<unsigned long> res_hash;
   IR *root = v_ir_collector[v_ir_collector.size() - 1];
 
-  mutated_root_ = root;
   auto tmp_str = root->to_string();
   res_hash.insert(hash(tmp_str));
   for (auto ir : v_ir_collector) {
-    if (ir == root) continue;
-    if (ir->type_ == kUnknown ||
-        not_mutatable_types_.find(ir->type_) != not_mutatable_types_.end() ||
-        is_leaf(ir) || !can_be_mutated(ir))
-      continue;
+    if (ir == root || !should_mutate(ir)) continue;
 
-    if (MUTATE_DBG)
-      cout << "Mutating type: " << get_string_by_nodetype(ir->type_) << endl;
+    spdlog::debug("Mutating type: {}", get_string_by_nodetype(ir->type_));
     vector<IR *> v_mutated_ir = mutate(ir);
 
     for (auto i : v_mutated_ir) {
       IR *new_ir_tree = deep_copy_with_record(root, ir);
-      if (MUTATE_DBG)
-        cout << "NEW type: " << get_string_by_nodetype(i->type_) << endl;
+      spdlog::debug("NEW type: {}", get_string_by_nodetype(i->type_));
 
       replace(new_ir_tree, this->record_, i);
 
-      // extract_struct_after_mutation(new_ir_tree);
       IR *backup = deep_copy(new_ir_tree);
       extract_struct(new_ir_tree);
       string tmp = new_ir_tree->to_string();
-      // cout << "Mutated: " << backup->to_string();
-      // cout << "Strip:" << tmp << endl;
       unsigned tmp_hash = hash(tmp);
       if (res_hash.find(tmp_hash) != res_hash.end()) {
         deep_delete(new_ir_tree);
@@ -105,7 +113,6 @@ vector<IR *> Mutator::mutate_all(vector<IR *> &v_ir_collector) {
       res_hash.insert(tmp_hash);
       deep_delete(new_ir_tree);
 
-      // extract_struct_after_mutation(backup);
       res.push_back(backup);
     }
   }
@@ -128,7 +135,8 @@ void Mutator::add_ir_to_library_limited(IR *cur) {
     return;
   }
 
-  if (ir_library_[type].size() >= max_ir_library_size_) {
+  constexpr unsigned kMaxIRNumForOneType = 0x200;
+  if (ir_library_[type].size() >= kMaxIRNumForOneType) {
     auto rand_idx = get_rand_int(ir_library_[type].size());
     auto removed_ir = ir_library_[type][rand_idx];
     ir_library_[type][rand_idx] = ir_library_[type].back();
@@ -146,7 +154,7 @@ void Mutator::add_ir_to_library_limited(IR *cur) {
 }
 
 void Mutator::init_convertable_ir_type_map() {
-  for (auto &p : GetConvertableTypes()) {
+  for (auto &p : gen::GetConvertableTypes()) {
     m_convertable_map_[get_nodetype_by_string(p.first)].insert(
         get_nodetype_by_string(p.second));
   }
@@ -501,9 +509,10 @@ IR *Mutator::strategy_replace(IR *cur) {
   MUTATEEND
 }
 
+constexpr size_t kMaxMutationTimes = 500;
 // Need No Fix
 bool Mutator::lucky_enough_to_be_mutated(unsigned int mutated_times) {
-  if (get_rand_int(mutated_times + 1) < LUCKY_NUMBER) {
+  if (get_rand_int(mutated_times + 1) < kMaxMutationTimes) {
     return true;
   }
   return false;
@@ -609,10 +618,10 @@ void Mutator::extract_struct(IR *root) {
   }
 }
 
-unsigned int calc_node(IR *root) {
+unsigned int calc_node_num(IR *root) {
   unsigned int res = 0;
-  if (root->left_) res += calc_node(root->left_);
-  if (root->right_) res += calc_node(root->right_);
+  if (root->left_) res += calc_node_num(root->left_);
+  if (root->right_) res += calc_node_num(root->right_);
 
   return res + 1;
 }

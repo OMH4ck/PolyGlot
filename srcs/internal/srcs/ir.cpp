@@ -209,11 +209,11 @@ string IR::to_string() {
 string IR::to_string_core() {
   // cout << get_string_by_nodetype(this->type_) << endl;
 
-  if (IsFloatLiteral(type_)) {
+  if (polyglot::gen::IsFloatLiteral(type_)) {
     return std::to_string(float_val_);
-  } else if (IsIntLiteral(type_)) {
+  } else if (polyglot::gen::IsIntLiteral(type_)) {
     return std::to_string(int_val_);
-  } else if (IsStringLiteral(type_)) {
+  } else if (polyglot::gen::IsStringLiteral(type_)) {
     return str_val_;
   }
   // else if(IsIdentifier(type_)){

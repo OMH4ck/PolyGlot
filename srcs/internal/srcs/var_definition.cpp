@@ -4,6 +4,7 @@
 #include "config_misc.h"
 
 using namespace std;
+using namespace polyglot;
 #define NOTEXISTS 0
 #define DBG 0
 shared_ptr<Scope> g_scope_current;
@@ -79,7 +80,7 @@ void init_convert_chain() {
   }
   */
 
-  for (auto &rule : GetConvertChain()) {
+  for (auto &rule : gen::GetConvertChain()) {
     auto base_var =
         get_type_by_type_id(get_basic_type_id_by_string(rule.second));
     auto derived_var =
@@ -112,7 +113,7 @@ bool is_derived_type(TYPEID dtype, TYPEID btype) {
 }
 
 void init_basic_types() {
-  for (auto &line : GetBasicTypeStr()) {
+  for (auto &line : gen::GetBasicTypeStr()) {
     if (line.empty()) continue;
     auto new_id = gen_type_id();
     auto ptr = make_shared<VarType>();
@@ -475,7 +476,7 @@ void Scope::add_definition(int type, const string &var_name, unsigned long id,
                            ScopeType stype) {
   if (type == 0) return;
 
-  if (IsWeakType()) {
+  if (gen::IsWeakType()) {
     if (stype != kScopeStatement) {
       auto p = this;
       while (p != NULL && p->scope_type_ != stype) p = p->parent_.lock().get();
