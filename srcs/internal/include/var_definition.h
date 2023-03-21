@@ -145,7 +145,7 @@ bool is_basic_type(const string &s);
 TYPEID get_basic_type_id_by_string(const string &s);
 TYPEID get_type_id_by_string(const string &s);
 TYPEID get_compound_type_id_by_string(const string &s);
-void fuck_debug();
+void duck_debug();
 int gen_type_id();
 string get_type_name_by_id(TYPEID type_id);
 void debug_scope_tree(shared_ptr<Scope> cur);

@@ -797,7 +797,7 @@ bool TypeSystem::collect_definition(IR *cur) {
         }
         return true;
       default:
-        if (DBG) cout << "fuck default" << endl;
+        if (DBG) cout << "duck default" << endl;
         // handle structure and function ,array ,etc..
         if (gen::IsWeakType()) {
           collect_simple_variable_defintion_wt(cur);
@@ -1766,7 +1766,7 @@ string TypeSystem::generate_expression_by_type(int type, IR *ir) {
   function_gen_counter_ = 0;
   auto res = generate_expression_by_type_core(type, ir);
   if (res.size() == 0) {
-    system("echo fuck > fuckfuck");
+    system("echo duck > duckduck");
     assert(0);
   }
   return res;

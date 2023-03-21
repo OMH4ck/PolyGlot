@@ -672,10 +672,10 @@ def genGenerateOneCase(current_class, case_idx):
 
 def getNotSelfContainCases(current_class):
     #print(current_class.name)
-    fuck_list = {"SimpleSelect": [0, 1, 2, 3], "CExpr": [0], "AExpr": [0]}
-    if current_class.name in fuck_list:
-        #print("YES:", fuck_list[current_class.name])
-        return fuck_list[current_class.name]
+    duck_list = {"SimpleSelect": [0, 1, 2, 3], "CExpr": [0], "AExpr": [0]}
+    if current_class.name in duck_list:
+        #print("YES:", duck_list[current_class.name])
+        return duck_list[current_class.name]
     case_idx_list = []
     class_name = hump_to_underline(current_class.name)
     for case in current_class.caseList:
@@ -1863,12 +1863,12 @@ if __name__ == "__main__":
     if (args.token != None):
         with open(args.token, "r") as token_file:
             token_info = token_file.read()
-            split_by_fuck = False
-            if "fuck" in token_info:
-                split_by_fuck = True
+            split_by_duck = False
+            if "duck" in token_info:
+                split_by_duck = True
             token_info = token_info.split("\n")
-            if split_by_fuck:
-                token_info = [i.split("fuck") for i in token_info]
+            if split_by_duck:
+                token_info = [i.split("duck") for i in token_info]
             else:
                 token_info = [i.split(" ") for i in token_info]
             #print(token_info)

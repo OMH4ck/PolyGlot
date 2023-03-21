@@ -36,7 +36,7 @@ void reset_id_counter();
 
 string gen_id_name();
 
-uint64_t fucking_hash(const void *key, int len);
+uint64_t ducking_hash(const void *key, int len);
 
 vector<string> get_all_files_in_dir(const char *dir_name);
 

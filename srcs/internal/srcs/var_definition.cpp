@@ -498,7 +498,7 @@ void Scope::add_definition(int type, const string &var_name, unsigned long id,
   m_defined_variables_[type].push_back(make_pair(var_name, id));
 }
 
-void fuck_debug() {
+void duck_debug() {
   if (DBG) cout << "g_scope_root: " << g_scope_root << endl;
   debug_scope_tree(g_scope_root);
 }

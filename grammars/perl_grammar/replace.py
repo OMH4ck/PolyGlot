@@ -142,7 +142,7 @@ def generate_token_file(token_list, symbols, prec_info):
             if(k == token):
                 ttype = v
 
-        res += "%sfuck%dfuck%sfuck%sfuck%s\n" % (token, prec_idx, assoc, token2, ttype)
+        res += "%sduck%dduck%sduck%sduck%s\n" % (token, prec_idx, assoc, token2, ttype)
     return res
 
 def replace_data_type(content):
