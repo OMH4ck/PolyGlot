@@ -1125,6 +1125,7 @@ def genBisonTypeDef(gen_class):
 def genBisonDestructor(destructorDict, extra_data_type):
 
     res = ""
+    print(extra_data_type)
     for dest_define, name in destructorDict.items():
         typename = ""
         for i in name:
@@ -1132,6 +1133,8 @@ def genBisonDestructor(destructorDict, extra_data_type):
                 typename += " <%s>" % (i)
             else:
                 typename += " <%s_t>" % (i)
+                print(name)
+                assert 0
         if (dest_define == "EMPTY"):
             dest_define = " "
         res += "%destructor{\n\t" + dest_define + "\n} " + typename + "\n\n"
@@ -1785,10 +1788,6 @@ if __name__ == "__main__":
     parse.add_argument("-b", "--bison", help="path of bison.y file")
     parse.add_argument("-a", "--ast", help="name of ast file(both .cpp and .h)")
     parse.add_argument("-t", "--token", help="path of config file for token")
-    parse.add_argument("-d",
-                       "--destructor",
-                       help="path of destructor for bison")
-    parse.add_argument("-D", "--datatype", help="path of datatype collection")
     parse.add_argument("-s", "--semantic", help="path of semantic rule file")
     parse.add_argument("-e", "--extraflex", help="path of extra flex rules")
     args = parse.parse_args()
@@ -1882,16 +1881,21 @@ if __name__ == "__main__":
                                                  each_token[2], each_token[3],
                                                  each_token[4])
 
-    if (args.destructor != None):
-        with open(args.destructor, "r") as dest_file:
-            dest_info = dest_file.read()
-            dest_info = dest_info.split("---")
-            for each_dest in dest_info:
-                typename = each_dest.split(":\n")[0]
-                dest_define = each_dest.split(":\n")[1].strip()
-                destructorDict[dest_define] = [
-                    i.strip() for i in typename.split(",")
-                ]
+    dest_info ="""
+sval:
+free( ($$) );
+---
+fval, ival:
+EMPTY
+"""
+    dest_info = dest_info.strip()
+    dest_info = dest_info.split("---")
+    for each_dest in dest_info:
+        typename = each_dest.split(":\n")[0]
+        dest_define = each_dest.split(":\n")[1].strip()
+        destructorDict[dest_define] = [
+            i.strip() for i in typename.split(",")
+        ]
 
     pu_h = genParserUtilsHeader(tokenDict)
     with open(configuration.parser_utils_header_output_path, "w") as f:
