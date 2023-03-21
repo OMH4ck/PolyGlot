@@ -81,20 +81,20 @@ bool Mutator::should_mutate(IR *cur) {
   return true;
 }
 
-vector<IR *> Mutator::mutate_all(vector<IR *> &v_ir_collector) {
+vector<IR *> Mutator::mutate_all(vector<IR *> &irs_to_mutate) {
   vector<IR *> res;
   std::unordered_set<unsigned long> res_hash;
-  IR *root = v_ir_collector[v_ir_collector.size() - 1];
+  IR *root = irs_to_mutate[irs_to_mutate.size() - 1];
 
   auto tmp_str = root->to_string();
   res_hash.insert(hash(tmp_str));
-  for (auto ir : v_ir_collector) {
+  for (IR *ir : irs_to_mutate) {
     if (ir == root || !should_mutate(ir)) continue;
 
     spdlog::debug("Mutating type: {}", get_string_by_nodetype(ir->type_));
-    vector<IR *> v_mutated_ir = mutate(ir);
+    vector<IR *> new_variants = mutate(ir);
 
-    for (auto i : v_mutated_ir) {
+    for (IR *i : new_variants) {
       IR *new_ir_tree = deep_copy_with_record(root, ir);
       spdlog::debug("NEW type: {}", get_string_by_nodetype(i->type_));
 
@@ -247,8 +247,7 @@ bool Mutator::replace(IR *root, IR *old_ir, IR *new_ir) {
     parent_ir->right_ = new_ir;
     return true;
   }
-  assert(0);
-  return false;
+  assert(false && "should not reach here");
 }
 
 // Need No Fix
