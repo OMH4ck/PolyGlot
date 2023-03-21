@@ -188,43 +188,29 @@ vector<IR *> Mutator::mutate(IR *input) {
   vector<IR *> res;
 
   if (!lucky_enough_to_be_mutated(input->mutated_times_)) {
+    // TODO: Why this is not triggered?
     assert(0);
     return res;  // return a empty set if the IR is not mutated
   }
 
-  for (int i = 0; i < 0x6; i++) {
-    auto tmp = strategy_replace_with_constraint(input);
-    if (tmp != NULL) {
+  constexpr size_t kConstraintReplaceTimes = 0x6;
+  for (int i = 0; i < kConstraintReplaceTimes; i++) {
+    if (IR *tmp = strategy_replace_with_constraint(input)) {
       res.push_back(tmp);
     }
   }
 
-  IR *tmp = NULL;
-  /*
-  tmp = strategy_delete(input);
-  if(tmp != NULL){
-      res.push_back(tmp);
-  }
-  */
+  // if (IR *tmp = strategy_insert(input)) {
+  //   res.push_back(tmp);
+  //  }
 
-  tmp = strategy_insert(input);
-  if (tmp != NULL) {
+  if (IR *tmp = strategy_replace(input)) {
     res.push_back(tmp);
-  }
-
-  tmp = strategy_replace(input);
-  if (tmp != NULL) {
-    res.push_back(tmp);
-    if (MUTATE_DBG) {
-      cout << "Replacing " << input->to_string() << endl;
-      cout << "With " << tmp->to_string() << endl;
-      getchar();
-    }
   }
 
   input->mutated_times_ += res.size();
-  for (auto i : res) {
-    if (i == NULL) continue;
+  for (IR *i : res) {
+    assert(i != NULL && "should not be null");
     i->mutated_times_ = input->mutated_times_;
   }
   return res;
@@ -248,109 +234,6 @@ bool Mutator::replace(IR *root, IR *old_ir, IR *new_ir) {
     return true;
   }
   assert(false && "should not reach here");
-}
-
-// Need No Fix
-IR *Mutator::strategy_delete(IR *cur) {
-  assert(cur);
-  // if(!can_be_mutated(cur)) return NULL;
-  // cout << "enter strategy_delete" << endl;
-  MUTATESTART
-
-  DOLEFT
-  res = deep_copy(cur);
-#ifdef MUTATE_UNKNOWN
-  if (res->left_ != NULL)
-#else
-  if (res->left_ != NULL && res->left_->type_ != kUnknown)
-#endif
-    deep_delete(res->left_);
-  res->left_ = NULL;  // memory leak
-
-  DORIGHT
-  res = deep_copy(cur);
-#ifdef MUTATE_UNKNOWN
-  if (res->right_ != NULL)
-#else
-  if (res->right_ != NULL && res->right_->type_ != kUnknown)
-#endif
-    deep_delete(res->right_);
-  res->right_ = NULL;
-
-  DOBOTH
-  res = deep_copy(cur);
-#ifdef MUTATE_UNKNOWN
-  if (res->left_ != NULL)
-#else
-  if (res->left_ != NULL && res->left_->type_ != kUnknown)
-#endif
-    deep_delete(res->left_);
-
-#ifdef MUTATE_UNKNOWN
-  if (res->right_ != NULL)
-#else
-  if (res->right_ != NULL && res->right_->type_ != kUnknown)
-#endif
-    deep_delete(res->right_);
-  res->left_ = res->right_ = NULL;
-
-  MUTATEEND
-}
-
-IR *Mutator::strategy_insert(IR *cur) {
-  // cout << "enter strategy_insert" << endl;
-  assert(cur);
-  // if(!can_be_mutated(cur)) return NULL;
-
-  IR *res = NULL;
-  // auto res = deep_copy(cur);
-  auto parent_type = cur->type_;
-
-#ifdef MUTATE_UNKNOWN
-  if (cur->right_ == NULL && cur->left_ != NULL) {
-#else
-  if (cur->right_ == NULL && cur->left_ != NULL && not_unknown(cur->left_)) {
-#endif
-    auto left_type = cur->left_->type_;
-    for (int k = 0; k < 4; k++) {
-      auto fetch_ir = get_ir_from_library(parent_type);
-      if (fetch_ir->left_ != NULL && fetch_ir->left_->type_ == left_type &&
-          fetch_ir->right_ != NULL) {
-        res = deep_copy(cur);
-        res->right_ = deep_copy(fetch_ir->right_);
-        return res;
-      }
-    }
-  }
-#ifdef MUTATE_UNKNOWN
-  else if (cur->right_ != NULL && cur->left_ == NULL) {
-#else
-  else if (cur->right_ != NULL && cur->left_ == NULL &&
-           not_unknown(cur->right_)) {
-#endif
-    auto right_type = cur->left_->type_;
-    for (int k = 0; k < 4; k++) {
-      auto fetch_ir = get_ir_from_library(parent_type);
-      if (fetch_ir->right_ != NULL && fetch_ir->right_->type_ == right_type &&
-          fetch_ir->left_ != NULL) {
-        res = deep_copy(cur);
-        res->left_ = deep_copy(fetch_ir->left_);
-        return res;
-      }
-    }
-  } else if (cur->left_ == NULL && cur->right_ == NULL) {
-    for (int k = 0; k < 4; k++) {
-      auto fetch_ir = get_ir_from_library(parent_type);
-      if (fetch_ir->right_ != NULL && fetch_ir->left_ != NULL) {
-        res = deep_copy(cur);
-        res->left_ = deep_copy(fetch_ir->left_);
-        res->right_ = deep_copy(fetch_ir->right_);
-        return res;
-      }
-    }
-  }
-
-  return res;
 }
 
 bool Mutator::is_ir_type_connvertable(IRTYPE a, IRTYPE b) {
@@ -433,79 +316,43 @@ IR *Mutator::strategy_replace_with_constraint(IR *cur) {
 IR *Mutator::strategy_replace(IR *cur) {
   assert(cur);
 
-  MUTATESTART
+  IR *res = NULL;
+  auto randint = get_rand_int(3);
+  switch (randint) {
+    case 0:
+      if (cur->left_ != NULL && not_unknown(cur->left_)) {
+        res = deep_copy(cur);
+        auto new_node = get_ir_from_library(res->left_->type_);
+        deep_delete(res->left_);
+        res->left_ = deep_copy(new_node);
+      }
+      break;
 
-  DOLEFT
-#ifdef MUTATE_UNKOWN
-  if (cur->left_ != NULL) {
-#else
-  if (cur->left_ != NULL && not_unknown(cur->left_)) {
-#endif
-    res = deep_copy(cur);
+    case 1:
+      if (cur->right_ != NULL && not_unknown(cur->right_)) {
+        res = deep_copy(cur);
+        auto new_node = get_ir_from_library(res->right_->type_);
+        deep_delete(res->right_);
+        res->right_ = deep_copy(new_node);
+      }
+      break;
 
-    auto new_node = get_ir_from_library(res->left_->type_);
-    // new_node->data_type_ = res->left_->data_type_;
-    deep_delete(res->left_);
-    if (MUTATE_DBG) {
-      cout << "Replacing left: " << cur->left_->to_string() << endl;
-      cout << "With: " << new_node->to_string() << endl;
-      cout << "Type: " << get_string_by_nodetype(new_node->type_) << endl;
-    }
-    res->left_ = deep_copy(new_node);
+    case 2:
+      if (cur->left_ != NULL && cur->right_ != NULL &&
+          not_unknown(cur->left_) && not_unknown(cur->right_)) {
+        res = deep_copy(cur);
+
+        auto new_left = get_ir_from_library(res->left_->type_);
+        auto new_right = get_ir_from_library(res->right_->type_);
+        deep_delete(res->right_);
+        res->right_ = deep_copy(new_right);
+
+        deep_delete(res->left_);
+        res->left_ = deep_copy(new_left);
+      }
+      break;
   }
-
-  DORIGHT
-#ifdef MUTATE_UNKNOWN
-  if (cur->right_ != NULL) {
-#else
-  if (cur->right_ != NULL && not_unknown(cur->right_)) {
-#endif
-    res = deep_copy(cur);
-
-    auto new_node = get_ir_from_library(res->right_->type_);
-    // new_node->data_type_ = res->right_->data_type_;
-    if (MUTATE_DBG) {
-      cout << "Replacing right: " << cur->right_->to_string() << endl;
-      cout << "With: " << new_node->to_string() << endl;
-      cout << "Type: " << get_string_by_nodetype(new_node->type_) << endl;
-    }
-    deep_delete(res->right_);
-    res->right_ = deep_copy(new_node);
-  }
-
-  DOBOTH
-#ifdef MUTATE_UNKNOWN
-  if (cur->left_ != NULL && cur->right_ != NULL) {
-#else
-  if (cur->left_ != NULL && cur->right_ != NULL && not_unknown(cur->left_) &&
-      not_unknown(cur->right_)) {
-#endif
-    res = deep_copy(cur);
-
-    auto new_left = get_ir_from_library(res->left_->type_);
-    auto new_right = get_ir_from_library(res->right_->type_);
-    // new_left->data_type_ = res->left_->data_type_;
-    // new_right->data_type_ = res->right_->data_type_;
-    deep_delete(res->right_);
-    res->right_ = deep_copy(new_right);
-
-    deep_delete(res->left_);
-    res->left_ = deep_copy(new_left);
-    if (MUTATE_DBG) {
-      cout << "Replacing both: " << cur->to_string() << endl;
-      cout << "Left: " << (new_left->to_string()) << endl;
-      cout << "Right: " << (new_right->to_string()) << endl;
-      cout << "ORiLeft type: " << get_string_by_nodetype(cur->left_->type_)
-           << endl;
-      cout << "ORIRight type: " << get_string_by_nodetype(cur->right_->type_)
-           << endl;
-      cout << "Left type: " << get_string_by_nodetype(new_left->type_) << endl;
-      cout << "Right type: " << get_string_by_nodetype(new_right->type_)
-           << endl;
-    }
-  }
-
-  MUTATEEND
+  return res;
 }
 
 constexpr size_t kMaxMutationTimes = 500;

@@ -33,8 +33,9 @@ class Mutator {
   unsigned long hash(IR *);
   unsigned long hash(string &);
 
-  IR *strategy_delete(IR *cur);   // Done
-  IR *strategy_insert(IR *cur);   // Done
+  // Delete and insert seems useless.
+  // IR *strategy_delete(IR *cur);   // Done
+  // IR *strategy_insert(IR *cur);   // Done
   IR *strategy_replace(IR *cur);  // done
   IR *strategy_replace_with_constraint(IR *cur);
   bool lucky_enough_to_be_mutated(unsigned int mutated_times);  // done
