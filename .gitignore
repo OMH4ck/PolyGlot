@@ -26,3 +26,4 @@ test_data/
 release
 gen/
 .cache/
+test.py

@@ -1,0 +1,802 @@
+program:
+T_OPEN_TAG top_statement_list
+---
+reserved_non_modifiers:
+T_INCLUDE
+T_INCLUDE_ONCE
+T_EVAL
+T_REQUIRE
+T_REQUIRE_ONCE
+T_LOGICAL_OR
+T_LOGICAL_XOR
+T_LOGICAL_AND
+T_INSTANCEOF
+T_NEW
+T_CLONE
+T_EXIT
+T_IF
+T_ELSEIF
+T_ELSE
+T_ENDIF
+T_ECHO
+T_DO
+T_WHILE
+T_ENDWHILE
+T_FOR
+T_ENDFOR
+T_FOREACH
+T_ENDFOREACH
+T_DECLARE
+T_ENDDECLARE
+T_AS
+T_TRY
+T_CATCH
+T_FINALLY
+T_THROW
+T_USE
+T_INSTEADOF
+T_GLOBAL
+T_VAR
+T_UNSET
+T_ISSET
+T_EMPTY
+T_CONTINUE
+T_GOTO
+T_FUNCTION
+T_CONST
+T_RETURN
+T_PRINT
+T_YIELD
+T_LIST
+T_SWITCH
+T_ENDSWITCH
+T_CASE
+T_DEFAULT
+T_BREAK
+T_ARRAY
+T_CALLABLE
+T_EXTENDS
+T_IMPLEMENTS
+T_NAMESPACE
+T_TRAIT
+T_INTERFACE
+T_CLASS
+T_CLASS_C
+T_TRAIT_C
+T_FUNC_C
+T_METHOD_C
+T_LINE
+T_FILE
+T_DIR
+T_NS_C
+T_FN
+---
+semi_reserved:
+reserved_non_modifiers
+T_STATIC
+T_ABSTRACT
+T_FINAL
+T_PRIVATE
+T_PROTECTED
+T_PUBLIC
+---
+identifier_plus:
+identifier
+semi_reserved
+---
+top_statement_list:
+top_statement_list top_statement
+
+---
+namespace_name:
+identifier
+namespace_name T_NS_SEPARATOR identifier
+---
+name:
+namespace_name
+T_NAMESPACE T_NS_SEPARATOR namespace_name
+T_NS_SEPARATOR namespace_name
+---
+top_statement:
+statement
+function_declaration_statement
+class_declaration_statement
+trait_declaration_statement
+interface_declaration_statement
+T_HALT_COMPILER OP_LP OP_RP OP_SEMI
+T_NAMESPACE namespace_name OP_SEMI
+T_NAMESPACE namespace_name OP_LBRACE top_statement_list OP_RBRACE
+T_NAMESPACE OP_LBRACE top_statement_list OP_RBRACE
+T_USE mixed_group_use_declaration OP_SEMI
+T_USE use_type group_use_declaration OP_SEMI
+T_USE use_declarations OP_SEMI
+T_USE use_type use_declarations OP_SEMI
+T_CONST const_list OP_SEMI
+---
+use_type:
+T_FUNCTION
+T_CONST
+---
+group_use_declaration:
+namespace_name T_NS_SEPARATOR OP_LBRACE unprefixed_use_declarations possible_comma OP_RBRACE
+T_NS_SEPARATOR namespace_name T_NS_SEPARATOR OP_LBRACE unprefixed_use_declarations possible_comma OP_RBRACE
+---
+mixed_group_use_declaration:
+namespace_name T_NS_SEPARATOR OP_LBRACE inline_use_declarations possible_comma OP_RBRACE
+T_NS_SEPARATOR namespace_name T_NS_SEPARATOR OP_LBRACE inline_use_declarations possible_comma OP_RBRACE
+---
+possible_comma:
+
+OP_COMMA
+---
+inline_use_declarations:
+inline_use_declarations OP_COMMA inline_use_declaration
+inline_use_declaration
+---
+unprefixed_use_declarations:
+unprefixed_use_declarations OP_COMMA unprefixed_use_declaration
+unprefixed_use_declaration
+---
+use_declarations:
+use_declarations OP_COMMA use_declaration
+use_declaration
+---
+inline_use_declaration:
+unprefixed_use_declaration
+use_type unprefixed_use_declaration
+---
+unprefixed_use_declaration:
+namespace_name
+namespace_name T_AS identifier
+---
+use_declaration:
+unprefixed_use_declaration
+T_NS_SEPARATOR unprefixed_use_declaration
+---
+const_list:
+const_list OP_COMMA const_decl
+const_decl
+---
+inner_statement_list:
+inner_statement_list inner_statement
+
+---
+inner_statement:
+statement
+function_declaration_statement
+class_declaration_statement
+trait_declaration_statement
+interface_declaration_statement
+T_HALT_COMPILER OP_LP OP_RP OP_SEMI
+---
+statement:
+OP_LBRACE inner_statement_list OP_RBRACE
+if_stmt
+alt_if_stmt
+T_WHILE OP_LP expr OP_RP while_statement
+T_DO statement T_WHILE OP_LP expr OP_RP OP_SEMI
+T_FOR OP_LP for_exprs OP_SEMI for_exprs OP_SEMI for_exprs OP_RP for_statement
+T_SWITCH OP_LP expr OP_RP switch_case_list
+T_BREAK optional_expr OP_SEMI
+T_CONTINUE optional_expr OP_SEMI
+T_RETURN optional_expr OP_SEMI
+T_GLOBAL global_var_list OP_SEMI
+T_STATIC static_var_list OP_SEMI
+T_ECHO echo_expr_list OP_SEMI
+expr OP_SEMI
+T_UNSET OP_LP unset_variables possible_comma OP_RP OP_SEMI
+T_FOREACH OP_LP expr T_AS foreach_variable OP_RP foreach_statement
+T_FOREACH OP_LP expr T_AS foreach_variable T_DOUBLE_ARROW foreach_variable OP_RP foreach_statement
+T_DECLARE OP_LP const_list OP_RP declare_statement
+OP_SEMI
+T_TRY OP_LBRACE inner_statement_list OP_RBRACE catch_list finally_statement
+T_THROW expr OP_SEMI
+T_GOTO identifier OP_SEMI
+identifier OP_COLON
+---
+catch_list:
+
+catch_list T_CATCH OP_LP catch_name_list dollar_variable OP_RP OP_LBRACE inner_statement_list OP_RBRACE
+---
+catch_name_list:
+class_name
+catch_name_list OP_BITOR class_name
+---
+finally_statement:
+
+T_FINALLY OP_LBRACE inner_statement_list OP_RBRACE
+---
+unset_variables:
+unset_variable
+unset_variables OP_COMMA unset_variable
+---
+unset_variable:
+variable
+---
+function_declaration_statement:
+function_declaration **fixme=kDataVarDefine:1:Define**
+---
+function_declaration:
+function returns_ref identifier backup_doc_comment OP_LP parameter_list OP_RP return_type backup_fn_flags OP_LBRACE inner_statement_list OP_RBRACE backup_fn_flags **fixme=kDataFunctionType:1:Define;identifier=kDataFunctionName:1:Define;parameter_list->non_empty_parameter_list->parameter->dollar_variable=kDataVarName:1:Define;parameter_list=kDataFunctionArg:1:Define;inner_statement_list=kDataFunctionBody:1:Define**
+---
+is_reference:
+
+OP_BITAND
+---
+is_variadic:
+
+T_ELLIPSIS
+---
+class_declaration_statement:
+class_declaration **fixme=kDataVarDefine:1:Define;class_declaration=kDataClassType:1:Define**
+---
+class_declaration:
+class_modifiers T_CLASS identifier extends_from implements_list backup_doc_comment class_body **identifier=kDataClassName:1:Define;class_body=kDataStructBody:1:Define**
+T_CLASS identifier extends_from implements_list backup_doc_comment class_body **identifier=kDataClassName:1:Define;class_body=kDataStructBody:1:Define**
+---
+class_body:
+OP_LBRACE class_statement_list OP_RBRACE  **fixme=kDataStructBody:1:Define**
+---
+class_modifiers:
+class_modifier
+class_modifiers class_modifier
+---
+class_modifier:
+T_ABSTRACT
+T_FINAL
+---
+trait_declaration_statement:
+T_TRAIT identifier backup_doc_comment class_body **class_body=kDataStructBody:1:Define**
+---
+interface_declaration_statement:
+T_INTERFACE identifier interface_extends_list backup_doc_comment class_body **class_body=kDataStructBody:1:Define**
+---
+extends_from:
+
+T_EXTENDS class_name
+---
+interface_extends_list:
+
+T_EXTENDS class_name_list
+---
+implements_list:
+
+T_IMPLEMENTS class_name_list
+---
+foreach_variable:
+variable
+OP_BITAND variable
+T_LIST OP_LP array_pair_list OP_RP
+OP_LBRACKET array_pair_list OP_RBRACKET
+---
+for_statement:
+statement
+OP_COLON inner_statement_list T_ENDFOR OP_SEMI
+---
+foreach_statement:
+statement
+OP_COLON inner_statement_list T_ENDFOREACH OP_SEMI
+---
+declare_statement:
+statement
+OP_COLON inner_statement_list T_ENDDECLARE OP_SEMI
+---
+switch_case_list:
+OP_LBRACE case_list OP_RBRACE
+OP_LBRACE OP_SEMI case_list OP_RBRACE
+OP_COLON case_list T_ENDSWITCH OP_SEMI
+OP_COLON OP_SEMI case_list T_ENDSWITCH OP_SEMI
+---
+case_list:
+
+case_list T_CASE expr case_separator inner_statement_list
+case_list T_DEFAULT case_separator inner_statement_list
+---
+case_separator:
+OP_COLON
+OP_SEMI
+---
+while_statement:
+statement
+OP_COLON inner_statement_list T_ENDWHILE OP_SEMI
+---
+if_stmt_without_else:
+T_IF OP_LP expr OP_RP statement
+if_stmt_without_else T_ELSEIF OP_LP expr OP_RP statement
+---
+if_stmt:
+if_stmt_without_else %prec T_NOELSE
+if_stmt_without_else T_ELSE statement
+---
+alt_if_stmt_without_else:
+T_IF OP_LP expr OP_RP OP_COLON inner_statement_list
+alt_if_stmt_without_else T_ELSEIF OP_LP expr OP_RP OP_COLON inner_statement_list
+---
+alt_if_stmt:
+alt_if_stmt_without_else T_ENDIF OP_SEMI
+alt_if_stmt_without_else T_ELSE OP_COLON inner_statement_list T_ENDIF OP_SEMI
+---
+parameter_list:
+non_empty_parameter_list
+
+---
+non_empty_parameter_list:
+parameter
+non_empty_parameter_list OP_COMMA parameter
+---
+parameter:
+optional_type is_reference is_variadic dollar_variable
+optional_type is_reference is_variadic dollar_variable OP_EQUAL expr
+---
+optional_type:
+
+type_expr
+---
+type_expr:
+type
+OP_QUESTION type
+union_type2
+---
+type:
+T_ARRAY
+T_CALLABLE
+name
+---
+union_type2:
+type OP_BITOR type
+union_type2 OP_BITOR type
+---
+return_type:
+
+OP_COLON type_expr
+---
+argument_list:
+OP_LP OP_RP
+OP_LP non_empty_argument_list possible_comma OP_RP
+---
+non_empty_argument_list:
+argument
+non_empty_argument_list OP_COMMA argument
+---
+argument:
+expr
+T_ELLIPSIS expr
+---
+global_var_list:
+global_var_list OP_COMMA global_var
+global_var
+---
+global_var:
+simple_variable
+---
+static_var_list:
+static_var_list OP_COMMA static_var
+static_var
+---
+static_var:
+dollar_variable
+dollar_variable OP_EQUAL expr
+---
+class_statement_list:
+class_statement_list class_statement **class_statement=kDataVarDefine:1:Define**
+
+---
+class_statement:
+simple_var_member
+method_modifiers T_CONST class_const_list OP_SEMI
+T_USE class_name_list trait_adaptations
+class_method_definition
+---
+class_method_definition:
+method_modifiers function returns_ref identifier_plus backup_doc_comment OP_LP parameter_list OP_RP return_type backup_fn_flags method_body backup_fn_flags **fixme=kDataFunctionType:1:Define;identifier_plus->identifier=kDataFunctionName:1:Define;parameter_list->non_empty_parameter_list->parameter->dollar_variable=kDataVarName:1:Define;parameter_list=kDataFunctionArg:1:Define;method_body=kDataFunctionBody:1:Define**
+---
+simple_var_member:
+variable_modifiers optional_type property_list OP_SEMI **fixme=kDataVarType:1:Define**
+---
+class_name_list:
+class_name
+class_name_list OP_COMMA class_name
+---
+trait_adaptations:
+OP_SEMI
+OP_LBRACE OP_RBRACE
+OP_LBRACE trait_adaptation_list OP_RBRACE
+---
+trait_adaptation_list:
+trait_adaptation
+trait_adaptation_list trait_adaptation
+---
+trait_adaptation:
+trait_precedence OP_SEMI
+trait_alias OP_SEMI
+---
+trait_precedence:
+absolute_trait_method_reference T_INSTEADOF class_name_list
+---
+trait_alias:
+trait_method_reference T_AS identifier
+trait_method_reference T_AS reserved_non_modifiers
+trait_method_reference T_AS member_modifier identifier_plus
+trait_method_reference T_AS member_modifier
+---
+trait_method_reference:
+identifier_plus
+absolute_trait_method_reference
+---
+absolute_trait_method_reference:
+class_name T_PAAMAYIM_NEKUDOTAYIM identifier_plus
+---
+method_body:
+OP_SEMI
+OP_LBRACE inner_statement_list OP_RBRACE
+---
+variable_modifiers:
+non_empty_member_modifiers
+T_VAR
+---
+method_modifiers:
+
+non_empty_member_modifiers
+---
+non_empty_member_modifiers:
+member_modifier
+non_empty_member_modifiers member_modifier
+---
+member_modifier:
+T_PUBLIC
+T_PROTECTED
+T_PRIVATE
+T_STATIC
+T_ABSTRACT
+T_FINAL
+---
+property_list:
+property_list OP_COMMA property
+property
+---
+property:
+dollar_variable backup_doc_comment **dollar_variable=kDataVarName:1:Define**
+dollar_variable OP_EQUAL expr backup_doc_comment **dollar_variable=kDataVarName:1:Define;expr=kDataInitiator:1:Use**
+---
+class_const_list:
+class_const_list OP_COMMA class_const_decl
+class_const_decl
+---
+class_const_decl:
+identifier_plus OP_EQUAL expr backup_doc_comment
+---
+const_decl:
+identifier OP_EQUAL expr backup_doc_comment
+---
+echo_expr_list:
+echo_expr_list OP_COMMA echo_expr
+echo_expr
+---
+echo_expr:
+expr
+---
+for_exprs:
+
+non_empty_for_exprs
+---
+non_empty_for_exprs:
+non_empty_for_exprs OP_COMMA expr
+expr
+---
+anonymous_class:
+T_CLASS ctor_arguments extends_from implements_list backup_doc_comment class_body **fixme=kDataClassType:1:Define**
+---
+new_expr:
+T_NEW class_constructor **fixme=kDataFixUnit:1:Use**
+T_NEW anonymous_class **fixme=kDataFixUnit:1:Use**
+---
+class_constructor:
+class_name_reference OP_LP OP_RP
+class_name_reference OP_LP non_empty_argument_list possible_comma OP_RP
+class_name_reference
+---
+might_define_expr:
+variable OP_EQUAL expr **fixme=kDataVarType:1:Define;variable_1->callable_variable->simple_variable->dollar_variable=kDataVarName:1:Define;expr=kDataInitiator:1:Use**
+variable OP_EQUAL OP_BITAND variable **fixme=kDataVarType:1:Define;variable_1->callable_variable->simple_variable->dollar_variable=kDataVarName:1:Define;variable_2=kDataInitiator:1:Use**
+---
+expr:
+variable **fixme=kDataFixUnit:1:Use**
+T_LIST OP_LP array_pair_list OP_RP OP_EQUAL expr
+OP_LBRACKET array_pair_list OP_RBRACKET OP_EQUAL expr
+T_CLONE expr
+might_define_expr **fixme=kDataVarDefine:1:Define**
+variable T_PLUS_EQUAL expr **variable=kDataFixUnit:1:Use**
+variable T_MINUS_EQUAL expr **variable=kDataFixUnit:1:Use**
+variable T_MUL_EQUAL expr **variable=kDataFixUnit:1:Use**
+variable T_POW_EQUAL expr **variable=kDataFixUnit:1:Use**
+variable T_DIV_EQUAL expr **variable=kDataFixUnit:1:Use**
+variable T_CONCAT_EQUAL expr **variable=kDataFixUnit:1:Use**
+variable T_MOD_EQUAL expr **variable=kDataFixUnit:1:Use**
+variable T_AND_EQUAL expr **variable=kDataFixUnit:1:Use**
+variable T_OR_EQUAL expr **variable=kDataFixUnit:1:Use**
+variable T_XOR_EQUAL expr **variable=kDataFixUnit:1:Use**
+variable T_SL_EQUAL expr **variable=kDataFixUnit:1:Use**
+variable T_SR_EQUAL expr **variable=kDataFixUnit:1:Use**
+variable T_COALESCE_EQUAL expr **variable=kDataFixUnit:1:Use**
+variable T_INC **variable=kDataFixUnit:1:Use**
+T_INC variable **variable=kDataFixUnit:1:Use**
+variable T_DEC **variable=kDataFixUnit:1:Use**
+T_DEC variable **variable=kDataFixUnit:1:Use**
+expr T_BOOLEAN_OR expr
+expr T_BOOLEAN_AND expr
+expr T_LOGICAL_OR expr
+expr T_LOGICAL_AND expr
+expr T_LOGICAL_XOR expr
+expr OP_BITOR expr
+expr OP_BITAND expr
+expr OP_XOR expr
+expr OP_DOT expr **fixme=kDataFixUnit:1:Use**
+expr OP_ADD expr **fixme=kDataFixUnit:1:Use**
+expr OP_SUB expr **fixme=kDataFixUnit:1:Use**
+expr OP_STAR expr **fixme=kDataFixUnit:1:Use**
+expr T_POW expr **fixme=kDataFixUnit:1:Use**
+expr OP_DIVIDE expr **fixme=kDataFixUnit:1:Use**
+expr OP_MOD expr **fixme=kDataFixUnit:1:Use**
+expr T_SL expr **fixme=kDataFixUnit:1:Use**
+expr T_SR expr **fixme=kDataFixUnit:1:Use**
+OP_ADD expr %prec OP_BITNOT **fixme=kDataFixUnit:1:Use**
+OP_SUB expr %prec OP_BITNOT **fixme=kDataFixUnit:1:Use**
+OP_NOT expr **fixme=kDataFixUnit:1:Use**
+OP_BITNOT expr **fixme=kDataFixUnit:1:Use**
+expr T_IS_IDENTICAL expr
+expr T_IS_NOT_IDENTICAL expr
+expr T_IS_EQUAL expr
+expr T_IS_NOT_EQUAL expr
+expr T_IS_NOT_EQUAL_SEC expr **fixme=kDataFixUnit:1:Use**
+expr OP_LESSTHAN expr **fixme=kDataFixUnit:1:Use**
+expr T_IS_SMALLER_OR_EQUAL expr **fixme=kDataFixUnit:1:Use**
+expr OP_GTEATERTHAN expr **fixme=kDataFixUnit:1:Use**
+expr T_IS_GREATER_OR_EQUAL expr **fixme=kDataFixUnit:1:Use**
+expr T_SPACESHIP expr **fixme=kDataFixUnit:1:Use**
+expr T_INSTANCEOF class_name_reference **fixme=kDataFixUnit:1:Use**
+OP_LP expr OP_RP **fixme=kDataFixUnit:1:Use**
+new_expr **fixme=kDataFixUnit:1:Use**
+expr OP_QUESTION expr OP_COLON expr **fixme=kDataFixUnit:1:Use**
+expr OP_QUESTION OP_COLON expr **fixme=kDataFixUnit:1:Use**
+expr T_COALESCE expr **fixme=kDataFixUnit:1:Use**
+internal_functions_in_yacc **fixme=kDataFixUnit:1:Use**
+T_INT_CAST expr **fixme=kDataFixUnit:1:Use**
+T_DOUBLE_CAST expr **fixme=kDataFixUnit:1:Use**
+T_STRING_CAST expr **fixme=kDataFixUnit:1:Use**
+T_ARRAY_CAST expr **fixme=kDataFixUnit:1:Use**
+T_OBJECT_CAST expr **fixme=kDataFixUnit:1:Use**
+T_BOOL_CAST expr **fixme=kDataFixUnit:1:Use**
+T_UNSET_CAST expr **fixme=kDataFixUnit:1:Use**
+T_EXIT exit_expr **fixme=kDataFixUnit:1:Use**
+OP_AT expr **fixme=kDataFixUnit:1:Use**
+scalar
+OP_BACK_QUOTE backticks_expr OP_BACK_QUOTE **fixme=kDataFixUnit:1:Use**
+T_PRINT expr
+T_YIELD
+T_YIELD expr
+T_YIELD expr T_DOUBLE_ARROW expr
+T_YIELD_FROM expr
+inline_function
+T_STATIC inline_function
+---
+inline_function:
+function returns_ref backup_doc_comment OP_LP parameter_list OP_RP lexical_vars return_type backup_fn_flags OP_LBRACE inner_statement_list OP_RBRACE backup_fn_flags **parameter_list->non_empty_parameter_list->parameter->dollar_variable=kDataVarName:1:Define;parameter_list=kDataFunctionArg:1:Define;inner_statement_list=kDataFunctionBody:1:Define**
+fn returns_ref OP_LP parameter_list OP_RP return_type backup_doc_comment T_DOUBLE_ARROW backup_fn_flags backup_lex_pos expr **parameter_list->non_empty_parameter_list->parameter->dollar_variable=kDataVarName:1:Define;parameter_list=kDataFunctionArg:1:Define;**
+---
+fn:
+T_FN
+---
+function:
+T_FUNCTION
+---
+backup_doc_comment:
+
+---
+backup_fn_flags:
+%prec PREC_ARROW_FUNCTION
+---
+backup_lex_pos:
+
+---
+returns_ref:
+
+OP_BITAND
+---
+lexical_vars:
+
+T_USE OP_LP lexical_var_list OP_RP
+---
+lexical_var_list:
+lexical_var_list OP_COMMA lexical_var
+lexical_var
+---
+lexical_var:
+dollar_variable
+OP_BITAND dollar_variable
+---
+function_callme:
+name argument_list
+class_name T_PAAMAYIM_NEKUDOTAYIM member_name argument_list
+variable_class_name T_PAAMAYIM_NEKUDOTAYIM member_name argument_list
+callable_expr argument_list
+---
+class_name:
+T_STATIC
+name
+---
+class_name_reference:
+class_name
+new_variable
+---
+exit_expr:
+
+OP_LP optional_expr OP_RP
+---
+backticks_expr:
+
+encaps_list
+---
+ctor_arguments:
+
+argument_list
+---
+dereferencable_scalar:
+T_ARRAY OP_LP array_pair_list OP_RP
+OP_LBRACKET array_pair_list OP_RBRACKET
+string_literal
+---
+scalar:
+num_literal
+T_LINE
+T_FILE
+T_DIR
+T_TRAIT_C
+T_METHOD_C
+T_FUNC_C
+T_NS_C
+T_CLASS_C
+T_START_HEREDOC T_END_HEREDOC
+OP_DOUBLE_QUOTE encaps_list OP_DOUBLE_QUOTE
+T_START_HEREDOC encaps_list T_END_HEREDOC
+dereferencable_scalar
+constant
+---
+constant:
+name
+class_name T_PAAMAYIM_NEKUDOTAYIM identifier_plus
+variable_class_name T_PAAMAYIM_NEKUDOTAYIM identifier_plus
+---
+optional_expr:
+
+expr
+---
+variable_class_name:
+dereferencable
+---
+dereferencable:
+variable
+OP_LP expr OP_RP
+dereferencable_scalar
+---
+callable_expr:
+callable_variable
+OP_LP expr OP_RP
+dereferencable_scalar
+---
+callable_variable:
+simple_variable
+dereferencable OP_LBRACKET optional_expr OP_RBRACKET
+constant OP_LBRACKET optional_expr OP_RBRACKET
+dereferencable OP_LBRACE expr OP_RBRACE
+dereferencable T_OBJECT_OPERATOR property_name argument_list
+function_callme
+---
+variable:
+callable_variable
+static_member
+dereferencable T_OBJECT_OPERATOR property_name
+---
+simple_variable:
+dollar_variable
+OP_DOLLAR OP_LBRACE expr OP_RBRACE
+OP_DOLLAR simple_variable
+---
+static_member:
+class_name T_PAAMAYIM_NEKUDOTAYIM simple_variable
+variable_class_name T_PAAMAYIM_NEKUDOTAYIM simple_variable
+---
+new_variable:
+simple_variable
+new_variable OP_LBRACKET optional_expr OP_RBRACKET
+new_variable OP_LBRACE expr OP_RBRACE
+new_variable T_OBJECT_OPERATOR property_name
+class_name T_PAAMAYIM_NEKUDOTAYIM simple_variable
+new_variable T_PAAMAYIM_NEKUDOTAYIM simple_variable
+---
+member_name:
+identifier_plus
+OP_LBRACE expr OP_RBRACE
+simple_variable
+---
+property_name:
+identifier
+OP_LBRACE expr OP_RBRACE
+simple_variable
+---
+array_pair_list:
+non_empty_array_pair_list
+---
+possible_array_pair:
+
+array_pair
+---
+non_empty_array_pair_list:
+non_empty_array_pair_list OP_COMMA possible_array_pair
+possible_array_pair
+---
+array_pair:
+expr T_DOUBLE_ARROW expr
+expr
+expr T_DOUBLE_ARROW OP_BITAND variable **fixme=kDataFixUnit:1:Use**
+OP_BITAND variable **fixme=kDataFixUnit:1:Use**
+T_ELLIPSIS expr
+expr T_DOUBLE_ARROW T_LIST OP_LP array_pair_list OP_RP
+T_LIST OP_LP array_pair_list OP_RP
+---
+encaps_list:
+encaps_list encaps_var
+encaps_var
+---
+string_varname:
+T_STRING_VARNAME
+---
+encaps_var:
+dollar_variable
+dollar_variable OP_LBRACKET encaps_var_offset OP_RBRACKET
+dollar_variable T_OBJECT_OPERATOR identifier
+T_DOLLAR_OPEN_CURLY_BRACES expr OP_RBRACE
+T_DOLLAR_OPEN_CURLY_BRACES string_varname OP_RBRACE
+T_DOLLAR_OPEN_CURLY_BRACES string_varname OP_LBRACKET expr OP_RBRACKET OP_RBRACE
+T_CURLY_OPEN variable OP_RBRACE
+---
+encaps_var_offset:
+identifier
+string_literal
+OP_SUB string_literal
+dollar_variable
+---
+internal_functions_in_yacc:
+T_ISSET OP_LP isset_variables possible_comma OP_RP
+T_EMPTY OP_LP expr OP_RP
+T_INCLUDE expr
+T_INCLUDE_ONCE expr
+T_EVAL OP_LP expr OP_RP
+T_REQUIRE expr
+T_REQUIRE_ONCE expr
+---
+isset_variables:
+isset_variable
+isset_variables OP_COMMA isset_variable
+---
+isset_variable:
+expr
+---
+identifier:
+IDENTIFIER
+---
+dollar_variable:
+T_VARIABLE
+---
+num_literal:
+float_literal
+int_literal
+---
+float_literal:
+FLOATLITERAL
+---
+int_literal:
+INTLITERAL
+---
+string_literal:
+STRINGLITERAL
+---

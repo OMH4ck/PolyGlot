@@ -1,4 +1,8 @@
 #python3 postgres.py postgres_gram.y grammar_post.txt
 #python replace.py -r grammar > z_post_result
-python replace.py -t grammar > replaced_grammar
-python replace.py -c replaced_grammar ff > tokens
+set -e 
+python3 replace.py -t grammar > replaced_grammar
+python3 replace.py -c replaced_grammar ff > tokens
+
+diff replaced_grammar saved_replace_grammar || echo "Grammar changed"
+diff tokens saved_tokens || echo "Tokens changed"
