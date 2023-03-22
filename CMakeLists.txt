@@ -55,7 +55,7 @@ endif()
 # Code generation
 add_custom_command(
     OUTPUT
-        ${CMAKE_SOURCE_DIR}/gen/parser/bison_parser.cpp  ${CMAKE_SOURCE_DIR}/gen/parser/flex_lexer.cpp ${CMAKE_SOURCE_DIR}/gen/config.cpp gen/gen_ir.cpp
+        ${CMAKE_SOURCE_DIR}/gen/parser/bison_parser.cpp  ${CMAKE_SOURCE_DIR}/gen/parser/flex_lexer.cpp ${CMAKE_SOURCE_DIR}/gen/config.cpp ${CMAKE_SOURCE_DIR}/gen/gen_ir.cpp
     DEPENDS
         ${CMAKE_SOURCE_DIR}/CodeGen.py
     COMMAND
