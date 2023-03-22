@@ -22,7 +22,7 @@ class Config:
         self.include_path = "include/"
         self.src_path = "src/"
         self.template_path = "template/"
-        self.parser_path = "parser/"
+        self.parser_path = "gen/parser/"
 
         self.flex_headerfile = "%sflex_lexer.h" % self.output_path
         self.flex_cpp_file = "%sflex_lexer.cpp" % self.output_path
@@ -84,7 +84,7 @@ class Config:
             % self.bison_top_input_type)
 
         self.bison_code_require_include_files = [
-            normal_header("../gen/gen_ir.h"),
+            normal_header("../gen_ir.h"),
             normal_header("parser_typedef.h")
         ]
 

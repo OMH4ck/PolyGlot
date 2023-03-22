@@ -39,23 +39,44 @@ conan_cmake_install(
 
 find_package(spdlog)
 
+# TODO: Add more
+list(APPEND SUPPORTED_LANG lua php c)
+
+set(LANG ${LANG})
+
+if(NOT LANG)
+  message(FATAL_ERROR "Please specify a language to build with -DLANG=...")
+endif()
+
+if (NOT ${LANG} IN_LIST SUPPORTED_LANG)
+  message(FATAL_ERROR "Language ${LANG} is not supported")
+endif()
+
+# Code generation
+add_custom_command(
+    OUTPUT
+        ${CMAKE_SOURCE_DIR}/gen/parser/bison_parser.cpp  ${CMAKE_SOURCE_DIR}/gen/parser/flex_lexer.cpp ${CMAKE_SOURCE_DIR}/gen/config.cpp gen/gen_ir.cpp
+    DEPENDS
+        ${CMAKE_SOURCE_DIR}/CodeGen.py
+    COMMAND
+        python3 ${CMAKE_SOURCE_DIR}/CodeGen.py ${LANG} ${CMAKE_SOURCE_DIR}/grammars/${LANG}_grammar
+)
+
 file(GLOB SRC_FILES ${CMAKE_SOURCE_DIR}/srcs/internal/srcs/*.cpp)
 
 include_directories(${spdlog_INCLUDE_DIRS})
-# set_target_properties(${YAML_CPP_LIBRARIES} PROPERTIES COMPILE_FLAGS "-w")
-
 set(AFLPP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/AFLplusplus/include)
-
 include_directories(${AFLPP_DIR})
 
-add_library(polyglot_lib STATIC srcs/polyglot.cc ${SRC_FILES} ./parser/bison_parser.cpp  ./parser/flex_lexer.cpp gen/config.cpp gen/gen_ir.cpp)
+add_library(polyglot_lib STATIC srcs/polyglot.cc ${SRC_FILES} ${CMAKE_SOURCE_DIR}/gen/parser/bison_parser.cpp  ${CMAKE_SOURCE_DIR}/gen/parser/flex_lexer.cpp ${CMAKE_SOURCE_DIR}/gen/config.cpp ${CMAKE_SOURCE_DIR}/gen/gen_ir.cpp)
 target_include_directories(polyglot_lib PUBLIC ${CMAKE_SOURCE_DIR}/srcs/internal/include)
-target_include_directories(polyglot_lib PRIVATE ${CMAKE_SOURCE_DIR}/parser)
+target_include_directories(polyglot_lib PRIVATE ${CMAKE_SOURCE_DIR}/gen/parser)
 target_include_directories(polyglot_lib PRIVATE ${CMAKE_SOURCE_DIR}/gen)
 target_include_directories(polyglot_lib PUBLIC ${CMAKE_SOURCE_DIR}/srcs)
 target_compile_options(polyglot_lib PRIVATE -fPIC)
 target_link_libraries(polyglot_lib PRIVATE spdlog::spdlog)
 target_link_options(polyglot_lib PRIVATE $<$<CONFIG:DEBUG>: -fsanitize=address -shared-libasan>)
+#add_dependencies(polyglot_lib code_gen)
 
 add_library(polyglot_mutator SHARED srcs/custom_mutator.cc)
 target_link_libraries(polyglot_mutator PRIVATE polyglot_lib)

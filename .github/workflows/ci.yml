@@ -25,4 +25,4 @@ jobs:
       - name: install conan profile
         run: conan profile detect
       - name: build
-        run: make && mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug && make -j
+        run: mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DLANG=php && make -j
