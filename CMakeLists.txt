@@ -52,10 +52,11 @@ if (NOT ${LANG} IN_LIST SUPPORTED_LANG)
   message(FATAL_ERROR "Language ${LANG} is not supported")
 endif()
 
+set(GENERATED_FILES ${CMAKE_SOURCE_DIR}/gen/parser/bison_parser.cpp  ${CMAKE_SOURCE_DIR}/gen/parser/flex_lexer.cpp ${CMAKE_SOURCE_DIR}/gen/config.cpp ${CMAKE_SOURCE_DIR}/gen/gen_ir.cpp)
 # Code generation
 add_custom_command(
     OUTPUT
-        ${CMAKE_SOURCE_DIR}/gen/parser/bison_parser.cpp  ${CMAKE_SOURCE_DIR}/gen/parser/flex_lexer.cpp ${CMAKE_SOURCE_DIR}/gen/config.cpp ${CMAKE_SOURCE_DIR}/gen/gen_ir.cpp
+        ${GENERATED_FILES}
     DEPENDS
         ${CMAKE_SOURCE_DIR}/CodeGen.py
     COMMAND
@@ -68,7 +69,7 @@ include_directories(${spdlog_INCLUDE_DIRS})
 set(AFLPP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/AFLplusplus/include)
 include_directories(${AFLPP_DIR})
 
-add_library(polyglot_lib STATIC srcs/polyglot.cc ${SRC_FILES} ${CMAKE_SOURCE_DIR}/gen/parser/bison_parser.cpp  ${CMAKE_SOURCE_DIR}/gen/parser/flex_lexer.cpp ${CMAKE_SOURCE_DIR}/gen/config.cpp ${CMAKE_SOURCE_DIR}/gen/gen_ir.cpp)
+add_library(polyglot_lib STATIC srcs/polyglot.cc ${SRC_FILES} ${GENERATED_FILES})
 target_include_directories(polyglot_lib PUBLIC ${CMAKE_SOURCE_DIR}/srcs/internal/include)
 target_include_directories(polyglot_lib PRIVATE ${CMAKE_SOURCE_DIR}/gen/parser)
 target_include_directories(polyglot_lib PRIVATE ${CMAKE_SOURCE_DIR}/gen)
@@ -76,7 +77,6 @@ target_include_directories(polyglot_lib PUBLIC ${CMAKE_SOURCE_DIR}/srcs)
 target_compile_options(polyglot_lib PRIVATE -fPIC)
 target_link_libraries(polyglot_lib PRIVATE spdlog::spdlog)
 target_link_options(polyglot_lib PRIVATE $<$<CONFIG:DEBUG>: -fsanitize=address -shared-libasan>)
-#add_dependencies(polyglot_lib code_gen)
 
 add_library(polyglot_mutator SHARED srcs/custom_mutator.cc)
 target_link_libraries(polyglot_mutator PRIVATE polyglot_lib)
