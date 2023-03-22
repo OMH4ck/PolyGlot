@@ -59,7 +59,7 @@ add_custom_command(
     DEPENDS
         ${CMAKE_SOURCE_DIR}/CodeGen.py
     COMMAND
-        python3 ${CMAKE_SOURCE_DIR}/CodeGen.py ${LANG} ${CMAKE_SOURCE_DIR}/grammars/${LANG}_grammar
+        python3 ${CMAKE_SOURCE_DIR}/CodeGen.py ${CMAKE_SOURCE_DIR}/grammars/${LANG}_grammar
 )
 
 file(GLOB SRC_FILES ${CMAKE_SOURCE_DIR}/srcs/internal/srcs/*.cpp)
