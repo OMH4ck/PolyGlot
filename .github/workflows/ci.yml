@@ -21,7 +21,7 @@ jobs:
       - name: pull submodule
         run: git submodule update --init
       - name: install conan
-        run: pip3 install conan
+        run: pip3 install conan fire
       - name: install conan profile
         run: conan profile detect
       - name: build
