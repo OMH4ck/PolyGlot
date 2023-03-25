@@ -1596,28 +1596,24 @@ if __name__ == "__main__":
             content = input_file.read().strip()
             ptn = re.compile("Data\w+")
             kkk = re.findall(ptn, content)  # ptn.findall(c)
-            ss = set()
-            ss.add("DataVarDefine")
-
-            ss.add("DataFunctionType")
-            ss.add("DataFunctionName")
-            ss.add("DataFunctionArg")
-            ss.add("DataFunctionBody")
-            ss.add("DataFunctionReturnValue")
-
-            ss.add("DataClassType")
-            ss.add("DataClassName")
-            ss.add("DataStructBody")
-
-            ss.add("DataVarType")
-            ss.add("DataVarName")
-            ss.add("DataInitiator")
-            ss.add("DataVarScope")
-
-            ss.add("DataDeclarator")
-            ss.add("DataPointer")
-
-            ss.add("DataFixUnit")
+            ss = {
+                "DataVarDefine",
+                "DataFunctionType",
+                "DataFunctionName",
+                "DataFunctionArg",
+                "DataFunctionBody",
+                "DataFunctionReturnValue",
+                "DataClassType",
+                "DataClassName",
+                "DataStructBody",
+                "DataVarType",
+                "DataVarName",
+                "DataInitiator",
+                "DataVarScope",
+                "DataDeclarator",
+                "DataPointer",
+                "DataFixUnit",
+            }
             for kkkk in kkk:
                 if str(kkkk) != "DataWhatever":
                     ss.add(str(kkkk))
@@ -1639,9 +1635,7 @@ if __name__ == "__main__":
     if args.token != None:
         with open(args.token, "r") as token_file:
             token_info = token_file.read()
-            split_by_duck = False
-            if "duck" in token_info:
-                split_by_duck = True
+            split_by_duck = "duck" in token_info
             token_info = token_info.split("\n")
             if split_by_duck:
                 token_info = [i.split("duck") for i in token_info]
