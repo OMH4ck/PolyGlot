@@ -8,10 +8,10 @@
 typedef void *yyscan_t;
 #endif
 
-#define YYSTYPE REPLACEME_STYPE
-#define YYLTYPE REPLACEME_LTYPE
+#define YYSTYPE FF_STYPE
+#define YYLTYPE FF_LTYPE
 
-struct REPLACEME_CUST_LTYPE {
+struct FF_CUST_LTYPE {
   int first_line;
   int first_column;
   int last_line;
@@ -27,8 +27,8 @@ struct REPLACEME_CUST_LTYPE {
   std::vector<void *> param_list;
 };
 
-#define REPLACEME_LTYPE REPLACEME_CUST_LTYPE
-#define REPLACEME_LTYPE_IS_DECLARED 1
+#define FF_LTYPE FF_CUST_LTYPE
+#define FF_LTYPE_IS_DECLARED 1
 
 #define YY_USER_ACTION                                                         \
   yylloc->first_line = yylloc->last_line;                                      \
