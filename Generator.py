@@ -77,7 +77,7 @@ def expect():
 
     def func():
         id[0] += 1
-        return "v" + str(id[0])
+        return f"v{str(id[0])}"
 
     return func
 
@@ -140,14 +140,7 @@ class Symbol:
 
     def analyze(self):
         token = self.analyze_item(self.name)
-        if (
-            token == "_COMMA_"
-            or token == "_QUOTA_"
-            or token == "_LD_"
-            or token == "_RD_"
-            or "_QUEAL_"
-        ):
-            self.name = self.name.replace("'", "")
+        self.name = self.name.replace("'", "")
         if self.name.isupper():
             self.isTerminator = True
         if token == "_IDENTIFIER_":
@@ -175,11 +168,7 @@ class Symbol:
             return "_VAR_"
 
     def __str__(self):
-        return "name:%s, isTerminator:%s, isId:%s" % (
-            self.name,
-            self.isTerminator,
-            self.isId,
-        )
+        return f"name:{self.name}, isTerminator:{self.isTerminator}, isId:{self.isId}"
 
 
 class Case:
@@ -192,15 +181,15 @@ class Case:
         expected_value_generator=expect(),
     ):
         self.caseidx = caseidx
-        self.symbolList = list()
-        self.idTypeList = list()
+        self.symbolList = []
+        self.idTypeList = []
         self.isEmpty = isEmpty
         self.prec = prec
         self.datatype_rules = self.parse_datatype_rules(data_type_to_replace)
 
     def parse_datatype_rules(self, s):
         res = []
-        if s == None:
+        if s is None:
             return res
 
         s = s.split(";")
@@ -233,29 +222,26 @@ class Case:
         return member_list
 
     def __str__(self):
-        symbol = ""
-        for i in self.symbolList:
-            symbol += "(" + str(i) + ")" + ","
+        symbol = "".join(f"({str(i)})," for i in self.symbolList)
         symbol = symbol[:-1]
-        res = "caseidx:%d, SymbolList:(%s), isEmpty:%s, prec: %s\n" % (
+        return "caseidx:%d, SymbolList:(%s), isEmpty:%s, prec: %s\n" % (
             self.caseidx,
             symbol,
             self.isEmpty,
             self.prec,
         )
-        return res
 
 
 class Genclass:
     def __init__(self, name, memberList=None, caseList=None):
-        if memberList == None:
-            memberList = dict()
-        if caseList == None:
-            caseList = list()
+        if memberList is None:
+            memberList = {}
+        if caseList is None:
+            caseList = []
 
         self.name = underline_to_hump(name)
         self.memberList = memberList
-        self.caseList = list()
+        self.caseList = []
         self.isTerminatable = False
 
     def merge_member_list(self, current_member_list):
@@ -269,12 +255,12 @@ class Genclass:
         name = self.name
         members = "("
         for k, v in self.memberList.items():
-            members += k + ":" + str(v) + ","
-        members = members[:-1] + ")"
+            members += f"{k}:{str(v)},"
+        members = f"{members[:-1]})"
         case = "("
         for i in self.caseList:
-            case += str(i) + ","
-        case = case[:-1] + ")"
+            case += f"{str(i)},"
+        case = f"{case[:-1]})"
 
         return "Genclass:[name:%s,\n memberList:%s,\n caseList:%s]" % (
             name,
@@ -363,9 +349,7 @@ def parseGrammar(grammarDescription):
     # print "*************"
     cases = content[1:]
     cases = [i.lstrip() for i in cases]
-    caseIndex = 0
-
-    for c in cases:
+    for caseIndex, c in enumerate(cases):
         ptn = re.compile("\*\*.*\*\*")
         data_type_to_replace = re.search(ptn, c)  # ptn.findall(c)
         if data_type_to_replace != None:
@@ -375,12 +359,11 @@ def parseGrammar(grammarDescription):
             c = re.sub(ptn, "", c)
 
         # print c
-        tmp_c = (c + "%").split("%")
+        tmp_c = f"{c}%".split("%")
         c = tmp_c[0].strip()
         if tmp_c[1] != "":
-            tmp_c[1] = "%" + tmp_c[1]
+            tmp_c[1] = f"%{tmp_c[1]}"
         case = Case(caseIndex, len(c) == 0, tmp_c[1], data_type_to_replace)
-        caseIndex += 1
         symbols = c.split(" ")
         case.symbolList = [Symbol(s) for s in symbols]
         # print(symbols)
@@ -399,15 +382,17 @@ def is_list(class_name):
     # print class_name#list
     class_name = underline_to_hump(class_name)
 
-    for i in allClass:
-        if class_name == i.name:
-            for member in i.memberList.keys():
-                if underline_to_hump(member) == class_name:
-                    return True
-
-            return False
-
-    return False
+    return next(
+        (
+            any(
+                underline_to_hump(member) == class_name
+                for member in i.memberList.keys()
+            )
+            for i in allClass
+            if class_name == i.name
+        ),
+        False,
+    )
 
 
 def genClassDef(current_class, parent_class):
@@ -419,7 +404,7 @@ def genClassDef(current_class, parent_class):
         definition of this class in cpp: string
     """
     res = "class "
-    res += current_class.name + ":"
+    res += f"{current_class.name}:"
     res += "public " + "Node " + "{\n"
     res += "public:\n" + "\tvirtual void deep_delete();\n"
     res += "\tvirtual IR* translate(vector<IR*> &v_ir_collector);\n"
@@ -461,7 +446,7 @@ def genClassDef(current_class, parent_class):
 
 
 def genDeepDelete(current_class):
-    res = "void " + current_class.name + "::deep_delete(){\n"
+    res = f"void {current_class.name}" + "::deep_delete(){\n"
     for member_name, count in current_class.memberList.items():
         if count == 1:
             res += "\t" + "SAFEDELETE(" + member_name + "_);\n"
@@ -486,7 +471,7 @@ def translateOneMember(member_name, variable_name):
         no \t at the front
 
     """
-    return "auto " + variable_name + "= SAFETRANSLATE(" + member_name + ");\n"
+    return f"auto {variable_name}= SAFETRANSLATE({member_name}" + ");\n"
 
 
 def findOperator(symbol_list):
@@ -494,7 +479,7 @@ def findOperator(symbol_list):
     idx = 0
     while idx < len(symbol_list):
         if symbol_list[idx].isTerminator == True:
-            res += get_match_string(symbol_list[idx].name) + " "
+            res += f"{get_match_string(symbol_list[idx].name)} "
             symbol_list.remove(symbol_list[idx])
             idx -= 1
         else:
@@ -516,20 +501,18 @@ def get_match_string(token):
 def findLastOperator(symbol_list):
     res = ""
     idx = 0
-    if idx < len(symbol_list):
-        if symbol_list[idx].isTerminator == True:
-            res += get_match_string(symbol_list[idx].name)
-            symbol_list.remove(symbol_list[idx])
+    if idx < len(symbol_list) and symbol_list[idx].isTerminator == True:
+        res += get_match_string(symbol_list[idx].name)
+        symbol_list.remove(symbol_list[idx])
 
-    is_case_end = True
-    for i in range(idx, len(symbol_list)):
-        if symbol_list[i].isTerminator == False:
-            is_case_end = False
-            break
-    if is_case_end == True:
+    is_case_end = all(
+        symbol_list[i].isTerminator != False
+        for i in range(idx, len(symbol_list))
+    )
+    if is_case_end:
         i = 0
         while i < len(symbol_list):
-            res += " " + get_match_string(symbol_list[i].name)
+            res += f" {get_match_string(symbol_list[i].name)}"
             symbol_list.remove(symbol_list[i])
 
     res = res.strip()
@@ -552,9 +535,7 @@ def findOperand(symbol_list):
 
 
 def strip_quote(s):
-    if s[0] == '"' and s[-1] == '"':
-        return s[1:-1]
-    return s
+    return s[1:-1] if s[0] == '"' and s[-1] == '"' else s
 
 
 def collectOpFromCase(symbol_list):
@@ -567,18 +548,14 @@ def collectOpFromCase(symbol_list):
         (operands, operators): tuple(list, list)
     """
 
-    operands = list()
-    operators = list()
+    operators = [findOperator(symbol_list)]
 
-    operators.append(findOperator(symbol_list))
-    operands.append(findOperand(symbol_list))
+    operands = [findOperand(symbol_list)]
     operators.append(findOperator(symbol_list))
     operands.append(findOperand(symbol_list))
     operators.append(findLastOperator(symbol_list))
 
-    res = ([i for i in operands if i != ""], [i for i in operators])
-
-    return res
+    return [i for i in operands if i != ""], list(operators)
 
 
 def translateOneIR(ir_argument, classname, irname):
@@ -593,30 +570,19 @@ def translateOneIR(ir_argument, classname, irname):
     operators = ir_argument[1]
 
     for i in range(3):
-        operators[i] = '"' + operators[i] + '"'
+        operators[i] = f'"{operators[i]}"'
 
-    res_operand = ""
-
-    for operand in operands:
-        res_operand += ", " + operand
-
-    res_operator = "OP3(" + operators[0] + "," + operators[1] + "," + operators[2] + ")"
+    res_operand = "".join(f", {operand}" for operand in operands)
+    res_operator = f"OP3({operators[0]},{operators[1]},{operators[2]})"
     # operand_num = len(operands)
 
     if irname != "res":
-        irname = "auto " + irname
+        irname = f"auto {irname}"
 
-    res = (
-        irname
-        + " = new IR("
-        + "k"
-        + underline_to_hump(classname)
-        + ", "
-        + res_operator
-        + res_operand
+    return (
+        f"{irname} = new IR(k{underline_to_hump(classname)}, {res_operator}{res_operand}"
         + ");\n"
     )
-    return res
 
 
 def gen_tmp():
@@ -624,7 +590,7 @@ def gen_tmp():
 
     def get_tmp():
         count[0] += 1
-        return "tmp" + str(count[0])
+        return f"tmp{str(count[0])}"
 
     return get_tmp
 
@@ -632,9 +598,8 @@ def gen_tmp():
 def transalteOneCase(current_class, case_idx):
     current_case = current_class.caseList[case_idx]
     member_list = current_class.memberList
-    symbols = [i for i in current_case.symbolList]
-    process_queue = list()
-    name_idx_dict = dict()
+    symbols = list(current_case.symbolList)
+    process_queue = []
     res = ""
     """
     Handle Empty Case Here
@@ -646,10 +611,7 @@ def transalteOneCase(current_class, case_idx):
             + ', string(""));\n'
         )
 
-    for name, count in member_list.items():
-        if count > 1:
-            name_idx_dict[name] = 1
-
+    name_idx_dict = {name: 1 for name, count in member_list.items() if count > 1}
     get_tmp = gen_tmp()
     for symbol in symbols:
         if symbol.isTerminator == False:
@@ -657,20 +619,18 @@ def transalteOneCase(current_class, case_idx):
             new_symbol = Symbol(tmp_name, False, symbol.isId)
             process_queue.append(new_symbol)
             cur_symbol_real_name = ""
-            if symbol.name in name_idx_dict.keys():
-                cur_symbol_real_name = (
-                    symbol.name + "_" + str(name_idx_dict[symbol.name]) + "_"
-                )
+            if symbol.name in name_idx_dict:
+                cur_symbol_real_name = f"{symbol.name}_{str(name_idx_dict[symbol.name])}_"
                 name_idx_dict[symbol.name] += 1
             else:
-                cur_symbol_real_name = symbol.name + "_"
+                cur_symbol_real_name = f"{symbol.name}_"
             res += "\t\t" + translateOneMember(cur_symbol_real_name, tmp_name)
         else:
             process_queue.append(symbol)
 
-    while len(process_queue) != 0:
+    while process_queue:
         ir_info = collectOpFromCase(process_queue)
-        if len(process_queue) == 0:
+        if not process_queue:
             res += "\t\t" + translateOneIR(ir_info, current_class.name, "res")
         else:
             tmp_name = get_tmp()
@@ -689,15 +649,11 @@ def genGenerateOneCase(current_class, case_idx):
     if case_list.isEmpty == True:
         return "\n"
 
-    counter = dict()
-
-    for key in current_class.memberList.keys():
-        counter[key] = 1
-
+    counter = {key: 1 for key in current_class.memberList.keys()}
     for sym in case_list.symbolList:
         if sym.isTerminator:
             continue
-        membername = sym.name + "_"
+        membername = f"{sym.name}_"
         if current_class.memberList[sym.name] > 1:
             membername = "%s_%d_" % (sym.name, counter[sym.name])
             counter[sym.name] += 1
@@ -718,12 +674,8 @@ def getNotSelfContainCases(current_class):
     case_idx_list = []
     class_name = hump_to_underline(current_class.name)
     for case in current_class.caseList:
-        flag = False
-        for i in case.symbolList:
-            if i.name == class_name:
-                flag = True
-                break
-        if flag == False:
+        flag = any(i.name == class_name for i in case.symbolList)
+        if not flag:
             case_idx_list.append(case.caseidx)
 
     return case_idx_list
@@ -734,23 +686,17 @@ def genGenerate(current_class):
     has_switch = case_nums != 1
     class_name = underline_to_hump(current_class.name)
 
-    res = "void " + class_name + "::generate(){\n"
+    res = f"void {class_name}" + "::generate(){\n"
     not_self_contained_list = getNotSelfContainCases(current_class)
     not_len = len(not_self_contained_list)
-    # print(class_name)
-    # print(not_self_contained_list)
-    has_default = True
     if case_nums == 0:
         print(class_name)
-    if not_len / case_nums > 0.8:
-        # print("FUCK")
-        has_default = False
-
-    if has_default == False:
-        res += "\tGENERATESTART(%d)\n\n" % (case_nums)
-    else:
-        res += "\tGENERATESTART(%d)\n\n" % (case_nums * 100)
-
+    has_default = not_len / case_nums <= 0.8
+    res += (
+        "\tGENERATESTART(%d)\n\n" % (case_nums * 100)
+        if has_default
+        else "\tGENERATESTART(%d)\n\n" % (case_nums)
+    )
     # Handling class need specific variable like identifier
     specific = is_specific(current_class.name)
     if specific[0]:
@@ -785,12 +731,12 @@ def genGenerate(current_class):
 }
 """
 
-    if has_switch and has_default == False:
+    if has_switch and not has_default:
         res += "\tSWITCHEND\n"
     elif has_default:
         tmp_str = ""
         for i in range(not_len):
-            tmp_str += "CASESTART(" + str(i) + ")\n"
+            tmp_str += f"CASESTART({str(i)}" + ")\n"
 
             tmp_str += genGenerateOneCase(current_class, not_self_contained_list[i])
 
@@ -812,14 +758,13 @@ def genTranslateBegin(class_name):
 
     ir_handlers = semanticRule["IRHandlers"]
 
-    res = list()
+    res = []
     for item in ir_handlers:
         if item["IRType"] == class_name:
-            for handler in item["PreHandler"]:
-                res.append(
-                    handler["Function"] + "(" + ", ".join(handler["Args"]) + ");"
-                )
-
+            res.extend(
+                handler["Function"] + "(" + ", ".join(handler["Args"]) + ");"
+                for handler in item["PreHandler"]
+            )
     return "\t" + "\n\t".join(res) + "\n"
 
 
@@ -828,14 +773,14 @@ def genTranslateEnd(class_name):
     dict(): class_name --> api_dict
     """
 
-    res = list()
+    res = []
     ir_handlers = semanticRule["IRHandlers"]
     for item in ir_handlers:
         if item["IRType"] == class_name:
-            for handler in item["PostHandler"]:
-                res.append(
-                    handler["Function"] + "(" + ", ".join(handler["Args"]) + ");"
-                )
+            res.extend(
+                handler["Function"] + "(" + ", ".join(handler["Args"]) + ");"
+                for handler in item["PostHandler"]
+            )
     return "\t" + "\n\t".join(res) + "\n"
 
 
@@ -849,29 +794,20 @@ def genTranslate(current_class):
     has_switch = len(current_class.caseList) != 1
     class_name = underline_to_hump(current_class.name)
 
-    res = "IR*  " + class_name + "::translate(vector<IR *> &v_ir_collector){\n"
+    res = f"IR*  {class_name}" + "::translate(vector<IR *> &v_ir_collector){\n"
     res += "\tTRANSLATESTART\n\n"
 
     res += genTranslateBegin(current_class.name)
     # Handling class need specific variable like identifier
     specific = is_specific(current_class.name)
     if specific[0]:
-        if "iteral" in class_name and specific[1] == "string":
-            res += (
-                "\t\tres = new IR(k"
-                + current_class.name
-                + ", "
-                + specific[1]
-                + "_val_, data_type_, scope_, data_flag_);\n"
-            )
-        else:
-            res += (
-                "\t\tres = new IR(k"
-                + current_class.name
-                + ", "
-                + specific[1]
-                + "_val_, data_type_, scope_, data_flag_);\n"
-            )
+        res += (
+            "\t\tres = new IR(k"
+            + current_class.name
+            + ", "
+            + specific[1]
+            + "_val_, data_type_, scope_, data_flag_);\n"
+        )
         res += genTranslateEnd(current_class.name)
         res += "\n\tTRANSLATEEND\n}\n\n"
         return res
@@ -900,27 +836,29 @@ def genTranslate(current_class):
 
 
 def genDataTypeEnum():
-    res = "enum DATATYPE{"
-
-    res += """
+    res = (
+        "enum DATATYPE{"
+        + """
 #define DECLARE_TYPE(v)  \\
     k##v,
 ALLDATATYPE(DECLARE_TYPE)
 #undef DECLARE_TYPE
 """
+    )
     res += "};\n"
     return res
 
 
 def genClassTypeEnum():
-    res = "enum NODETYPE{"
-
-    res += """
+    res = (
+        "enum NODETYPE{"
+        + """
 #define DECLARE_TYPE(v)  \\
     v,
 ALLTYPE(DECLARE_TYPE)
 #undef DECLARE_TYPE
 """
+    )
     res += "};\n"
 
     res += "typedef NODETYPE IRTYPE;\n"
@@ -928,16 +866,16 @@ ALLTYPE(DECLARE_TYPE)
 
 
 def genClassDeclaration(class_list):
-    res = ""
-
-    res += """
+    return (
+        ""
+        + """
 #define DECLARE_CLASS(v) \\
     class v ; \
 
 ALLCLASS(DECLARE_CLASS);
 #undef DECLARE_CLASS
 """
-    return res
+    )
 
 
 def genTokenForOneKeyword(keyword, token):
@@ -1067,7 +1005,7 @@ def genBisonPrec(token_dict):
     output:
         "%right xxx yyy": string
     """
-    precdict = dict()
+    precdict = {}
     for token_name, token in token_dict.items():
         if token.prec != 0:
             if token.prec not in precdict:
@@ -1076,11 +1014,9 @@ def genBisonPrec(token_dict):
 
     res = ""
 
-    for key, value in precdict.items():
-        tmp = ""
-        tmp_name = ""
-        for token_name in value:
-            tmp += " %s" % token_name
+    tmp_name = ""
+    for value in precdict.values():
+        tmp = "".join(f" {token_name}" for token_name in value)
         res += "%%%s %s\n" % (token_dict[value[0]].assoc, tmp)
 
     return res
@@ -1107,7 +1043,7 @@ def genBisonToken(token_dict):
             continue
         if counter % 8 == 0:
             token_res += "\n%token"
-        token_res += " " + token_name
+        token_res += f" {token_name}"
         counter += 1
 
     token_res += type_token
@@ -1121,13 +1057,10 @@ def genBisonToken(token_dict):
 
 
 def genBisonDataType(extra_data_type, allClass):
-    res = ""
-    for k, v in extra_data_type.items():
-        res += "\t%s\t%s;\n" % (v, k)
-
+    res = "".join("\t%s\t%s;\n" % (v, k) for k, v in extra_data_type.items())
     for c in allClass:
         underline_name = hump_to_underline(c.name)
-        res += "\t%s\t%s;\n" % (c.name + " *", underline_name + "_t")
+        res += "\t%s\t%s;\n" % (f"{c.name} *", f"{underline_name}_t")
 
     return res
 
@@ -1138,18 +1071,16 @@ gTopInputType = "Program"
 def genBisonTypeDefOneCase(gen_class, caseidx):
     case = gen_class.caseList[caseidx]
     symbol_name_list = []
-    counter = dict()
     res = []
 
     # TODO: Fix hardcoded string.
     if gen_class.name == gTopInputType:
         res.append("$$ = result;\n")
-        res.append("$$->case_idx_ = CASE%d;\n" % caseidx)
     else:
         res.append("$$ = new %s();\n" % (gen_class.name))
-        res.append("$$->case_idx_ = CASE%d;\n" % caseidx)
-
+    res.append("$$->case_idx_ = CASE%d;\n" % caseidx)
     if case.isEmpty == False:
+        counter = {}
         # tmp = "\t/* empty */ {\n \t\t%s \t}\n"
         for idx in range(len(case.symbolList)):
             sym = case.symbolList[idx]
@@ -1168,16 +1099,16 @@ def genBisonTypeDefOneCase(gen_class, caseidx):
         # Handling class which need specific variable
         specific = is_specific(gen_class.name)
         if specific[0]:
-            res = []
-            res.append("$$ = new %s();\n" % (gen_class.name))
-            res.append("$$->%s_val_ = $%d;\n" % (specific[1], 1))
+            res = [
+                "$$ = new %s();\n" % gen_class.name,
+                "$$->%s_val_ = $%d;\n" % (specific[1], 1),
+            ]
             if specific[1] == "string":
                 res.append("free($%d);\n" % 1)
 
-    data_type_rule = ""
-    for dtr in case.datatype_rules:
-        data_type_rule += genDataTypeOneRule(dtr) + "\n"
-
+    data_type_rule = "".join(
+        genDataTypeOneRule(dtr) + "\n" for dtr in case.datatype_rules
+    )
     res.append(data_type_rule[2:])
     if gen_class.name == gTopInputType:
         res.append("$$ = NULL;\n")
@@ -1198,7 +1129,7 @@ def genBisonTypeDef(gen_class):
 
     # res[-2] = ";"
 
-    return res[0:-2] + ";\n"
+    return res[:-2] + ";\n"
 
 
 def genBisonDestructor(destructorDict, extra_data_type):
@@ -1208,9 +1139,9 @@ def genBisonDestructor(destructorDict, extra_data_type):
         typename = ""
         for i in name:
             if i in extra_data_type.keys():
-                typename += " <%s>" % (i)
+                typename += f" <{i}>"
             else:
-                typename += " <%s_t>" % (i)
+                typename += f" <{i}_t>"
                 print(name)
                 assert 0
         if dest_define == "EMPTY":
@@ -1279,8 +1210,7 @@ int yyerror(YYLTYPE* llocp, Program * result, yyscan_t scanner, const char *msg)
 
 
 def genGenIRHeader(allClass, all_datatype):
-    res = "#ifndef __GEN_IR_H__\n"
-    res += "#define __GEN_IR_H__\n"
+    res = "#ifndef __GEN_IR_H__\n" + "#define __GEN_IR_H__\n"
     res += '#include "define.h"\n'
     res += '#include "ast.h"\n'
     res += '#include "ir.h"\n'
@@ -1382,12 +1312,11 @@ def genTestSrc():
     basic_unit = ",".join(semanticRule["BasicUnit"])
     content = content.replace("__SEMANTIC_BASIC_UNIT__", basic_unit)
     content = content.replace(
-        "__SEMANTIC_BUILTIN_OBJ__", '"%s"' % semanticRule["BuiltinObjFile"]
+        "__SEMANTIC_BUILTIN_OBJ__", f'"{semanticRule["BuiltinObjFile"]}"'
     )
     op_rules = []
     for oprule in semanticRule["OPRule"]:
-        tmp = []
-        tmp.append(str(oprule["OperandNum"]))
+        tmp = [str(oprule["OperandNum"])]
         tmp += oprule["Operator"]
         tmp.append(oprule["OperandLeftType"])
         if oprule["OperandNum"] == 2:
@@ -1395,7 +1324,7 @@ def genTestSrc():
         tmp.append(oprule["ResultType"])
         tmp.append(oprule["InferDirection"])
         tmp += oprule["Property"]
-        op_rules.append('"%s"' % " # ".join(tmp))
+        op_rules.append(f'"{" # ".join(tmp)}"')
 
     op_rules = ", ".join(op_rules)
     content = content.replace("__SEMANTIC_OP_RULE__", op_rules)
@@ -1409,7 +1338,7 @@ def genTestSrc():
             convert_chain += '{"%s", "%s"},' % (i[kk], i[kk + 1])
 
     content = content.replace("__SEMANTIC_CONVERT_CHAIN__", convert_chain[:-1])
-    basic_types = ['"%s"' % i for i in semanticRule["BasicTypes"]]
+    basic_types = [f'"{i}"' for i in semanticRule["BasicTypes"]]
     basic_types = ", ".join(basic_types)
     content = content.replace("__SEMANTIC_BASIC_TYPES__", basic_types)
     content = genToStringCase(content)
@@ -1420,10 +1349,7 @@ def genTestSrc():
 def genToStringCase(content):
     global literalValue
     global allClass
-    tmp_set = set()
-    for c in allClass:
-        tmp_set.add(underline_to_hump(c.name))
-
+    tmp_set = {underline_to_hump(c.name) for c in allClass}
     # res = ""
     basic_type_map = {}
     for key, value in literalValue.items():
@@ -1445,15 +1371,13 @@ def genToStringCase(content):
     float_literal_cmp = ""
     int_literal_cmp = ""
     for key, value in basic_type_map.items():
-        if key == "string":
-            for kk in value:
-                string_literal_cmp += "\tif (type == k%s) return true;\n" % kk
-        elif key == "float":
-            for kk in value:
+        for kk in value:
+            if key == "float":
                 float_literal_cmp += "\tif (type == k%s) return true;\n" % kk
-        elif key == "int":
-            for kk in value:
+            elif key == "int":
                 int_literal_cmp += "\tif (type == k%s) return true;\n" % kk
+            elif key == "string":
+                string_literal_cmp += "\tif (type == k%s) return true;\n" % kk
     # res = "switch(type){\n%s\n}" % res
     content = content.replace("__STRINGLITERALCASE__", string_literal_cmp)
     content = content.replace("__INTLITERALCASE__", int_literal_cmp)
@@ -1464,7 +1388,7 @@ def genToStringCase(content):
 def format_output_files():
     def format_file(filename):
         formatter = 'clang-format -style="{BasedOnStyle: LLVM, IndentWidth: 4, ColumnLimit: 1000}" -i'
-        os.system("%s %s" % (formatter, filename))
+        os.system(f"{formatter} {filename}")
 
     format_file(configuration.ast_header_output_path)
     format_file(configuration.ast_src_output_path)
@@ -1486,13 +1410,13 @@ def is_non_term_case(a_case):
 
 
 def build_convert_ir_type_map(all_class):
-    result = dict()
+    result = {}
 
     for c in all_class:
         c_name = c.name
         for case in c.caseList:
             node = is_non_term_case(case)
-            if node == None:
+            if node is None:
                 continue
             if node not in result:
                 result[node] = set()
@@ -1513,25 +1437,22 @@ def can_be_converted(a, b, graph):
     parent_a = set()
     visited = set()
 
-    bfs = list()
-    bfs.append(a)
-    while len(bfs) != 0:
-        new_bfs = list()
+    bfs = [a]
+    while bfs:
+        new_bfs = []
         for i in bfs:
             if i in parent_a:
                 continue
             parent_a.add(i)
             if i not in graph:
                 continue
-            for node in graph[i]:
-                if node not in visited:
-                    new_bfs.append(node)
+            new_bfs.extend(node for node in graph[i] if node not in visited)
         bfs = new_bfs
 
     bfs.append(b)
     visited = set()
-    while len(bfs) != 0:
-        new_bfs = list()
+    while bfs:
+        new_bfs = []
         for i in bfs:
             visited.add(i)
             if i in parent_a:
@@ -1539,9 +1460,7 @@ def can_be_converted(a, b, graph):
                 return i
             if i not in graph:
                 continue
-            for node in graph[i]:
-                if node not in visited:
-                    new_bfs.append(node)
+            new_bfs.extend(node for node in graph[i] if node not in visited)
         bfs = new_bfs
 
     # print("No common parent")
