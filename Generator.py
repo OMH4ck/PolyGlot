@@ -506,8 +506,7 @@ def findLastOperator(symbol_list):
         symbol_list.remove(symbol_list[idx])
 
     is_case_end = all(
-        symbol_list[i].isTerminator != False
-        for i in range(idx, len(symbol_list))
+        symbol_list[i].isTerminator != False for i in range(idx, len(symbol_list))
     )
     if is_case_end:
         i = 0
@@ -620,7 +619,9 @@ def transalteOneCase(current_class, case_idx):
             process_queue.append(new_symbol)
             cur_symbol_real_name = ""
             if symbol.name in name_idx_dict:
-                cur_symbol_real_name = f"{symbol.name}_{str(name_idx_dict[symbol.name])}_"
+                cur_symbol_real_name = (
+                    f"{symbol.name}_{str(name_idx_dict[symbol.name])}_"
+                )
                 name_idx_dict[symbol.name] += 1
             else:
                 cur_symbol_real_name = f"{symbol.name}_"
@@ -889,7 +890,7 @@ def genAllTokensHeader(token_dict):
     content = """
 #ifndef __PARSER_TOKEN_H__
 #define __PARSER_TOKEN_H__
-enum TOKEN{
+enum TOKENSTATE{
     TOKEN_NONE,
     __TOKEN_STATE__
 };
