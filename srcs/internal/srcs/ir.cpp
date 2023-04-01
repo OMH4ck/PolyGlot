@@ -300,3 +300,30 @@ void set_scope_translation_flag(bool flag) {
   }
 }
 bool get_scope_translation_flag() { return scope_tranlation; }
+
+unsigned int calc_node_num(IR *root) {
+  unsigned int res = 0;
+  if (root->left_) res += calc_node_num(root->left_);
+  if (root->right_) res += calc_node_num(root->right_);
+
+  return res + 1;
+}
+
+bool contain_fixme(IR *ir) {
+  bool res = false;
+  if (ir->left_ || ir->right_) {
+    if (ir->left_) {
+      res = res || contain_fixme(ir->left_);
+    }
+    if (ir->right_) {
+      res = res || contain_fixme(ir->right_);
+    }
+    return res;
+  }
+
+  if (!ir->str_val_.empty() && ir->str_val_ == "FIXME") {
+    return true;
+  }
+
+  return false;
+}

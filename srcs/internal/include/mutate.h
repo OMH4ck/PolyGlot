@@ -68,8 +68,6 @@ class Mutator {
   map<IRTYPE, set<IRTYPE>> m_convertable_map_;
 };
 
-unsigned int calc_node_num(IR *root);
-bool contain_fixme(IR *);
 }  // namespace mutation
 }  // namespace polyglot
 #endif

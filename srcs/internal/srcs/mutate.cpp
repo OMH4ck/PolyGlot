@@ -445,14 +445,6 @@ void Mutator::extract_struct(IR *root) {
   }
 }
 
-unsigned int calc_node_num(IR *root) {
-  unsigned int res = 0;
-  if (root->left_) res += calc_node_num(root->left_);
-  if (root->right_) res += calc_node_num(root->right_);
-
-  return res + 1;
-}
-
 bool Mutator::can_be_mutated(IR *cur) {
   // #ifdef SYNTAX_ONLY
   // return true;
@@ -468,23 +460,5 @@ bool Mutator::can_be_mutated(IR *cur) {
   // #endif
 }
 
-bool contain_fixme(IR *ir) {
-  bool res = false;
-  if (ir->left_ || ir->right_) {
-    if (ir->left_) {
-      res = res || contain_fixme(ir->left_);
-    }
-    if (ir->right_) {
-      res = res || contain_fixme(ir->right_);
-    }
-    return res;
-  }
-
-  if (!ir->str_val_.empty() && ir->str_val_ == "FIXME") {
-    return true;
-  }
-
-  return false;
-}
 }  // namespace mutation
 }  // namespace polyglot

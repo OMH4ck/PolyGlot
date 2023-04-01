@@ -95,4 +95,7 @@ IR *locate_parent(IR *root, IR *old_ir);
 
 void deep_delete(IR *root);
 
+unsigned int calc_node_num(IR *root);
+bool contain_fixme(IR *);
+
 #endif

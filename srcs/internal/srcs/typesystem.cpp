@@ -3,7 +3,6 @@
 
 #include "config_misc.h"
 #include "define.h"
-#include "mutate.h"
 #include "utils.h"
 #include "var_definition.h"
 
@@ -167,7 +166,7 @@ bool TypeSystem::type_fix_framework(IR *root) {
   while (!q.empty()) {
     auto cur = q.front();
     if (recursive_counter == 1) {
-      int tmp_count = mutation::calc_node_num(cur);
+      int tmp_count = calc_node_num(cur);
       node_count += tmp_count;
       if ((tmp_count > 250 || node_count > 1500) &&
           is_internal_obj_setup == false) {
@@ -1964,17 +1963,17 @@ IR *TypeSystem::locate_mutated_ir(IR *root) {
       return locate_mutated_ir(root->left_);
     }
 
-    if (mutation::contain_fixme(root->right_) == false) {
+    if (contain_fixme(root->right_) == false) {
       return locate_mutated_ir(root->left_);
     }
-    if (mutation::contain_fixme(root->left_) == false) {
+    if (contain_fixme(root->left_) == false) {
       return locate_mutated_ir(root->right_);
     }
 
     return root;
   }
 
-  if (mutation::contain_fixme(root)) return root;
+  if (contain_fixme(root)) return root;
   return NULL;
 }
 
@@ -2057,7 +2056,7 @@ bool TypeSystem::top_fix(IR *root) {
     } else {
       // if (root->type_ == kAssignmentExpression)
       if (root->type_ == gen::GetFixIRType() || root->str_val_ == "FIXME") {
-        if (mutation::contain_fixme(root) == false) continue;
+        if (contain_fixme(root) == false) continue;
 
         bool flag = type_inference_new(root, 0);
         if (!flag) {
@@ -2096,7 +2095,7 @@ bool TypeSystem::validate_syntax_only(IR *root) {
   while (!q.empty()) {
     auto cur = q.front();
     q.pop();
-    int tmp_count = mutation::calc_node_num(cur);
+    int tmp_count = calc_node_num(cur);
     node_count += tmp_count;
     if (tmp_count > 250 || node_count > 1500) {
       connect_back(m_save);
