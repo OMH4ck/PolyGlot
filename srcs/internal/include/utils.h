@@ -10,8 +10,6 @@
 #include <string_view>
 #include <vector>
 
-#include "bison_parser.h"
-#include "flex_lexer.h"
 
 // To Fix
 #include "gen_ir.h"

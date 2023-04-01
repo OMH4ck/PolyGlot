@@ -1,0 +1,8 @@
+'+'  OP_ADD
+';'  OP_SEMI
+'('  OP_LP
+')'  OP_RP
+'{'  OP_LBRACKET
+'}'  OP_RBRACKET
+'='  OP_ASSIGN
+'.'  OP_DOT

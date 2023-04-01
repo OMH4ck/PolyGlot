@@ -60,7 +60,7 @@ def replace_to_hump(content):
         content1 = i.split("\n")
         each_block = ""
         for line in content1:
-            #print hump_to_underline(line)
+            #print(hump_to_underline(line))
             tmp = hump_to_underline(line)
             if(tmp != ""):
                 each_block += tmp + "\n"
@@ -94,13 +94,13 @@ def replace_all_symbol(content, replace_dict):
     return content.replace(" \n", "\n")
 
 def read_symbol_file(filename):
-    res = dict()
+    res = {}
     with open(filename, 'r') as f:
         content = f.read()
         for line in content.split("\n"):
-            if(line == ""):
+            line = line.split("  ")
+            if(len(line) == 1):
                 continue
-            line = line.split()
             res[line[0]] = line[1]
     return res
 
@@ -109,7 +109,7 @@ def collect_tokens(content):
     desc_list = content.split("---")
     for desc in desc_list:
         for each_line in desc.split("\n"):
-            for each_word in each_line.split():
+            for each_word in each_line.split(" "):
                 if each_word.isupper() and each_word not in res:
                     res.append(each_word)
     return res
@@ -117,7 +117,7 @@ def collect_tokens(content):
 def generate_token_file(token_list, symbols, prec_info):
     res = ""
     #ban_list = ["INTLITERAL", "FLOATLITERAL", "STRINGLITERAL"]
-    ban_list = []
+    ban_list = ["PREC_ARROW_FUNCTION", "OP_DOLLAR", "T_LNUMBER", "T_DNUMBER", "T_STRING", "T_VARIABLE", "T_INLINE_HTML", "T_ENCAPSED_AND_WHITESPACE", "T_CONSTANT_ENCAPSED_STRING", "T_STRING_VARNAME", "T_NUM_STRING"]
     type_dict = {"IDENTIFIER": "sval", "OP": "sval", "INTLITERAL":"ival", "FLOATLITERAL":"fval", "STRINGLITERAL":"sval"}
     for token in token_list:
         if token == "\n" or token in ban_list:
@@ -126,6 +126,8 @@ def generate_token_file(token_list, symbols, prec_info):
         for k, v in symbols.items():
             if(v == token):
                 token2 = '"' + k[1:-1] + '"'
+                if(token2 == '"""'):
+                    token2 = '"\\""'
 
         prec_idx = 0
         assoc = "0"
@@ -139,7 +141,7 @@ def generate_token_file(token_list, symbols, prec_info):
             if(k == token):
                 ttype = v
 
-        res += "%s %d %s %s %s\n" % (token, prec_idx, assoc, token2, ttype)
+        res += "%sduck%dduck%sduck%sduck%s\n" % (token, prec_idx, assoc, token2, ttype)
     return res
 
 def replace_data_type(content):
@@ -183,9 +185,9 @@ def analyze_ff_info(info):
     if(info == ''):
         return res
 
-    info = info.split("\n")   
+    info = info.split("\n")
     prec_idx = 1
-   
+
     for line in info:
         if(line == ""):
             continue
@@ -212,6 +214,9 @@ if __name__ == "__main__":
             print(i)
     elif(sys.argv[1] == "-t"):
         symbols_replace = read_symbol_file("to_replace")
+        print(symbols_replace, file=sys.stderr)
+
+        #TOFIX: What is this for?
         symbols_replace["_P "] = " "
         symbols_replace["prec op"] = "prec OP"
         print(replace_all_symbol(content, symbols_replace).strip())
@@ -220,11 +225,5 @@ if __name__ == "__main__":
         prec_info = analyze_ff_info(ff_info)
         token_list =  collect_tokens(content)
         symbols_replace = read_symbol_file("to_replace")
-       # symbols_replace["'<='"] = "LESS_EQUALS"
-       # symbols_replace["':='"] = "COLON_EQUALS"
-       # symbols_replace["'!='"] = "NOT_EQUALS"
-       # symbols_replace["'=>'"] = "EQUALS_GREATER"
-       # symbols_replace["'>='"] = "GREATER_EQUALS"
-       # symbols_replace["'->'"] = "PTR_OP"
         print(generate_token_file(token_list, symbols_replace, prec_info))
 

@@ -40,7 +40,7 @@ conan_cmake_install(
 find_package(spdlog)
 
 # TODO: Add more
-list(APPEND SUPPORTED_LANG lua php c)
+list(APPEND SUPPORTED_LANG lua php c simpletest)
 
 set(LANG ${LANG})
 
@@ -72,7 +72,7 @@ include_directories(${AFLPP_DIR})
 add_library(polyglot_lib STATIC srcs/polyglot.cc ${SRC_FILES} ${GENERATED_FILES})
 target_include_directories(polyglot_lib PUBLIC ${CMAKE_SOURCE_DIR}/srcs/internal/include)
 target_include_directories(polyglot_lib PRIVATE ${CMAKE_SOURCE_DIR}/gen/parser)
-target_include_directories(polyglot_lib PRIVATE ${CMAKE_SOURCE_DIR}/gen)
+target_include_directories(polyglot_lib PUBLIC ${CMAKE_SOURCE_DIR}/gen)
 target_include_directories(polyglot_lib PUBLIC ${CMAKE_SOURCE_DIR}/srcs)
 target_compile_options(polyglot_lib PRIVATE -fPIC)
 target_link_libraries(polyglot_lib PRIVATE spdlog::spdlog)
@@ -84,4 +84,5 @@ target_link_options(polyglot_mutator PRIVATE $<$<CONFIG:DEBUG>: -fsanitize=addre
 
 
 include(lint.cmake)
+enable_testing()
 add_subdirectory(tests)

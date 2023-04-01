@@ -1,16 +1,10 @@
-find_package(GTest)
-
-enable_testing()
-
-#add_executable(
-#  manager_test
-#  manager_test.cpp
-#)
-#target_link_libraries(
-#  manager_test
-#  spdlog::spdlog
-#  GTest::gtest_main
-#)
+find_package(GTest REQUIRED)
 
 include(GoogleTest)
-#gtest_discover_tests(manager_test)
+
+# if LANG equals "simpletest" then we are testing the simpletest language
+if (LANG STREQUAL "simpletest")
+  add_executable(simplelang_test simplelang_test.cc)
+  target_link_libraries(simplelang_test GTest::gtest_main polyglot_lib)
+  gtest_discover_tests(simplelang_test)
+endif()
