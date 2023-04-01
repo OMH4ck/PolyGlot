@@ -1,14 +1,16 @@
 #include <gtest/gtest.h>
 
+#include <string_view>
+
 #include "mutate.h"
 #include "utils.h"
 
-TEST(MutatorTest, ParseTest) {
-  const char* kTestCase = R"V0G0N(
-    int a = 1;
-  )V0G0N";
+class ParserTest : public ::testing::TestWithParam<std::string_view> {};
 
-  Program* program_root = parser(kTestCase);
+TEST_P(ParserTest, ParseValidTestCaseReturnNotNull) {
+  std::string_view test_case = GetParam();
+
+  Program* program_root = parser(test_case.data());
   ASSERT_TRUE(program_root != nullptr);
   program_root->deep_delete();
   /*
@@ -21,6 +23,10 @@ TEST(MutatorTest, ParseTest) {
     program_root->deep_delete();
     return 0;
   }
-  program_root->deep_delete();  
+  program_root->deep_delete();
   */
 }
+
+INSTANTIATE_TEST_SUITE_P(ValidTestCase, ParserTest, ::testing::Values(R"V0G0N(
+    int a = 1;
+  )V0G0N"));
