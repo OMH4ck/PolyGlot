@@ -27,6 +27,14 @@ TEST_P(ParserTest, ParseValidTestCaseReturnNotNull) {
   */
 }
 
-INSTANTIATE_TEST_SUITE_P(ValidTestCase, ParserTest, ::testing::Values(R"V0G0N(
+INSTANTIATE_TEST_SUITE_P(ValidTestCase, ParserTest,
+                         ::testing::Values(
+                             R"V0G0N(
     int a = 1;
-  )V0G0N"));
+  )V0G0N",
+                             R"V0G0N(
+    int a = 1;
+    FOR(1){
+      int c = 1;
+    }
+    int b = 2;)V0G0N"));
