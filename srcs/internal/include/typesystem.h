@@ -16,6 +16,10 @@
 
 #include "ir.h"
 
+namespace polyglot {
+
+namespace typesystem {
+
 using std::map;
 using std::set;
 using std::shared_ptr;
@@ -26,9 +30,9 @@ typedef int VALUETYPE;
 typedef int OPTYPE;
 class Scope;
 
-extern unsigned long type_fix_framework_fail_counter;
-extern unsigned long top_fix_fail_counter;
-extern unsigned long top_fix_success_counter;
+// extern unsigned long type_fix_framework_fail_counter;
+// extern unsigned long top_fix_fail_counter;
+// extern unsigned long top_fix_success_counter;
 
 enum FIXORDER {
   LEFT_TO_RIGHT = 0,
@@ -185,5 +189,7 @@ class TypeSystem {
   static void init();
   static void debug();
 };
+}  // namespace typesystem
+}  // namespace polyglot
 
 #endif

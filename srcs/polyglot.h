@@ -16,9 +16,9 @@ class PolyGlotMutator {
   // const std::string &current_input() const { return current_input_; }
 
  private:
-  Mutator g_mutator;
+  polyglot::mutation::Mutator g_mutator;
   std::string current_input_;
-  TypeSystem g_typesystem;
+  polyglot::typesystem::TypeSystem g_typesystem;
   char *g_libary_path;
   char *g_current_input = NULL;
   std::vector<std::string> save_test_cases_;

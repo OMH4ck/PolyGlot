@@ -8,7 +8,10 @@
 #include "var_definition.h"
 
 using namespace std;
-using namespace polyglot;
+namespace polyglot {
+
+namespace typesystem {
+
 #define DBG 0
 #define SOLIDITYFUZZ
 #define dbg_cout \
@@ -164,7 +167,7 @@ bool TypeSystem::type_fix_framework(IR *root) {
   while (!q.empty()) {
     auto cur = q.front();
     if (recursive_counter == 1) {
-      int tmp_count = calc_node_num(cur);
+      int tmp_count = mutation::calc_node_num(cur);
       node_count += tmp_count;
       if ((tmp_count > 250 || node_count > 1500) &&
           is_internal_obj_setup == false) {
@@ -1228,10 +1231,10 @@ vector<map<int, vector<string>>> TypeSystem::collect_all_var_definition_by_type(
       simple_var[t1->first].push_back(*random_pick(t1->second));
   }
 
-  result.push_back(move(simple_var));
-  result.push_back(move(compound_types));
-  result.push_back(move(functions));
-  result.push_back(move(pointer_types));
+  result.push_back(std::move(simple_var));
+  result.push_back(std::move(compound_types));
+  result.push_back(std::move(functions));
+  result.push_back(std::move(pointer_types));
   return result;
 }
 
@@ -1241,7 +1244,7 @@ pair<OPTYPE, vector<int>> TypeSystem::collect_sat_op_by_result_type(
     map<int, vector<string>> &compound_var_map) {
   static map<int, vector<vector<int>>>
       cache;  // map<type, vector<pair<opid, int<operand_1, operand_2>>>
-  auto res = make_pair(0, move(vector<int>(2, 0)));
+  auto res = make_pair(0, std::move(vector<int>(2, 0)));
 
   if (cache.empty()) {
     for (auto &rule : op_rules_) {
@@ -1552,10 +1555,10 @@ void filter_element(map<int, vector<string>> &vars,
   map<int, vector<string>> filtered;
   for (auto t : satisfiable_types) {
     if (vars.find(t) != vars.end()) {
-      filtered[t] = move(vars[t]);
+      filtered[t] = std::move(vars[t]);
     }
   }
-  vars = move(filtered);
+  vars = std::move(filtered);
 }
 
 map<int, vector<set<int>>> TypeSystem::collect_satisfiable_types(
@@ -1961,17 +1964,17 @@ IR *TypeSystem::locate_mutated_ir(IR *root) {
       return locate_mutated_ir(root->left_);
     }
 
-    if (contain_fixme(root->right_) == false) {
+    if (mutation::contain_fixme(root->right_) == false) {
       return locate_mutated_ir(root->left_);
     }
-    if (contain_fixme(root->left_) == false) {
+    if (mutation::contain_fixme(root->left_) == false) {
       return locate_mutated_ir(root->right_);
     }
 
     return root;
   }
 
-  if (contain_fixme(root)) return root;
+  if (mutation::contain_fixme(root)) return root;
   return NULL;
 }
 
@@ -2054,7 +2057,7 @@ bool TypeSystem::top_fix(IR *root) {
     } else {
       // if (root->type_ == kAssignmentExpression)
       if (root->type_ == gen::GetFixIRType() || root->str_val_ == "FIXME") {
-        if (contain_fixme(root) == false) continue;
+        if (mutation::contain_fixme(root) == false) continue;
 
         bool flag = type_inference_new(root, 0);
         if (!flag) {
@@ -2093,7 +2096,7 @@ bool TypeSystem::validate_syntax_only(IR *root) {
   while (!q.empty()) {
     auto cur = q.front();
     q.pop();
-    int tmp_count = calc_node_num(cur);
+    int tmp_count = mutation::calc_node_num(cur);
     node_count += tmp_count;
     if (tmp_count > 250 || node_count > 1500) {
       connect_back(m_save);
@@ -2341,7 +2344,7 @@ OPRule TypeSystem::parse_op_rule(string s) {
     } else {
       res.fix_order_ = DEFAULT;
     }
-    return move(res);
+    return std::move(res);
   } else {
     assert(v_strbuf[0][0] == '1');
     if (DBG) cout << "Here: " << v_strbuf[4] << endl;
@@ -2358,7 +2361,7 @@ OPRule TypeSystem::parse_op_rule(string s) {
     } else {
       res.fix_order_ = DEFAULT;
     }
-    return move(res);
+    return std::move(res);
   }
 }
 
@@ -2391,3 +2394,6 @@ bool TypeSystem::insert_definition(int scope_id, int type_id, string var_name) {
 
   return true;
 }
+
+}  // namespace typesystem
+}  // namespace polyglot

@@ -47,7 +47,7 @@ size_t PolyGlotMutator::generate(const char *test_case) {
   deep_delete(ir_set[ir_set.size() - 1]);
 
   for (auto &ir : mutated_tree) {
-    if (TypeSystem::validate(ir)) {
+    if (polyglot::typesystem::TypeSystem::validate(ir)) {
       save_test_cases_.push_back(ir->to_string());
     }
     deep_delete(ir);

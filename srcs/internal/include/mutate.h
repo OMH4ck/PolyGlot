@@ -7,6 +7,10 @@
 
 #include "ir.h"
 
+namespace polyglot {
+
+namespace mutation {
+
 using std::map;
 using std::set;
 
@@ -66,4 +70,6 @@ class Mutator {
 
 unsigned int calc_node_num(IR *root);
 bool contain_fixme(IR *);
+}  // namespace mutation
+}  // namespace polyglot
 #endif

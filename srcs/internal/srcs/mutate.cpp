@@ -19,7 +19,10 @@ using namespace std;
 #include "mutate.h"
 #include "spdlog/spdlog.h"
 #include "utils.h"
-using namespace polyglot;
+
+namespace polyglot {
+
+namespace mutation {
 
 #define _NON_REPLACE_
 
@@ -483,3 +486,5 @@ bool contain_fixme(IR *ir) {
 
   return false;
 }
+}  // namespace mutation
+}  // namespace polyglot
