@@ -40,7 +40,7 @@ conan_cmake_install(
 find_package(spdlog)
 
 # TODO: Add more
-list(APPEND SUPPORTED_LANG lua php c simpletest)
+list(APPEND SUPPORTED_LANG lua php c simplelang)
 
 set(LANG ${LANG})
 
