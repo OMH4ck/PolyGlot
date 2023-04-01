@@ -10,7 +10,6 @@
 #include <string_view>
 #include <vector>
 
-
 // To Fix
 #include "gen_ir.h"
 

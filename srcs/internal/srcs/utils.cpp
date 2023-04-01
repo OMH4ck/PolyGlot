@@ -1,9 +1,8 @@
 #include "utils.h"
 
+#include "ast.h"
 #include "bison_parser.h"
 #include "flex_lexer.h"
-
-#include "ast.h"
 #include "typesystem.h"
 #include "var_definition.h"
 
