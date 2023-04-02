@@ -7,7 +7,7 @@
 #define STATEMENT_SCOPE 0x1002
 #define CLASS_BODY_SCOPE 0x1003
 
-#define SYNTAX_ONLY
+// #define SYNTAX_ONLY
 
 // #define INIT_FILE_DIR "__INIT_FILE_DIR__"
 

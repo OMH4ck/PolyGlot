@@ -189,6 +189,8 @@ class TypeSystem {
   static void init();
   static void debug();
 };
+
+void extract_struct_after_mutation(IR *);
 }  // namespace typesystem
 }  // namespace polyglot
 

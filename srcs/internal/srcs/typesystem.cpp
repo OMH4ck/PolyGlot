@@ -2107,6 +2107,39 @@ bool TypeSystem::validate_syntax_only(IR *root) {
 
   return true;
 }
+
+void extract_struct_after_mutation(IR *root) {
+  if (root->left_) {
+    if (root->left_->data_type_ == kDataFixUnit) {
+      if (contain_fixme(root->left_)) {
+        auto save_ir_id = root->left_->id_;
+        auto save_scope = root->left_->scope_id_;
+        deep_delete(root->left_);
+        root->left_ = new IR(kStringLiteral, "FIXME");
+        root->left_->scope_id_ = save_scope;
+        root->left_->id_ = save_ir_id;
+      }
+    } else {
+      extract_struct_after_mutation(root->left_);
+    }
+  }
+  if (root->right_) {
+    if (root->right_->data_type_ == kDataFixUnit) {
+      if (contain_fixme(root->right_)) {
+        auto save_ir_id = root->right_->id_;
+        auto save_scope = root->right_->scope_id_;
+        deep_delete(root->right_);
+        root->right_ = new IR(kStringLiteral, "FIXME");
+        root->right_->scope_id_ = save_scope;
+        root->right_->id_ = save_ir_id;
+      }
+    } else {
+      extract_struct_after_mutation(root->right_);
+    }
+  }
+  return;
+}
+
 bool TypeSystem::validate(IR *&root) {
   bool res = false;
 #ifdef SYNTAX_ONLY
@@ -2127,7 +2160,7 @@ bool TypeSystem::validate(IR *&root) {
 
   vector<IR *> ivec;
 
-  if (!IsWeakType()) {
+  if (!gen::IsWeakType()) {
     ast->translate(ivec);
     ast->deep_delete();
     deep_delete(root);
