@@ -114,7 +114,7 @@ TEST_F(MutatorTestF, MutateGenerateDifferentTestCases) {
 TEST_F(MutatorTestF, MutateGenerateParsableTestCases) {
   std::string_view test_case = "int a = 1;";
 
-  for (size_t i = 0; i < 1; ++i) {
+  for (size_t i = 0; i < 1000; ++i) {
     vector<IR*> ir_set;
     Program* program_root = parser(test_case.data());
     auto root = program_root->translate(ir_set);
