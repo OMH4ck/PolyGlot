@@ -5,9 +5,13 @@ repos:
     rev: v3.2.0
     hooks:
     -   id: trailing-whitespace
+        exclude: ^grammars/.*$
     -   id: end-of-file-fixer
+        exclude: ^grammars/.*$
     -   id: check-yaml
+        exclude: ^grammars/.*$
     -   id: check-added-large-files
+        exclude: ^grammars/.*$
 -   repo: https://github.com/psf/black
     rev: 22.10.0
     hooks:
