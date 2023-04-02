@@ -1,6 +1,6 @@
 int a = 1;
 
-FOR(TEST a) {
+FOR(TEST) {
   int d = c + 1;
 }
 
@@ -12,4 +12,4 @@ STRUCT c {
   int b;
   int c;
   STRUCT d e = f;
-}
+};

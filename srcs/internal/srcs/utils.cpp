@@ -111,12 +111,16 @@ vector<string> get_all_files_in_dir(const char *dir_name) {
   }
   cout << "Successfully opened the dir !" << endl;
 
+  std::string abs_path(dir_name);
+  if (abs_path[abs_path.size() - 1] != '/') {
+    abs_path += '/';
+  }
   while ((filename = readdir(dir)) != NULL) {
     if (strcmp(filename->d_name, ".") == 0 ||
         strcmp(filename->d_name, "..") == 0)
       continue;
     // cout<<filename->d_name <<endl;
-    file_list.push_back(string(filename->d_name));
+    file_list.push_back(abs_path + filename->d_name);
   }
   closedir(dir);
   return file_list;

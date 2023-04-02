@@ -163,7 +163,7 @@ void Mutator::init_convertable_ir_type_map() {
   }
 }
 
-void Mutator::init_ir_library_from_a_file(string filename) {
+bool Mutator::init_ir_library_from_a_file(string filename) {
   char content[0x4000] = {0};
   auto fd = open(filename.c_str(), 0);
 
@@ -173,7 +173,7 @@ void Mutator::init_ir_library_from_a_file(string filename) {
   auto p = parser(content);
   if (p == NULL) {
     cout << "init " << filename << " failed" << endl;
-    return;
+    return false;
   }
   // cout << filename << endl;
   vector<IR *> v_ir;
@@ -184,7 +184,7 @@ void Mutator::init_ir_library_from_a_file(string filename) {
   add_ir_to_library(res);
   deep_delete(res);
   cout << "init " << filename << " success" << endl;
-  return;
+  return true;
 }
 
 vector<IR *> Mutator::mutate(IR *input) {

@@ -63,8 +63,8 @@ void PolyGlotMutator::do_libary_initialize() {
   vector<string> file_list = get_all_files_in_dir(init_file_path.c_str());
 
   for (auto &f : file_list) {
-    cerr << "init filename: " << init_file_path + f << endl;
-    g_mutator.init_ir_library_from_a_file(init_file_path + f);
+    cerr << "init filename: " << f << endl;
+    g_mutator.init_ir_library_from_a_file(f);
   }
   g_typesystem.init();
 }

@@ -28,7 +28,7 @@ class Mutator {
   vector<IR *> mutate_all(vector<IR *> &v_ir_collector);
   vector<IR *> mutate(IR *input);
   void add_ir_to_library(IR *);
-  void init_ir_library_from_a_file(string filename);
+  bool init_ir_library_from_a_file(string filename);
 
  private:
   bool should_mutate(IR *cur);
