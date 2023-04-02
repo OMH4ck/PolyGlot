@@ -27,6 +27,20 @@ TEST_P(ParserTest, ParseValidTestCaseReturnNotNull) {
   */
 }
 
+TEST_P(ParserTest, ValidTestCaseCanTranslate) {
+  std::string_view test_case = GetParam();
+
+  Program* program_root = parser(test_case.data());
+  ASSERT_TRUE(program_root != nullptr);
+
+  std::vector<IR*> ir_set;
+  auto root = program_root->translate(ir_set);
+  program_root->deep_delete();
+
+  ASSERT_FALSE(ir_set.empty());
+  deep_delete(root);
+}
+
 INSTANTIATE_TEST_SUITE_P(ValidTestCase, ParserTest,
                          ::testing::Values(
                              R"V0G0N(
