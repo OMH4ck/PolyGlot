@@ -22,7 +22,9 @@ endif()
 
 include(${CMAKE_BINARY_DIR}/conan.cmake)
 
-conan_cmake_configure(REQUIRES gtest/1.12.1 spdlog/1.11.0 GENERATORS
+conan_cmake_configure(REQUIRES gtest/1.12.1 spdlog/1.11.0 ms-gsl/4.0.0
+abseil/20230125.2
+ GENERATORS
                       CMakeDeps CMakeToolchain)
 
 conan_cmake_autodetect(settings)
@@ -38,6 +40,8 @@ conan_cmake_install(
   ${settings})
 
 find_package(spdlog)
+find_package(Microsoft.GSL REQUIRED)
+find_package(absl REQUIRED)
 
 # TODO: Add more
 list(APPEND SUPPORTED_LANG lua php c simplelang)
@@ -74,8 +78,8 @@ target_include_directories(polyglot_lib PUBLIC ${CMAKE_SOURCE_DIR}/srcs/internal
 target_include_directories(polyglot_lib PRIVATE ${CMAKE_SOURCE_DIR}/gen/parser)
 target_include_directories(polyglot_lib PUBLIC ${CMAKE_SOURCE_DIR}/gen)
 target_include_directories(polyglot_lib PUBLIC ${CMAKE_SOURCE_DIR}/srcs)
-target_compile_options(polyglot_lib PRIVATE -fPIC)
-target_link_libraries(polyglot_lib PRIVATE spdlog::spdlog)
+target_compile_options(polyglot_lib PRIVATE -fPIC -Werror)
+target_link_libraries(polyglot_lib PRIVATE spdlog::spdlog Microsoft.GSL::GSL absl::str_format)
 target_link_options(polyglot_lib PRIVATE $<$<CONFIG:DEBUG>: -fsanitize=address -shared-libasan>)
 
 add_library(polyglot_mutator SHARED srcs/custom_mutator.cc)

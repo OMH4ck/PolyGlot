@@ -2,6 +2,7 @@
 
 #include <cassert>
 
+#include "absl/strings/str_cat.h"
 #include "config_misc.h"
 #include "define.h"
 #include "typesystem.h"
@@ -201,49 +202,40 @@ string IR::print() {
 }
 
 string IR::to_string() {
-  auto res = to_string_core();
+  std::string res;
+  to_string_core(res);
   trim_string(res);
   return res;
 }
 
-string IR::to_string_core() {
+void IR::to_string_core(std::string &res) {
   // cout << get_string_by_nodetype(this->type_) << endl;
 
   if (polyglot::gen::IsFloatLiteral(type_)) {
-    return std::to_string(float_val_);
+    absl::StrAppend(&res, float_val_);
   } else if (polyglot::gen::IsIntLiteral(type_)) {
-    return std::to_string(int_val_);
+    absl::StrAppend(&res, int_val_);
   } else if (polyglot::gen::IsStringLiteral(type_)) {
-    return str_val_;
+    absl::StrAppend(&res, str_val_);
   }
-  // else if(IsIdentifier(type_)){
-  //   return str_val_;
-  // }
-
-  string res;
 
   if (op_ != NULL) {
-    // if(op_->prefix_ == NULL)
-    /// cout << "FUCK NULL prefix" << endl;
-    // cout << "OP_Prex: " << op_->prefix_ << endl;
-    res += op_->prefix_ + " ";
+    absl::StrAppend(&res, op_->prefix_, " ");
   }
-  // cout << "OP_1_" << op_ << endl;
-  if (left_ != NULL)
-    // res += left_->to_string() + " ";
-    res += left_->to_string_core() + " ";
-  // cout << "OP_2_" << op_ << endl;
-  if (op_ != NULL) res += op_->middle_ + " ";
-  // cout << "OP_3_" << op_ << endl;
-  if (right_ != NULL)
-    // res += right_->to_string() + " ";
-    res += right_->to_string_core() + " ";
-  // cout << "OP_4_" << op_ << endl;
-  if (op_ != NULL) res += op_->suffix_;
-
-  // cout << "FUCK" << endl;
-  // cout << "RETURN" << endl;
-  return res;
+  if (left_ != NULL) {
+    left_->to_string_core(res);
+    absl::StrAppend(&res, " ");
+  }
+  if (op_ != NULL) {
+    absl::StrAppend(&res, op_->middle_, " ");
+  }
+  if (right_ != NULL) {
+    right_->to_string_core(res);
+    absl::StrAppend(&res, " ");
+  }
+  if (op_ != NULL) {
+    absl::StrAppend(&res, op_->suffix_);
+  }
 }
 
 static int cal_list_num_dfs(IR *ir, IRTYPE type) {
