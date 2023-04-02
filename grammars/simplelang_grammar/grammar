@@ -11,7 +11,7 @@ declaration_stmt ';'
 expr ';'
 ---
 declaration_stmt:
-type assign_expr
+type assign_expr **fixme=kDataVarDefine:1:Define**
 STRUCT identifier assign_expr
 structure_declaration
 ---
@@ -23,11 +23,12 @@ declaration_stmt ';'
 declaration_stmt ';' declaration_stmt_list
 ---
 type:
-identifier 
+INT
+FLOAT
 ---
 assign_expr:
-identifier '=' expr 
-identifier 
+identifier '=' expr **identifier=kDataVarName:1:Define**
+identifier **identifier=kDataVarName:1:Define**
 ---
 forstmt:
 FOR '(' expr ')' '{' stmtlist '}'
@@ -46,7 +47,7 @@ TEST
 cexpr
 ---
 cexpr:
-identifier 
+identifier **fixme=kDataFixUnit:1:Use**
 float_literal
 string_literal
 int_literal

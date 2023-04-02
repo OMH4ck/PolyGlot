@@ -431,7 +431,8 @@ void Mutator::extract_struct(IR *root) {
   }
 #else
 */
-  if (root->data_type_ != kDataWhatever) {
+  // TODO: Verify whether this should be == or !=.
+  if (root->data_type_ == kDataWhatever) {
     root->str_val_ = "x";
     return;
   }

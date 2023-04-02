@@ -6,8 +6,10 @@
 #include "config_misc.h"
 #include "ir.h"
 #include "mutate.h"
+#include "typesystem.h"
 #include "utils.h"
 
+using namespace polyglot;
 class ParserTest : public ::testing::TestWithParam<std::string_view> {};
 
 TEST_P(ParserTest, ParseValidTestCaseReturnNotNull) {
@@ -35,32 +37,32 @@ TEST_P(ParserTest, ValidTestCaseCanTranslate) {
 INSTANTIATE_TEST_SUITE_P(ValidTestCase, ParserTest,
                          ::testing::Values(
                              R"V0G0N(
-    int a = 1;
+    INT a = 1;
   )V0G0N",
                              R"V0G0N(
-    int a = 'x';
+    INT a = 'x';
   )V0G0N",
                              R"V0G0N(
   STRUCT c {
-  int a;
-  int b;
-  int c;
+  INT a;
+  INT b;
+  INT c;
   STRUCT d e = f;
   };
   )V0G0N",
                              R"V0G0N(
-    int a = 1;
+    INT a = 1;
     FOR(1){
-      int c = 1;
+      INT c = 1;
     }
-    int b = 2;)V0G0N"));
+    INT b = 2;)V0G0N"));
 
 TEST(MutatorTest, MutateInitGoodTestCasesOnly) {
-  std::string_view test_case = "int a = 1;";
+  std::string_view test_case = "INT a = 1;";
 
-  polyglot::mutation::Mutator mutator;
+  mutation::Mutator mutator;
 
-  std::string init_file_path = polyglot::gen::GetInitDirPath();
+  std::string init_file_path = gen::GetInitDirPath();
   vector<string> file_list = get_all_files_in_dir(init_file_path.c_str());
 
   size_t valid_test_case_count = 0;
@@ -78,18 +80,18 @@ TEST(MutatorTest, MutateInitGoodTestCasesOnly) {
 class MutatorTestF : public testing::Test {
  protected:
   void SetUp() override {
-    std::string init_file_path = polyglot::gen::GetInitDirPath();
+    std::string init_file_path = gen::GetInitDirPath();
     vector<string> file_list = get_all_files_in_dir(init_file_path.c_str());
     for (auto& f : file_list) {
       mutator.init_ir_library_from_a_file(f);
     }
   }
 
-  polyglot::mutation::Mutator mutator;
+  mutation::Mutator mutator;
 };
 
 TEST_F(MutatorTestF, MutateGenerateDifferentTestCases) {
-  std::string_view test_case = "int a = 1;";
+  std::string_view test_case = "INT a = 1; FLOAT b = 1.0; c + c;";
 
   std::unordered_set<std::string> unique_test_cases;
 
@@ -112,7 +114,7 @@ TEST_F(MutatorTestF, MutateGenerateDifferentTestCases) {
 }
 
 TEST_F(MutatorTestF, MutateGenerateParsableTestCases) {
-  std::string_view test_case = "int a = 1;";
+  std::string_view test_case = "INT a = 1;";
 
   for (size_t i = 0; i < 1000; ++i) {
     vector<IR*> ir_set;
@@ -129,4 +131,25 @@ TEST_F(MutatorTestF, MutateGenerateParsableTestCases) {
     }
     deep_delete(root);
   }
+}
+
+TEST(TypeSystemTest, ValidateFixDefineUse) {
+  std::string_view test_case = "INT a = 1;\n c + c;\n";
+  std::string_view validated_test_case = "INT a = 1 ;\n a + a ;\n ";
+
+  Program* program_root = parser(test_case.data());
+  std::vector<IR*> ir_set;
+  auto root = program_root->translate(ir_set);
+  program_root->deep_delete();
+
+  mutation::Mutator mutator;
+  mutator.extract_struct(root);
+
+  typesystem::TypeSystem ts;
+  ts.init();
+
+  ASSERT_TRUE(ts.validate(root));
+  ASSERT_TRUE(root != nullptr);
+  EXPECT_EQ(root->to_string(), validated_test_case);
+  deep_delete(root);
 }

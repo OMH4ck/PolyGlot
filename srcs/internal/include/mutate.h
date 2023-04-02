@@ -29,6 +29,7 @@ class Mutator {
   vector<IR *> mutate(IR *input);
   void add_ir_to_library(IR *);
   bool init_ir_library_from_a_file(string filename);
+  void extract_struct(IR *);  // Done
 
  private:
   bool should_mutate(IR *cur);
@@ -49,8 +50,6 @@ class Mutator {
   void add_ir_to_library_limited(IR *);  // DONE
 
   IR *get_ir_from_library(IRTYPE);  // DONE
-
-  void extract_struct(IR *);  // Done
 
   bool is_ir_type_connvertable(IRTYPE a, IRTYPE b);
   void debug(IR *root);
