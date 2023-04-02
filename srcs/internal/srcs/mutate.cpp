@@ -1,4 +1,6 @@
 // #include <queue>
+#include "mutate.h"
+
 #include <assert.h>
 #include <fcntl.h>
 
@@ -8,17 +10,17 @@
 #include <cstdio>
 #include <deque>
 #include <fstream>
+#include <gsl/assert>
+#include <gsl/gsl>
 #include <iterator>
 #include <map>
 #include <unordered_set>
-using namespace std;
 
-// #include "ast.h"
 #include "config_misc.h"
 #include "define.h"
-#include "mutate.h"
 #include "spdlog/spdlog.h"
 #include "utils.h"
+using namespace std;
 
 namespace polyglot {
 
@@ -45,6 +47,7 @@ Mutator::Mutator() {
 }
 // Need No fix
 IR *Mutator::deep_copy_with_record(const IR *root, const IR *record) {
+  Expects(record != nullptr);
   IR *left = NULL, *right = NULL, *copy_res;
 
   if (root->left_)
@@ -55,20 +58,18 @@ IR *Mutator::deep_copy_with_record(const IR *root, const IR *record) {
     right = deep_copy_with_record(root->right_,
                                   record);  // no I forget to update here
 
-  if (root->op_ != NULL)
-    copy_res =
-        new IR(root->type_,
-               OP3(root->op_->prefix_, root->op_->middle_, root->op_->suffix_),
-               left, right, root->float_val_, root->str_val_, root->name_,
-               root->mutated_times_, root->scope_, root->data_flag_);
-  else
-    copy_res = new IR(root->type_, NULL, left, right, root->float_val_,
-                      root->str_val_, root->name_, root->mutated_times_,
-                      root->scope_, root->data_flag_);
+  IROperator *op = nullptr;
+  if (root->op_ != NULL) {
+    op = new IROperator(root->op_->prefix_, root->op_->middle_,
+                        root->op_->suffix_);
+  }
+  copy_res =
+      new IR(root->type_, op, left, right, root->float_val_, root->str_val_,
+             root->name_, root->mutated_times_, root->scope_, root->data_flag_);
 
   copy_res->data_type_ = root->data_type_;
 
-  if (root == record && record != NULL) {
+  if (root == record) {
     this->record_ = copy_res;
   }
 
@@ -87,7 +88,7 @@ bool Mutator::should_mutate(IR *cur) {
 vector<IR *> Mutator::mutate_all(vector<IR *> &irs_to_mutate) {
   vector<IR *> res;
   std::unordered_set<unsigned long> res_hash;
-  IR *root = irs_to_mutate[irs_to_mutate.size() - 1];
+  IR *root = irs_to_mutate.back();
 
   auto tmp_str = root->to_string();
   res_hash.insert(hash(tmp_str));

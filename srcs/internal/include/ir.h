@@ -82,8 +82,10 @@ class IR {
 
   unsigned long id_;
   string to_string();
-  string to_string_core();
   string print();
+
+ private:
+  void to_string_core(string &str);
 };
 
 IR *deep_copy(const IR *root);
