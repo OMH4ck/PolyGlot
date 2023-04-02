@@ -58,7 +58,7 @@ add_custom_command(
     OUTPUT
         ${GENERATED_FILES}
     DEPENDS
-        ${CMAKE_SOURCE_DIR}/CodeGen.py
+        ${CMAKE_SOURCE_DIR}/CodeGen.py ${CMAKE_SOURCE_DIR}/Generator.py
     COMMAND
         python3 ${CMAKE_SOURCE_DIR}/CodeGen.py ${CMAKE_SOURCE_DIR}/grammars/${LANG}_grammar
 )

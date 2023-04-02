@@ -1,6 +1,6 @@
 {
     "__comments": "",
-    "InitFileDir":"/home/yongheng/php_testcase/",
+    "InitFileDir":"grammars/simplelang_grammar/init",
     "BuiltinObjFile":"/home/yongheng/FuzzerFactory_php/php_grammar/php_internal_object/",
     "IsWeakType": 1,
     "IRHandlers": [

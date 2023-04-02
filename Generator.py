@@ -1343,7 +1343,15 @@ def genTestSrc():
     basic_types = ", ".join(basic_types)
     content = content.replace("__SEMANTIC_BASIC_TYPES__", basic_types)
     content = genToStringCase(content)
-    content = content.replace("__INIT_FILE_DIR__", semanticRule["InitFileDir"])
+
+    init_path = semanticRule["InitFileDir"]
+    if not init_path.startswith("/"):
+        # we require the path to be relative to the Project root dir
+        # Get the script path
+        script_path = os.path.dirname(os.path.realpath(__file__))
+        init_path = os.path.join(script_path, init_path)
+
+    content = content.replace("__INIT_FILE_DIR__", init_path)
     return content
 
 

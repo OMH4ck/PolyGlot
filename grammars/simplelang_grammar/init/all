@@ -1,0 +1,15 @@
+int a = 1;
+
+FOR(TEST a) {
+  int d = c + 1;
+}
+
+k + 1.23;
+d + "1234";
+
+STRUCT c {
+  int a;
+  int b;
+  int c;
+  STRUCT d e = f;
+}

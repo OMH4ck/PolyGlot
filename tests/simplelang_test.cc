@@ -13,18 +13,6 @@ TEST_P(ParserTest, ParseValidTestCaseReturnNotNull) {
   Program* program_root = parser(test_case.data());
   ASSERT_TRUE(program_root != nullptr);
   program_root->deep_delete();
-  /*
-  try {
-    program_root->translate(ir_set);
-  } catch (...) {
-    for (auto ir : ir_set) {
-      delete ir;
-    }
-    program_root->deep_delete();
-    return 0;
-  }
-  program_root->deep_delete();
-  */
 }
 
 TEST_P(ParserTest, ValidTestCaseCanTranslate) {
@@ -45,6 +33,14 @@ INSTANTIATE_TEST_SUITE_P(ValidTestCase, ParserTest,
                          ::testing::Values(
                              R"V0G0N(
     int a = 1;
+  )V0G0N",
+                             R"V0G0N(
+  STRUCT c {
+  int a;
+  int b;
+  int c;
+  STRUCT d e = f;
+  };
   )V0G0N",
                              R"V0G0N(
     int a = 1;
