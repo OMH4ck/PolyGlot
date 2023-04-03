@@ -31,10 +31,10 @@ int TypeSystem::current_fix_scope_;
 bool TypeSystem::contain_used_;
 int TypeSystem::current_scope_id_;
 shared_ptr<Scope> TypeSystem::current_scope_ptr_;
-map<IR *, shared_ptr<map<TYPEID, vector<pair<TYPEID, TYPEID>>>>>
+map<IRPtr, shared_ptr<map<TYPEID, vector<pair<TYPEID, TYPEID>>>>>
     TypeSystem::cache_inference_map_;
 
-IR *cur_statement_root = nullptr;
+IRPtr cur_statement_root = nullptr;
 
 unsigned long type_fix_framework_fail_counter = 0;
 unsigned long top_fix_fail_counter = 0;
@@ -80,11 +80,11 @@ void TypeSystem::init_one_internal_obj(string filename) {
     return;
   }
 
-  vector<IR *> v_ir;
+  vector<IRPtr> v_ir;
   set_scope_translation_flag(true);
   auto res = p->translate(v_ir);
   set_scope_translation_flag(false);
-  p->deep_delete();
+  // p->deep_delete();
   p = nullptr;
 
   is_internal_obj_setup = true;
@@ -92,7 +92,7 @@ void TypeSystem::init_one_internal_obj(string filename) {
     cout << "[init_internal_obj] setup " << filename << " failed" << endl;
   is_internal_obj_setup = false;
 
-  deep_delete(res);
+  ;
 }
 
 void TypeSystem::init() {
@@ -119,8 +119,8 @@ int TypeSystem::gen_id() {
   return id++;
 }
 
-void TypeSystem::split_to_basic_unit(IR *root, queue<IR *> &q,
-                                     map<IR **, IR *> &m_save,
+void TypeSystem::split_to_basic_unit(IRPtr root, queue<IRPtr> &q,
+                                     map<IRPtr *, IRPtr> &m_save,
                                      set<IRTYPE> &s_basic_unit) {
   if (root->left_ &&
       s_basic_unit.find(root->left_->type_) != s_basic_unit.end()) {
@@ -139,16 +139,16 @@ void TypeSystem::split_to_basic_unit(IR *root, queue<IR *> &q,
   if (root->right_) split_to_basic_unit(root->right_, q, m_save, s_basic_unit);
 }
 
-void TypeSystem::connect_back(map<IR **, IR *> &m_save) {
+void TypeSystem::connect_back(map<IRPtr *, IRPtr> &m_save) {
   for (auto &i : m_save) {
     *i.first = i.second;
   }
 }
 
-bool TypeSystem::type_fix_framework(IR *root) {
+bool TypeSystem::type_fix_framework(IRPtr root) {
   static unsigned recursive_counter = 0;
-  queue<IR *> q;
-  map<IR **, IR *> m_save;
+  queue<IRPtr> q;
+  map<IRPtr *, IRPtr> m_save;
   int node_count = 0;
   q.push(root);
   split_to_basic_unit(root, q, m_save);
@@ -199,19 +199,19 @@ FIXORDER TypeSystem::get_fix_order(int op) {
   */
 }
 
-int TypeSystem::get_op_value(IROperator *op) {
+int TypeSystem::get_op_value(std::shared_ptr<IROperator> op) {
   if (op == nullptr) return 0;
   return op_id_map_[op->prefix_][op->middle_][op->suffix_];
 }
 
-bool TypeSystem::is_op_null(IROperator *op) {
+bool TypeSystem::is_op_null(std::shared_ptr<IROperator> op) {
   return (op == nullptr ||
           (op->suffix_ == "" && op->middle_ == "" && op->prefix_ == ""));
 }
 
-bool TypeSystem::is_contain_definition(IR *cur) {
+bool TypeSystem::is_contain_definition(IRPtr cur) {
   bool res = false;
-  stack<IR *> stk;
+  stack<IRPtr> stk;
 
   stk.push(cur);
 
@@ -227,7 +227,7 @@ bool TypeSystem::is_contain_definition(IR *cur) {
   return res;
 }
 
-void search_by_data_type(IR *cur, DATATYPE type, vector<IR *> &result,
+void search_by_data_type(IRPtr cur, DATATYPE type, vector<IRPtr> &result,
                          DATATYPE forbit_type = kDataWhatever,
                          bool go_inside = false) {
   if (cur->data_type_ == type) {
@@ -246,8 +246,8 @@ void search_by_data_type(IR *cur, DATATYPE type, vector<IR *> &result,
   return;
 }
 
-IR *search_by_data_type(IR *cur, DATATYPE type,
-                        DATATYPE forbit_type = kDataWhatever) {
+IRPtr search_by_data_type(IRPtr cur, DATATYPE type,
+                          DATATYPE forbit_type = kDataWhatever) {
   if (cur->data_type_ == type) {
     return cur;
   } else if (forbit_type != kDataWhatever && cur->data_type_ == forbit_type) {
@@ -274,7 +274,7 @@ ScopeType scope_js(const string &s) {
   return kScopeStatement;
 }
 
-void TypeSystem::collect_simple_variable_defintion_wt(IR *cur) {
+void TypeSystem::collect_simple_variable_defintion_wt(IRPtr cur) {
   if (DBG) cout << "Collecting: " << cur->to_string() << endl;
 
   auto var_scope = search_by_data_type(cur, kDataVarScope);
@@ -286,8 +286,8 @@ void TypeSystem::collect_simple_variable_defintion_wt(IR *cur) {
     scope_type = scope_js(str);
   }
 
-  vector<IR *> name_vec;
-  vector<IR *> init_vec;
+  vector<IRPtr> name_vec;
+  vector<IRPtr> init_vec;
   vector<int> type_vec;
   search_by_data_type(cur, kDataVarName, name_vec);
   search_by_data_type(cur, kDataInitiator, init_vec);
@@ -331,7 +331,7 @@ void TypeSystem::collect_simple_variable_defintion_wt(IR *cur) {
   }
 }
 
-void TypeSystem::collect_function_definition_wt(IR *cur) {
+void TypeSystem::collect_function_definition_wt(IRPtr cur) {
   if (DBG) cout << "Collecting " << cur->to_string() << endl;
   auto function_name_ir = search_by_data_type(cur, kDataFunctionName);
   auto function_args_ir = search_by_data_type(cur, kDataFunctionArg);
@@ -343,7 +343,7 @@ void TypeSystem::collect_function_definition_wt(IR *cur) {
   }
 
   size_t num_function_args = 0;
-  vector<IR *> args;
+  vector<IRPtr> args;
   vector<string> arg_names;
   vector<int> arg_types;
   if (function_args_ir) {
@@ -384,11 +384,11 @@ void TypeSystem::collect_function_definition_wt(IR *cur) {
   }
 }
 
-void TypeSystem::collect_structure_definition_wt(IR *cur, IR *root) {
+void TypeSystem::collect_structure_definition_wt(IRPtr cur, IRPtr root) {
   auto cur_scope = get_scope_by_id(cur->scope_id_);
 
   if (isDefine(cur->data_flag_)) {
-    vector<IR *> structure_name, strucutre_variable_name, structure_body;
+    vector<IRPtr> structure_name, strucutre_variable_name, structure_body;
 
     search_by_data_type(cur, kDataClassName, structure_name);
     auto struct_body = search_by_data_type(cur, kDataStructBody);
@@ -423,11 +423,11 @@ void TypeSystem::collect_structure_definition_wt(IR *cur, IR *root) {
   }
 }
 
-void collect_simple_variable_defintion(IR *cur) {
+void collect_simple_variable_defintion(IRPtr cur) {
   string var_type;
 
   std::cerr << "Collecting: " << cur->to_string() << endl;
-  vector<IR *> ir_vec;
+  vector<IRPtr> ir_vec;
 
   search_by_data_type(cur, kDataVarType, ir_vec);
 
@@ -468,7 +468,7 @@ void collect_simple_variable_defintion(IR *cur) {
     if (DBG) cout << "var: " << ir->to_string() << endl;
     auto name_ir = search_by_data_type(ir, kDataVarName);
     auto new_type = type;
-    vector<IR *> tmp_vec;
+    vector<IRPtr> tmp_vec;
     search_by_data_type(ir, kDataPointer, tmp_vec, kDataWhatever, true);
 
     if (!tmp_vec.empty()) {
@@ -484,7 +484,7 @@ void collect_simple_variable_defintion(IR *cur) {
   }
 }
 
-void TypeSystem::collect_structure_definition(IR *cur, IR *root) {
+void TypeSystem::collect_structure_definition(IRPtr cur, IRPtr root) {
   if (cur->data_type_ == kDataClassType) {
     if (DBG) cout << "to_string: " << cur->to_string() << endl;
     if (DBG)
@@ -494,7 +494,7 @@ void TypeSystem::collect_structure_definition(IR *cur, IR *root) {
 
     if (isDefine(cur->data_flag_)) {  // with structure define
       if (DBG) cout << "data_flag = Define" << endl;
-      vector<IR *> structure_name, strucutre_variable_name, structure_body;
+      vector<IRPtr> structure_name, strucutre_variable_name, structure_body;
       search_by_data_type(cur, kDataClassName, structure_name);
 
       auto struct_body = search_by_data_type(cur, kDataStructBody);
@@ -525,8 +525,8 @@ void TypeSystem::collect_structure_definition(IR *cur, IR *root) {
           get_scope_by_id(struct_body->scope_id_), current_compound_name);
 
       // get all class variable define unit by finding kDataDeclarator.
-      vector<IR *> strucutre_variable_unit;
-      vector<IR *> structure_pointer_var;
+      vector<IRPtr> strucutre_variable_unit;
+      vector<IRPtr> structure_pointer_var;
       search_by_data_type(root, kDataDeclarator, strucutre_variable_unit,
                           kDataStructBody);
       if (DBG) cout << strucutre_variable_unit.size() << endl;
@@ -560,7 +560,7 @@ void TypeSystem::collect_structure_definition(IR *cur, IR *root) {
       }
     } else if (isUse(cur->data_flag_)) {  // only strucutre variable define
       if (DBG) cout << "data_flag = Use" << endl;
-      vector<IR *> structure_name, strucutre_variable_name;
+      vector<IRPtr> structure_name, strucutre_variable_name;
       search_by_data_type(cur, kDataClassName, structure_name);
       // search_by_data_type(root, kDataVarName, strucutre_variable_name,
       // kDataStructBody);
@@ -576,8 +576,8 @@ void TypeSystem::collect_structure_definition(IR *cur, IR *root) {
       // forward_add_compound_type(structure_name[0]->str_val_);
 
       // get all class variable define unit by finding kDataDeclarator.
-      vector<IR *> strucutre_variable_unit;
-      vector<IR *> structure_pointer_var;
+      vector<IRPtr> strucutre_variable_unit;
+      vector<IRPtr> structure_pointer_var;
       search_by_data_type(root, kDataDeclarator, strucutre_variable_unit,
                           kDataStructBody);
       if (DBG) cout << strucutre_variable_unit.size() << endl;
@@ -616,7 +616,7 @@ void TypeSystem::collect_structure_definition(IR *cur, IR *root) {
   }
 }
 
-void TypeSystem::collect_function_definition(IR *cur) {
+void TypeSystem::collect_function_definition(IRPtr cur) {
   auto return_value_type_ir =
       search_by_data_type(cur, kDataFunctionReturnValue, kDataFunctionBody);
   auto function_name_ir =
@@ -660,8 +660,8 @@ void TypeSystem::collect_function_definition(IR *cur) {
   vector<string> arg_names;
   vector<unsigned long> arg_ids;
   if (function_arg_ir) {
-    queue<IR *> q;
-    map<IR **, IR *> m_save;
+    queue<IRPtr> q;
+    map<IRPtr *, IRPtr> m_save;
     set<NODETYPE> ss;
     // ss.insert(kParameterDeclaration);
     if (!gen::IsWeakType()) {
@@ -676,8 +676,8 @@ void TypeSystem::collect_function_definition(IR *cur) {
       string var_type;
       string var_name;
 
-      vector<IR *> ir_vec;
-      vector<IR *> ir_vec_name;
+      vector<IRPtr> ir_vec;
+      vector<IRPtr> ir_vec_name;
       search_by_data_type(cur, kDataVarType, ir_vec);
       search_by_data_type(cur, kDataVarName, ir_vec_name);
 
@@ -751,7 +751,7 @@ void TypeSystem::collect_function_definition(IR *cur) {
   }
 }
 
-DATATYPE TypeSystem::find_define_type(IR *cur) {
+DATATYPE TypeSystem::find_define_type(IRPtr cur) {
   if (cur->data_type_ == kDataVarType || cur->data_type_ == kDataClassType ||
       cur->data_type_ == kDataFunctionType)
     return cur->data_type_;
@@ -769,7 +769,7 @@ DATATYPE TypeSystem::find_define_type(IR *cur) {
   return kDataWhatever;
 }
 
-bool TypeSystem::collect_definition(IR *cur) {
+bool TypeSystem::collect_definition(IRPtr cur) {
   bool res = false;
   if (cur->data_type_ == kDataVarDefine) {
     auto define_type = find_define_type(cur);
@@ -823,7 +823,7 @@ bool TypeSystem::collect_definition(IR *cur) {
 // map<IR*, shared_ptr<map<TYPEID, vector<pair<TYPEID, TYPEID>>>>>
 // TypeSystem::cache_inference_map_;
 
-bool TypeSystem::type_inference_new(IR *cur, int scope_type) {
+bool TypeSystem::type_inference_new(IRPtr cur, int scope_type) {
   auto cur_type = make_shared<map<TYPEID, vector<pair<TYPEID, TYPEID>>>>();
   int res_type = NOTEXIST;
   bool flag;
@@ -1079,7 +1079,7 @@ int TypeSystem::locate_defined_variable_by_name(const string &var_name,
   return result;
 }
 
-set<int> TypeSystem::collect_usable_type(IR *cur) {
+set<int> TypeSystem::collect_usable_type(IRPtr cur) {
   set<int> result;
   auto ir_id = cur->id_;
   auto current_scope = get_scope_by_id(cur->scope_id_);
@@ -1132,7 +1132,7 @@ set<int> TypeSystem::collect_usable_type(IR *cur) {
 }
 
 vector<map<int, vector<string>>> TypeSystem::collect_all_var_definition_by_type(
-    IR *cur) {
+    IRPtr cur) {
   vector<map<int, vector<string>>> result;
   map<int, vector<string>> simple_var;
   map<int, vector<string>> functions;
@@ -1564,7 +1564,7 @@ void filter_element(map<int, vector<string>> &vars,
 }
 
 map<int, vector<set<int>>> TypeSystem::collect_satisfiable_types(
-    IR *ir, map<int, vector<string>> &simple_var_map,
+    IRPtr ir, map<int, vector<string>> &simple_var_map,
     map<int, vector<string>> &compound_var_map,
     map<int, vector<string>> &function_map) {
   map<int, vector<set<int>>> res;
@@ -1623,7 +1623,7 @@ map<int, vector<set<int>>> TypeSystem::collect_satisfiable_types(
 }
 
 string TypeSystem::function_call_gen_handler(
-    map<int, vector<string>> &function_map, IR *ir) {
+    map<int, vector<string>> &function_map, IRPtr ir) {
   string res;
   assert(function_map.size());
   if (DBG) cout << "function handler" << endl;
@@ -1735,7 +1735,7 @@ void TypeSystem::update_pointer_var(
 string TypeSystem::expression_gen_handler(
     int type, map<int, vector<set<int>>> &all_satisfiable_types,
     map<int, vector<string>> &function_map,
-    map<int, vector<string>> &compound_var_map, IR *ir) {
+    map<int, vector<string>> &compound_var_map, IRPtr ir) {
   string res;
   auto sat_op = collect_sat_op_by_result_type(
       type, all_satisfiable_types, function_map,
@@ -1766,7 +1766,7 @@ string TypeSystem::expression_gen_handler(
   return res;
 }
 
-string TypeSystem::generate_expression_by_type(int type, IR *ir) {
+string TypeSystem::generate_expression_by_type(int type, IRPtr ir) {
   gen_counter_ = 0;
   function_gen_counter_ = 0;
   auto res = generate_expression_by_type_core(type, ir);
@@ -1776,7 +1776,7 @@ string TypeSystem::generate_expression_by_type(int type, IR *ir) {
   return res;
 }
 
-string TypeSystem::generate_expression_by_type_core(int type, IR *ir) {
+string TypeSystem::generate_expression_by_type_core(int type, IRPtr ir) {
   static vector<map<int, vector<string>>> var_maps;
   static map<int, vector<set<int>>> all_satisfiable_types;
   if (gen_counter_ == 0) {
@@ -1959,7 +1959,7 @@ string TypeSystem::generate_expression_by_type_core(int type, IR *ir) {
   }
 }
 
-IR *TypeSystem::locate_mutated_ir(IR *root) {
+IRPtr TypeSystem::locate_mutated_ir(IRPtr root) {
   if (root->left_) {
     if (root->right_ == nullptr) {
       return locate_mutated_ir(root->left_);
@@ -1979,7 +1979,7 @@ IR *TypeSystem::locate_mutated_ir(IR *root) {
   return nullptr;
 }
 
-bool TypeSystem::simple_fix(IR *ir, int type) {
+bool TypeSystem::simple_fix(IRPtr ir, int type) {
   // if (contain_fixme(ir) == false)
   //     return true;
 
@@ -2032,8 +2032,8 @@ bool TypeSystem::simple_fix(IR *ir, int type) {
   return true;
 }
 
-bool TypeSystem::top_fix(IR *root) {
-  stack<IR *> stk;
+bool TypeSystem::top_fix(IRPtr root) {
+  stack<IRPtr> stk;
 
   stk.push(root);
 
@@ -2077,14 +2077,14 @@ bool TypeSystem::top_fix(IR *root) {
   return res;
 }
 
-bool TypeSystem::validate_syntax_only(IR *root) {
+bool TypeSystem::validate_syntax_only(IRPtr root) {
   auto ast = parser(root->to_string());
   if (ast == nullptr) {
     return false;
   }
-  ast->deep_delete();
-  queue<IR *> q;
-  map<IR **, IR *> m_save;
+  // ast->deep_delete();
+  queue<IRPtr> q;
+  map<IRPtr *, IRPtr> m_save;
   int node_count = 0;
   q.push(root);
   split_to_basic_unit(root, q, m_save);
@@ -2110,14 +2110,14 @@ bool TypeSystem::validate_syntax_only(IR *root) {
   return true;
 }
 
-void extract_struct_after_mutation(IR *root) {
+void extract_struct_after_mutation(IRPtr root) {
   if (root->left_) {
     if (root->left_->data_type_ == kDataFixUnit) {
       if (contain_fixme(root->left_)) {
         auto save_ir_id = root->left_->id_;
         auto save_scope = root->left_->scope_id_;
-        deep_delete(root->left_);
-        root->left_ = new IR(kStringLiteral, "FIXME");
+        ;
+        root->left_ = std::make_shared<IR>(kStringLiteral, "FIXME");
         root->left_->scope_id_ = save_scope;
         root->left_->id_ = save_ir_id;
       }
@@ -2130,8 +2130,8 @@ void extract_struct_after_mutation(IR *root) {
       if (contain_fixme(root->right_)) {
         auto save_ir_id = root->right_->id_;
         auto save_scope = root->right_->scope_id_;
-        deep_delete(root->right_);
-        root->right_ = new IR(kStringLiteral, "FIXME");
+        ;
+        root->right_ = std::make_shared<IR>(kStringLiteral, "FIXME");
         root->right_->scope_id_ = save_scope;
         root->right_->id_ = save_ir_id;
       }
@@ -2142,7 +2142,7 @@ void extract_struct_after_mutation(IR *root) {
   return;
 }
 
-bool TypeSystem::validate(IR *&root) {
+bool TypeSystem::validate(IRPtr &root) {
   bool res = false;
 #ifdef SYNTAX_ONLY
   res = validate_syntax_only(root);
@@ -2160,12 +2160,12 @@ bool TypeSystem::validate(IR *&root) {
     return false;
   }
 
-  vector<IR *> ivec;
+  vector<IRPtr> ivec;
 
   if (!gen::IsWeakType()) {
     ast->translate(ivec);
-    ast->deep_delete();
-    deep_delete(root);
+    // ast->deep_delete();
+    ;
     root = ivec.back();
     extract_struct_after_mutation(root);
 
@@ -2178,14 +2178,14 @@ bool TypeSystem::validate(IR *&root) {
     set_scope_translation_flag(true);
 
     ast->translate(ivec);
-    ast->deep_delete();
-    deep_delete(root);
+    // ast->deep_delete();
+    ;
     root = ivec.back();
   } else {
     set_scope_translation_flag(true);
     ast->translate(ivec);
-    ast->deep_delete();
-    deep_delete(root);
+    // ast->deep_delete();
+    ;
     root = ivec.back();
     extract_struct_after_mutation(root);
   }
@@ -2193,14 +2193,14 @@ bool TypeSystem::validate(IR *&root) {
   res = type_fix_framework(root);
   if (res == false) {
     type_fix_framework_fail_counter++;
-    deep_delete(root);
+    ;
     root = nullptr;
   } else {
     std::cerr << "Scuessfully fix the type error! " << std::endl;
     res = top_fix(root);
     if (res == false) {
       top_fix_fail_counter++;
-      deep_delete(root);
+      ;
       root = nullptr;
     }
     top_fix_success_counter++;
@@ -2403,7 +2403,7 @@ OPRule TypeSystem::parse_op_rule(string s) {
 bool TypeSystem::insert_definition(int scope_id, int type_id, string var_name) {
   auto scope_ptr = get_scope_by_id(scope_id);
   auto type_ptr = get_type_by_type_id(type_id);
-  IR *insert_target = nullptr;
+  IRPtr insert_target = nullptr;
 
   if (!scope_ptr || !type_ptr) return false;
 
@@ -2417,8 +2417,9 @@ bool TypeSystem::insert_definition(int scope_id, int type_id, string var_name) {
   if (!insert_target) return false;
 
   auto def_str = generate_definition(var_name, type_id);
-  auto def_ir = new IR(kIdentifier, def_str, kDataWhatever);
-  auto root_ir = new IR(kUnknown, OP0(), def_ir, insert_target->left_);
+  auto def_ir = std::make_shared<IR>(kIdentifier, def_str, kDataWhatever);
+  auto root_ir =
+      std::make_shared<IR>(kUnknown, OP0(), def_ir, insert_target->left_);
 
   root_ir->scope_id_ = def_ir->scope_id_ = scope_id;
   insert_target->left_ = root_ir;

@@ -407,7 +407,7 @@ def genClassDef(current_class, parent_class):
     res += f"{current_class.name}:"
     res += "public " + "Node " + "{\n"
     res += "public:\n" + "\tvirtual void deep_delete();\n"
-    res += "\tvirtual IR* translate(vector<IR*> &v_ir_collector);\n"
+    res += "\tvirtual IRPtr translate(vector<IRPtr> &v_ir_collector);\n"
     res += "\tvirtual void generate();\n"
     # res += "\t" + current_class.name + "(){type_ = k%s; cout << \" Construct node: %s \\n\" ;}\n" % (current_class.name, current_class.name)
     # res += "\t~" + current_class.name + "(){cout << \" Destruct node: %s \\n\" ;}\n" % (current_class.name)
@@ -428,13 +428,20 @@ def genClassDef(current_class, parent_class):
         if member_name == "":
             continue
         if count == 1:
-            res += "\t" + underline_to_hump(member_name) + " * " + member_name + "_;\n"
+            res += (
+                "\t"
+                + "std::shared_ptr<"
+                + underline_to_hump(member_name)
+                + "> "
+                + member_name
+                + "_;\n"
+            )
         else:
             for idx in range(count):
                 res += (
-                    "\t"
+                    "\t std::shared_ptr<"
                     + underline_to_hump(member_name)
-                    + " * "
+                    + "> "
                     + member_name
                     + "_"
                     + str(idx + 1)
@@ -579,7 +586,7 @@ def translateOneIR(ir_argument, classname, irname):
         irname = f"auto {irname}"
 
     return (
-        f"{irname} = new IR(k{underline_to_hump(classname)}, {res_operator}{res_operand}"
+        f"{irname} = std::make_shared<IR>(k{underline_to_hump(classname)}, {res_operator}{res_operand}"
         + ");\n"
     )
 
@@ -605,7 +612,7 @@ def transalteOneCase(current_class, case_idx):
     """
     if current_case.isEmpty == True:
         return (
-            "\t\tres = new IR(k"
+            "\t\tres = std::make_shared<IR>(k"
             + underline_to_hump(current_class.name)
             + ', string(""));\n'
         )
@@ -660,7 +667,10 @@ def genGenerateOneCase(current_class, case_idx):
             counter[sym.name] += 1
 
         # ddprint(sym.name)
-        res += "\t\t%s = new %s();\n" % (membername, underline_to_hump(sym.name))
+        res += "\t\t%s = std::make_shared<%s>();\n" % (
+            membername,
+            underline_to_hump(sym.name),
+        )
         res += "\t\t%s->generate();\n" % membername
 
     return res
@@ -795,7 +805,7 @@ def genTranslate(current_class):
     has_switch = len(current_class.caseList) != 1
     class_name = underline_to_hump(current_class.name)
 
-    res = f"IR*  {class_name}" + "::translate(vector<IR *> &v_ir_collector){\n"
+    res = f"IRPtr  {class_name}" + "::translate(vector<IRPtr> &v_ir_collector){\n"
     res += "\tTRANSLATESTART\n\n"
 
     res += genTranslateBegin(current_class.name)
@@ -803,7 +813,7 @@ def genTranslate(current_class):
     specific = is_specific(current_class.name)
     if specific[0]:
         res += (
-            "\t\tres = new IR(k"
+            "\t\tres = std::make_shared<IR>(k"
             + current_class.name
             + ", "
             + specific[1]
@@ -1088,7 +1098,8 @@ def genBisonTypeDefOneCase(gen_class, caseidx):
             symbol_name_list.append(sym.name)
             if sym.isTerminator == True:
                 continue
-            tmp = "$$->%s_ = $%d;\n"
+            sym_class_name = underline_to_hump(sym.name)
+            tmp = f"$$->%s_ = std::shared_ptr<{sym_class_name}>($%d);\n"
             if sym.name not in counter:
                 counter[sym.name] = 0
             counter[sym.name] += 1

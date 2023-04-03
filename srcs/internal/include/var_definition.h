@@ -30,8 +30,8 @@ class Scope {
   Scope(int scope_id, ScopeType scope_type)
       : scope_id_(scope_id), scope_type_(scope_type) {}
   ~Scope() {}
-  vector<IR *> v_ir_set_;  // all the irs in this scope;
-  map<int, vector<IR *>> m_define_ir_;
+  vector<IRPtr> v_ir_set_;  // all the irs in this scope;
+  map<int, vector<IRPtr>> m_define_ir_;
   int scope_id_;
   map<int, shared_ptr<Scope>> children_;
   weak_ptr<Scope> parent_;
@@ -43,7 +43,7 @@ class Scope {
   void add_definition(int type, const string &var_name, unsigned long id,
                       ScopeType stype);
   void add_definition(int type, const string &var_name, unsigned long id);
-  void add_definition(int type, IR *ir);
+  void add_definition(int type, IRPtr ir);
 };
 
 class VarType {
@@ -61,12 +61,12 @@ class VarType {
 class FunctionType : public VarType {
  public:
   // pair<TYPEID, string> return_value_;
-  vector<IR *> return_value_ir_;
-  IR *return_definition_ir_;
+  vector<IRPtr> return_value_ir_;
+  IRPtr return_definition_ir_;
   TYPEID return_type_;
   // map<int, vector<string>> arguments_; // Should be IR*?
   // vector<pair<TYPEID, string>> v_arguments_;
-  vector<IR *> v_arguments_;
+  vector<IRPtr> v_arguments_;
   vector<TYPEID> v_arg_types_;
   int arg_num();
   string get_arg_by_order(int);
@@ -80,11 +80,11 @@ class CompoundType : public VarType {
  public:
   vector<TYPEID> parent_class_;
   map<TYPEID, vector<string>> v_members_;
-  set<IR *> can_be_fixed_ir_;
-  IR *define_root_;
+  set<IRPtr> can_be_fixed_ir_;
+  IRPtr define_root_;
 
   string get_member_by_type(TYPEID type);
-  void remove_unfix(IR *);
+  void remove_unfix(IRPtr);
   virtual bool is_pointer_type() { return false; }
   virtual bool is_compound_type() { return true; };
   virtual bool is_function_type() { return false; };

@@ -14,20 +14,19 @@ std::string_view PolyGlotMutator::get_next_test_case() {
 }
 
 void PolyGlotMutator::add_to_library(const char *mem) {
-  vector<IR *> ir_set;
+  vector<IRPtr> ir_set;
   auto p_strip_sql = parser(mem);
   if (p_strip_sql) {
     auto root_ir = p_strip_sql->translate(ir_set);
-    p_strip_sql->deep_delete();
+    // p_strip_sql->deep_delete();
     g_mutator.add_ir_to_library(root_ir);
-    deep_delete(root_ir);
+    ;
   }
 }
 
 size_t PolyGlotMutator::generate(const char *test_case) {
-  Program *program_root;
-  vector<IR *> ir_set, mutated_tree;
-  program_root = parser(test_case);
+  vector<IRPtr> ir_set, mutated_tree;
+  auto program_root = parser(test_case);
   if (program_root == nullptr) {
     return 0;
   }
@@ -35,29 +34,28 @@ size_t PolyGlotMutator::generate(const char *test_case) {
   try {
     program_root->translate(ir_set);
   } catch (...) {
-    for (auto ir : ir_set) {
-      delete ir;
-    }
-    program_root->deep_delete();
+    // for (auto ir : ir_set) {
+    //   delete ir;
+    // }
+    //  program_root->deep_delete();
     return 0;
   }
-  program_root->deep_delete();
+  // program_root->deep_delete();
 
   mutated_tree = g_mutator.mutate_all(ir_set);
-  deep_delete(ir_set[ir_set.size() - 1]);
+  ;
 
   for (auto &ir : mutated_tree) {
     if (polyglot::typesystem::TypeSystem::validate(ir)) {
       save_test_cases_.push_back(ir->to_string());
-    }
-    deep_delete(ir);
+    };
   }
 
   return save_test_cases_.size();
 }
 
 void PolyGlotMutator::do_libary_initialize() {
-  vector<IR *> ir_set;
+  vector<IRPtr> ir_set;
 
   std::string init_file_path = polyglot::gen::GetInitDirPath();
   vector<string> file_list = get_all_files_in_dir(init_file_path.c_str());

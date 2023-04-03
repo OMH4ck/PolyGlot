@@ -45,5 +45,5 @@ typename T::iterator random_pick(T &cc) {
 }
 // template<typename T> typename T::iterator random_pick(T &cc);
 
-TopASTNode *parser(string sql);
+std::shared_ptr<TopASTNode> parser(string sql);
 #endif

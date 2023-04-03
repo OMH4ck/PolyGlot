@@ -86,7 +86,7 @@ class TypeSystem {
 
  public:
   // static map<IR*, map<int, vector<pair<int,int>>>> cache_inference_map_;
-  static map<IR *, shared_ptr<map<int, vector<pair<int, int>>>>>
+  static map<IRPtr, shared_ptr<map<int, vector<pair<int, int>>>>>
       cache_inference_map_;
   // void init_basic_types();
 
@@ -94,22 +94,22 @@ class TypeSystem {
   static void init_type_dict();
 
   static void split_to_basic_unit(
-      IR *root, std::queue<IR *> &q, map<IR **, IR *> &m_save,
+      IRPtr root, std::queue<IRPtr> &q, map<IRPtr *, IRPtr> &m_save,
       set<IRTYPE> &s_basic_unit_ptr = s_basic_unit_);
 
-  static void connect_back(map<IR **, IR *> &m_save);
+  static void connect_back(map<IRPtr *, IRPtr> &m_save);
 
   static FIXORDER get_fix_order(int type);  // need to finish
 
-  static bool type_fix_framework(IR *root);
+  static bool type_fix_framework(IRPtr root);
 
-  static int get_op_value(IROperator *op);
+  static int get_op_value(std::shared_ptr<IROperator> op);
 
-  static bool is_op_null(IROperator *op);
+  static bool is_op_null(std::shared_ptr<IROperator> op);
 
   // new
-  static bool type_inference_new(IR *cur, int scope_type = NOTEXIST);
-  static set<int> collect_usable_type(IR *cur);
+  static bool type_inference_new(IRPtr cur, int scope_type = NOTEXIST);
+  static set<int> collect_usable_type(IRPtr cur);
   static int locate_defined_variable_by_name(const string &var_name,
                                              int scope_id);
   static string get_class_member_by_type(int type, int target_type);
@@ -122,27 +122,27 @@ class TypeSystem {
       map<int, vector<string>> &function_map,
       map<int, vector<string>> &compound_var_map);
 
-  static DATATYPE find_define_type(IR *cur);
+  static DATATYPE find_define_type(IRPtr cur);
 
-  static void collect_structure_definition(IR *cur, IR *root);
-  static void collect_function_definition(IR *cur);
+  static void collect_structure_definition(IRPtr cur, IRPtr root);
+  static void collect_function_definition(IRPtr cur);
 
-  static void collect_simple_variable_defintion_wt(IR *cur);
-  static void collect_function_definition_wt(IR *cur);
-  static void collect_structure_definition_wt(IR *cur, IR *root);
+  static void collect_simple_variable_defintion_wt(IRPtr cur);
+  static void collect_function_definition_wt(IRPtr cur);
+  static void collect_structure_definition_wt(IRPtr cur, IRPtr root);
 
-  static bool is_contain_definition(IR *cur);
-  static bool collect_definition(IR *cur);
-  static string generate_expression_by_type(int type, IR *ir);
-  static string generate_expression_by_type_core(int type, IR *ir);
+  static bool is_contain_definition(IRPtr cur);
+  static bool collect_definition(IRPtr cur);
+  static string generate_expression_by_type(int type, IRPtr ir);
+  static string generate_expression_by_type_core(int type, IRPtr ir);
   static vector<map<int, vector<string>>> collect_all_var_definition_by_type(
-      IR *cur);
+      IRPtr cur);
 
-  static bool simple_fix(IR *ir, int type);
-  static bool validate(IR *&root);
-  static bool validate_syntax_only(IR *root);
-  static bool top_fix(IR *root);
-  IR *locate_mutated_ir(IR *root);
+  static bool simple_fix(IRPtr ir, int type);
+  static bool validate(IRPtr &root);
+  static bool validate_syntax_only(IRPtr root);
+  static bool top_fix(IRPtr root);
+  IRPtr locate_mutated_ir(IRPtr root);
 
   static string generate_definition(string &var_name, int type);
   static string generate_definition(vector<string> &var_name, int type);
@@ -157,12 +157,12 @@ class TypeSystem {
   static set<int> calc_satisfiable_functions(const set<int> &function_type_set,
                                              const set<int> &available_types);
   static map<int, vector<set<int>>> collect_satisfiable_types(
-      IR *ir, map<int, vector<string>> &simple_var_map,
+      IRPtr ir, map<int, vector<string>> &simple_var_map,
       map<int, vector<string>> &compound_var_map,
       map<int, vector<string>> &function_map);
   static set<int> calc_possible_types_from_structure(int structure_type);
   static string function_call_gen_handler(
-      map<int, vector<string>> &function_map, IR *ir);
+      map<int, vector<string>> &function_map, IRPtr ir);
   static string structure_member_gen_handler(
       map<int, vector<string>> &compound_var_map, int member_type);
   static void update_pointer_var(map<int, vector<string>> &pointer_var_map,
@@ -172,7 +172,7 @@ class TypeSystem {
   static string expression_gen_handler(
       int type, map<int, vector<set<int>>> &all_satisfiable_types,
       map<int, vector<string>> &function_map,
-      map<int, vector<string>> &compound_var_map, IR *ir);
+      map<int, vector<string>> &compound_var_map, IRPtr ir);
   static OPRule parse_op_rule(string s);
   // static OPRule* get_op_rule_by_op_id(int);
   static bool is_op1(int);
@@ -190,7 +190,7 @@ class TypeSystem {
   static void debug();
 };
 
-void extract_struct_after_mutation(IR *);
+void extract_struct_after_mutation(IRPtr);
 }  // namespace typesystem
 }  // namespace polyglot
 
