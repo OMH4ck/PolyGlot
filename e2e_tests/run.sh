@@ -1,6 +1,7 @@
 # Failed on error
 set -e
 
+
 sudo apt-get install -y libreadline-dev
 # Clone the repo
 rm -rf lua
@@ -13,6 +14,10 @@ export SRC=$PWD
 export OUT=/tmp/out
 mkdir -p $OUT
 
+pushd $ROOT
+mkdir release && cd release && cmake .. -DCMAKE_BUILD_TYPE=Release -DLANG=lua && make -j
+popd
+
 export AFLPATH=$PWD/../AFLplusplus
 export CC=$AFLPATH/afl-cc
 export CXX=$AFLPATH/afl-c++
@@ -22,8 +27,6 @@ cd lua && bash ./build_lua.sh
 
 
 # Project root path
-cd $ROOT
-mkdir release && cd release && cmake .. -DCMAKE_BUILD_TYPE=Release -DLANG=lua && make -j
 
 
 export AFL_CUSTOM_MUTATOR_ONLY=1
