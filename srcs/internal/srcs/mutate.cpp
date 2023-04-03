@@ -35,7 +35,7 @@ namespace mutation {
 static inline bool not_unknown(IR *r) { return r->type_ != kUnknown; }
 
 static inline bool is_leaf(IR *r) {
-  return r->left_ == NULL && r->right_ == NULL;
+  return r->left_ == nullptr && r->right_ == nullptr;
 }
 
 Mutator::Mutator() {
@@ -48,7 +48,7 @@ Mutator::Mutator() {
 // Need No fix
 IR *Mutator::deep_copy_with_record(const IR *root, const IR *record) {
   Expects(record != nullptr);
-  IR *left = NULL, *right = NULL, *copy_res;
+  IR *left = nullptr, *right = nullptr, *copy_res;
 
   if (root->left_)
     left = deep_copy_with_record(
@@ -59,7 +59,7 @@ IR *Mutator::deep_copy_with_record(const IR *root, const IR *record) {
                                   record);  // no I forget to update here
 
   IROperator *op = nullptr;
-  if (root->op_ != NULL) {
+  if (root->op_ != nullptr) {
     op = new IROperator(root->op_->prefix_, root->op_->middle_,
                         root->op_->suffix_);
   }
@@ -168,11 +168,11 @@ bool Mutator::init_ir_library_from_a_file(string filename) {
   char content[0x4000] = {0};
   auto fd = open(filename.c_str(), 0);
 
-  read(fd, content, 0x3fff);
+  assert(read(fd, content, 0x3fff) > 0);
   close(fd);
 
   auto p = parser(content);
-  if (p == NULL) {
+  if (p == nullptr) {
     cout << "init " << filename << " failed" << endl;
     return false;
   }
@@ -180,7 +180,7 @@ bool Mutator::init_ir_library_from_a_file(string filename) {
   vector<IR *> v_ir;
   auto res = p->translate(v_ir);
   p->deep_delete();
-  p = NULL;
+  p = nullptr;
 
   add_ir_to_library(res);
   deep_delete(res);
@@ -214,7 +214,7 @@ vector<IR *> Mutator::mutate(IR *input) {
 
   input->mutated_times_ += res.size();
   for (IR *i : res) {
-    assert(i != NULL && "should not be null");
+    assert(i != nullptr && "should not be null");
     i->mutated_times_ = input->mutated_times_;
   }
   return res;
@@ -224,7 +224,7 @@ bool Mutator::replace(IR *root, IR *old_ir, IR *new_ir) {
   auto parent_ir = locate_parent(root, old_ir);
   assert(parent_ir);
   /*
-  if(parent_ir == NULL){
+  if(parent_ir == nullptr){
       return false;
   }
   */
@@ -254,12 +254,12 @@ bool Mutator::is_ir_type_connvertable(IRTYPE a, IRTYPE b) {
 
 IR *Mutator::strategy_replace_with_constraint(IR *cur) {
   assert(cur);
-  // if(!can_be_mutated(cur)) return NULL;
+  // if(!can_be_mutated(cur)) return nullptr;
 
-  if (cur->op_ == NULL ||
+  if (cur->op_ == nullptr ||
       (cur->op_->prefix_.empty() && cur->op_->middle_.empty() &&
        cur->op_->suffix_.empty())) {
-    return NULL;
+    return nullptr;
   }
 
   IRTYPE replace_type = cur->type_;
@@ -275,28 +275,28 @@ IR *Mutator::strategy_replace_with_constraint(IR *cur) {
       res->right_ && !cur->right_ || cur->right_ && !res->right_) {
     // deep_delete(res);
     // if(cur->type_ == kIterationStatement) cout << "failed" << endl;
-    return NULL;
+    return nullptr;
   }
 
   if (res->left_ &&
       !is_ir_type_connvertable(res->left_->type_, cur->left_->type_)) {
     // deep_delete(res);
     // if(cur->type_ == kIterationStatement) cout << "failed" << endl;
-    return NULL;
+    return nullptr;
   }
 
   if (res->right_ &&
       !is_ir_type_connvertable(res->right_->type_, cur->right_->type_)) {
     // deep_delete(res);
     // if(cur->type_ == kIterationStatement) cout << "failed" << endl;
-    return NULL;
+    return nullptr;
   }
 
   auto save_res_left = res->left_;
   auto save_res_right = res->right_;
   auto save_res = res;
-  res->left_ = NULL;
-  res->right_ = NULL;
+  res->left_ = nullptr;
+  res->right_ = nullptr;
 
   res = deep_copy(res);
 
@@ -318,11 +318,11 @@ IR *Mutator::strategy_replace_with_constraint(IR *cur) {
 IR *Mutator::strategy_replace(IR *cur) {
   assert(cur);
 
-  IR *res = NULL;
+  IR *res = nullptr;
   auto randint = get_rand_int(3);
   switch (randint) {
     case 0:
-      if (cur->left_ != NULL && not_unknown(cur->left_)) {
+      if (cur->left_ != nullptr && not_unknown(cur->left_)) {
         res = deep_copy(cur);
         auto new_node = get_ir_from_library(res->left_->type_);
         deep_delete(res->left_);
@@ -331,7 +331,7 @@ IR *Mutator::strategy_replace(IR *cur) {
       break;
 
     case 1:
-      if (cur->right_ != NULL && not_unknown(cur->right_)) {
+      if (cur->right_ != nullptr && not_unknown(cur->right_)) {
         res = deep_copy(cur);
         auto new_node = get_ir_from_library(res->right_->type_);
         deep_delete(res->right_);
@@ -340,7 +340,7 @@ IR *Mutator::strategy_replace(IR *cur) {
       break;
 
     case 2:
-      if (cur->left_ != NULL && cur->right_ != NULL &&
+      if (cur->left_ != nullptr && cur->right_ != nullptr &&
           not_unknown(cur->left_) && not_unknown(cur->right_)) {
         res = deep_copy(cur);
 

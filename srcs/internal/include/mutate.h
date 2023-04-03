@@ -55,7 +55,7 @@ class Mutator {
   void debug(IR *root);
   bool can_be_mutated(IR *);
 
-  IR *record_ = NULL;
+  IR *record_ = nullptr;
   map<IRTYPE, vector<IR *>> ir_library_;
   map<IRTYPE, set<unsigned long>> ir_library_hash_;
 

@@ -34,7 +34,7 @@ shared_ptr<Scope> TypeSystem::current_scope_ptr_;
 map<IR *, shared_ptr<map<TYPEID, vector<pair<TYPEID, TYPEID>>>>>
     TypeSystem::cache_inference_map_;
 
-IR *cur_statement_root = NULL;
+IR *cur_statement_root = nullptr;
 
 unsigned long type_fix_framework_fail_counter = 0;
 unsigned long top_fix_fail_counter = 0;
@@ -71,11 +71,11 @@ void TypeSystem::init_one_internal_obj(string filename) {
   char content[0x4000] = {0};
   auto fd = open(filename.c_str(), 0);
 
-  read(fd, content, 0x3fff);
+  assert(read(fd, content, 0x3fff) > 0);
   close(fd);
 
   auto p = parser(content);
-  if (p == NULL) {
+  if (p == nullptr) {
     cout << "[init_internal_obj] parse " << filename << " failed" << endl;
     return;
   }
@@ -85,7 +85,7 @@ void TypeSystem::init_one_internal_obj(string filename) {
   auto res = p->translate(v_ir);
   set_scope_translation_flag(false);
   p->deep_delete();
-  p = NULL;
+  p = nullptr;
 
   is_internal_obj_setup = true;
   if (type_fix_framework(res) == false)
@@ -126,7 +126,7 @@ void TypeSystem::split_to_basic_unit(IR *root, queue<IR *> &q,
       s_basic_unit.find(root->left_->type_) != s_basic_unit.end()) {
     m_save[&root->left_] = root->left_;
     q.push(root->left_);
-    root->left_ = NULL;
+    root->left_ = nullptr;
   }
   if (root->left_) split_to_basic_unit(root->left_, q, m_save, s_basic_unit);
 
@@ -134,7 +134,7 @@ void TypeSystem::split_to_basic_unit(IR *root, queue<IR *> &q,
       s_basic_unit.find(root->right_->type_) != s_basic_unit.end()) {
     m_save[&root->right_] = root->right_;
     q.push(root->right_);
-    root->right_ = NULL;
+    root->right_ = nullptr;
   }
   if (root->right_) split_to_basic_unit(root->right_, q, m_save, s_basic_unit);
 }
@@ -200,12 +200,12 @@ FIXORDER TypeSystem::get_fix_order(int op) {
 }
 
 int TypeSystem::get_op_value(IROperator *op) {
-  if (op == NULL) return 0;
+  if (op == nullptr) return 0;
   return op_id_map_[op->prefix_][op->middle_][op->suffix_];
 }
 
 bool TypeSystem::is_op_null(IROperator *op) {
-  return (op == NULL ||
+  return (op == nullptr ||
           (op->suffix_ == "" && op->middle_ == "" && op->prefix_ == ""));
 }
 
@@ -251,18 +251,18 @@ IR *search_by_data_type(IR *cur, DATATYPE type,
   if (cur->data_type_ == type) {
     return cur;
   } else if (forbit_type != kDataWhatever && cur->data_type_ == forbit_type) {
-    return NULL;
+    return nullptr;
   } else {
     if (cur->left_) {
       auto res = search_by_data_type(cur->left_, type, forbit_type);
-      if (res != NULL) return res;
+      if (res != nullptr) return res;
     }
     if (cur->right_) {
       auto res = search_by_data_type(cur->right_, type, forbit_type);
-      if (res != NULL) return res;
+      if (res != nullptr) return res;
     }
   }
-  return NULL;
+  return nullptr;
 }
 
 ScopeType scope_js(const string &s) {
@@ -392,7 +392,7 @@ void TypeSystem::collect_structure_definition_wt(IR *cur, IR *root) {
 
     search_by_data_type(cur, kDataClassName, structure_name);
     auto struct_body = search_by_data_type(cur, kDataStructBody);
-    if (struct_body == NULL) return;
+    if (struct_body == nullptr) return;
     shared_ptr<CompoundType> new_compound;
     string current_compound_name;
     if (structure_name.size() > 0) {
@@ -433,7 +433,7 @@ void collect_simple_variable_defintion(IR *cur) {
 
   if (!ir_vec.empty()) {
     for (auto ir : ir_vec) {
-      if (ir->op_ == NULL || ir->op_->prefix_.empty()) {
+      if (ir->op_ == nullptr || ir->op_->prefix_.empty()) {
         auto tmpp = ir->to_string();
         var_type += tmpp.substr(0, tmpp.size() - 1);
       } else {
@@ -479,7 +479,7 @@ void collect_simple_variable_defintion(IR *cur) {
       if (DBG) cout << "This is not a pointer definition" << endl;
       // handle other
     }
-    if (name_ir == NULL || cur_scope == NULL) return;
+    if (name_ir == nullptr || cur_scope == nullptr) return;
     cur_scope->add_definition(new_type, name_ir->str_val_, name_ir->id_);
   }
 }
@@ -686,7 +686,7 @@ void TypeSystem::collect_function_definition(IR *cur) {
       }
       // handle specially
       for (auto ir : ir_vec) {
-        if (ir->op_ == NULL || ir->op_->prefix_.empty()) {
+        if (ir->op_ == nullptr || ir->op_->prefix_.empty()) {
           auto tmpp = ir->to_string();
           var_type += tmpp.substr(0, tmpp.size() - 1);
         } else {
@@ -735,7 +735,7 @@ void TypeSystem::collect_function_definition(IR *cur) {
   if (return_type) {
     auto function_ptr =
         make_function_type(function_name_str, return_type, arg_types);
-    if (function_ptr == NULL || function_name_ir == NULL) return;
+    if (function_ptr == nullptr || function_name_ir == nullptr) return;
     // if(DBG) cout << cur_scope << ", " << function_ptr << endl;
     cur_scope->add_definition(function_ptr->type_id_, function_ptr->type_name_,
                               function_name_ir->id_);
@@ -1097,7 +1097,7 @@ set<int> TypeSystem::collect_usable_type(IR *cur) {
         }
         */
         auto type_ptr = get_type_by_type_id(tmp_type);
-        if (type_ptr == NULL) continue;
+        if (type_ptr == nullptr) continue;
         for (auto &kk : iter.second) {
           if (ir_id > kk.second) {
             flag = true;
@@ -1147,7 +1147,7 @@ vector<map<int, vector<string>>> TypeSystem::collect_all_var_definition_by_type(
       for (auto &iter : current_scope->m_defined_variables_) {
         auto tmp_type = iter.first;
         auto type_ptr = get_type_by_type_id(tmp_type);
-        if (type_ptr == NULL) continue;
+        if (type_ptr == nullptr) continue;
         if (type_ptr->is_function_type()) {
           for (auto &var : iter.second) {
             if (var.second < ir_id) {
@@ -1366,13 +1366,13 @@ string TypeSystem::get_class_member_by_type_no_duplicate(int type,
     auto pfunc = *random_pick(func_sol);
     map<int, vector<string>> tmp_func_map;
     tmp_func_map[pfunc->type_id_] = {pfunc->type_name_};
-    res = member_str + function_call_gen_handler(tmp_func_map, NULL);
+    res = member_str + function_call_gen_handler(tmp_func_map, nullptr);
   } else if (all_sol.size() && func_sol.size()) {
     if (get_rand_int(2)) {
       auto pfunc = *random_pick(func_sol);
       map<int, vector<string>> tmp_func_map;
       tmp_func_map[pfunc->type_id_] = {pfunc->type_name_};
-      res = member_str + function_call_gen_handler(tmp_func_map, NULL);
+      res = member_str + function_call_gen_handler(tmp_func_map, nullptr);
     } else {
       res = *random_pick(all_sol);
     }
@@ -1697,7 +1697,7 @@ string TypeSystem::get_class_member(TYPEID type_id) {
     } else if (is_function_type(var_type)) {
       map<int, vector<string>> tmp_func_map;
       tmp_func_map[var_type] = {var_name};
-      res += "." + TypeSystem::function_call_gen_handler(tmp_func_map, NULL);
+      res += "." + TypeSystem::function_call_gen_handler(tmp_func_map, nullptr);
       break;
     } else {
       res += "." + var_name;
@@ -1771,7 +1771,6 @@ string TypeSystem::generate_expression_by_type(int type, IR *ir) {
   function_gen_counter_ = 0;
   auto res = generate_expression_by_type_core(type, ir);
   if (res.size() == 0) {
-    system("echo duck > duckduck");
     assert(0);
   }
   return res;
@@ -1962,7 +1961,7 @@ string TypeSystem::generate_expression_by_type_core(int type, IR *ir) {
 
 IR *TypeSystem::locate_mutated_ir(IR *root) {
   if (root->left_) {
-    if (root->right_ == NULL) {
+    if (root->right_ == nullptr) {
       return locate_mutated_ir(root->left_);
     }
 
@@ -1977,7 +1976,7 @@ IR *TypeSystem::locate_mutated_ir(IR *root) {
   }
 
   if (contain_fixme(root)) return root;
-  return NULL;
+  return nullptr;
 }
 
 bool TypeSystem::simple_fix(IR *ir, int type) {
@@ -2080,7 +2079,7 @@ bool TypeSystem::top_fix(IR *root) {
 
 bool TypeSystem::validate_syntax_only(IR *root) {
   auto ast = parser(root->to_string());
-  if (ast == NULL) {
+  if (ast == nullptr) {
     return false;
   }
   ast->deep_delete();
@@ -2157,7 +2156,7 @@ bool TypeSystem::validate(IR *&root) {
   gen_counter_ = 0;
   current_fix_scope_ = -1;
   auto ast = parser(root->to_string());
-  if (ast == NULL) {
+  if (ast == nullptr) {
     return false;
   }
 
@@ -2171,7 +2170,7 @@ bool TypeSystem::validate(IR *&root) {
     extract_struct_after_mutation(root);
 
     ast = parser(root->to_string());
-    if (ast == NULL) {
+    if (ast == nullptr) {
       return false;
     }
     ivec.clear();
@@ -2195,14 +2194,14 @@ bool TypeSystem::validate(IR *&root) {
   if (res == false) {
     type_fix_framework_fail_counter++;
     deep_delete(root);
-    root = NULL;
+    root = nullptr;
   } else {
     std::cerr << "Scuessfully fix the type error! " << std::endl;
     res = top_fix(root);
     if (res == false) {
       top_fix_fail_counter++;
       deep_delete(root);
-      root = NULL;
+      root = nullptr;
     }
     top_fix_success_counter++;
   }
@@ -2282,7 +2281,7 @@ int TypeSystem::query_result_type(int op, int arg1, int arg2) {
     assert(0);
   }
 
-  OPRule *rule = NULL;
+  OPRule *rule = nullptr;
   int left = 0, right = 0, result_type = 0;
 
   for (auto &r : op_rules_[op]) {  // exact match
@@ -2404,7 +2403,7 @@ OPRule TypeSystem::parse_op_rule(string s) {
 bool TypeSystem::insert_definition(int scope_id, int type_id, string var_name) {
   auto scope_ptr = get_scope_by_id(scope_id);
   auto type_ptr = get_type_by_type_id(type_id);
-  IR *insert_target = NULL;
+  IR *insert_target = nullptr;
 
   if (!scope_ptr || !type_ptr) return false;
 

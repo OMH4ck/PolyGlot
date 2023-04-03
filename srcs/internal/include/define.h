@@ -25,7 +25,7 @@
   break;        \
   }
 
-#define TRANSLATESTART IR *res = NULL;
+#define TRANSLATESTART IR *res = nullptr;
 
 #define GENERATESTART(len) case_idx_ = rand() % len;
 
@@ -44,10 +44,10 @@
                                 \
   return res;
 
-#define SAFETRANSLATE(a) (assert(a != NULL), a->translate(v_ir_collector))
+#define SAFETRANSLATE(a) (assert(a != nullptr), a->translate(v_ir_collector))
 
 #define SAFEDELETE(a) \
-  if (a != NULL) a->deep_delete()
+  if (a != nullptr) a->deep_delete()
 
 #define SAFEDELETELIST(a) \
   for (auto _i : a) SAFEDELETE(_i)
@@ -79,7 +79,7 @@
 #define PUSH(a) v_ir_collector.push_back(a)
 
 #define MUTATESTART               \
-  IR *res = NULL;                 \
+  IR *res = nullptr;              \
   auto randint = get_rand_int(3); \
   switch (randint) {
 #define DOLEFT case 0: {

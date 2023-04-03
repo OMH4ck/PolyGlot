@@ -85,7 +85,7 @@ void init_convert_chain() {
         get_type_by_type_id(get_basic_type_id_by_string(rule.second));
     auto derived_var =
         get_type_by_type_id(get_basic_type_id_by_string(rule.first));
-    if (base_var != NULL && derived_var != NULL) {
+    if (base_var != nullptr && derived_var != nullptr) {
       derived_var->base_type_.push_back(base_var);
       base_var->derived_type_.push_back(derived_var);
     } else {
@@ -99,7 +99,7 @@ bool is_derived_type(TYPEID dtype, TYPEID btype) {
   auto base_type = get_type_by_type_id(btype);
 
   if (base_type == derived_type) return true;
-  // if(derived_type == NULL || base_type == NULL) return false;
+  // if(derived_type == nullptr || base_type == nullptr) return false;
   assert(derived_type && base_type);
 
   bool res = false;
@@ -479,8 +479,9 @@ void Scope::add_definition(int type, const string &var_name, unsigned long id,
   if (gen::IsWeakType()) {
     if (stype != kScopeStatement) {
       auto p = this;
-      while (p != NULL && p->scope_type_ != stype) p = p->parent_.lock().get();
-      if (p == NULL) p = this;
+      while (p != nullptr && p->scope_type_ != stype)
+        p = p->parent_.lock().get();
+      if (p == nullptr) p = this;
       if (p->s_defined_variable_names_.find(var_name) !=
           p->s_defined_variable_names_.end())
         return;
@@ -624,7 +625,7 @@ void debug_scope_tree(shared_ptr<Scope> cur) {
 void enter_scope(ScopeType scope_type) {
   if (get_scope_translation_flag() == false) return;
   auto new_scope = gen_scope(scope_type);
-  if (g_scope_root == NULL) {
+  if (g_scope_root == nullptr) {
     if (DBG) cout << "set g_scope_root, g_scope_current: " << new_scope << endl;
     g_scope_root = g_scope_current = new_scope;
     // return;
@@ -644,7 +645,7 @@ void exit_scope() {
   if (DBG) cout << "Exit scope: " << g_scope_current->scope_id_ << endl;
   g_scope_current = g_scope_current->parent_.lock();
   if (DBG) cout << "[exit]change g_scope_current: " << g_scope_current << endl;
-  // g_scope_root = NULL;
+  // g_scope_root = nullptr;
 }
 
 shared_ptr<Scope> gen_scope(ScopeType scope_type) {
@@ -806,8 +807,8 @@ void debug_pointer_type(shared_ptr<PointerType> &p) {
 
 void reset_scope() {
   if (DBG) cout << "call reset_scope" << endl;
-  g_scope_current = NULL;
-  g_scope_root = NULL;
+  g_scope_current = nullptr;
+  g_scope_root = nullptr;
   scope_id_map.clear();
   g_scope = 0;
 }

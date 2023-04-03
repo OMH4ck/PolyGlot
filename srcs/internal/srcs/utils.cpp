@@ -71,7 +71,7 @@ TopASTNode *parser(string sql) {
   reset_scope();
 
   if (ff_lex_init(&scanner)) {
-    return NULL;
+    return nullptr;
   }
   state = ff__scan_string(sql.c_str(), scanner);
 
@@ -82,7 +82,7 @@ TopASTNode *parser(string sql) {
 
   if (ret != 0) {
     p->deep_delete();
-    return NULL;
+    return nullptr;
   }
 
   return p;
@@ -90,7 +90,7 @@ TopASTNode *parser(string sql) {
 
 vector<string> get_all_files_in_dir(const char *dir_name) {
   vector<string> file_list;
-  if (NULL == dir_name) {
+  if (nullptr == dir_name) {
     cout << " dir_name is null ! " << endl;
     return file_list;
   }
@@ -105,7 +105,7 @@ vector<string> get_all_files_in_dir(const char *dir_name) {
   struct dirent *filename;  // return value for readdir()
   DIR *dir;                 // return value for opendir()
   dir = opendir(dir_name);
-  if (NULL == dir) {
+  if (nullptr == dir) {
     cout << "Can not open dir " << dir_name << endl;
     return file_list;
   }
@@ -115,7 +115,7 @@ vector<string> get_all_files_in_dir(const char *dir_name) {
   if (abs_path[abs_path.size() - 1] != '/') {
     abs_path += '/';
   }
-  while ((filename = readdir(dir)) != NULL) {
+  while ((filename = readdir(dir)) != nullptr) {
     if (strcmp(filename->d_name, ".") == 0 ||
         strcmp(filename->d_name, "..") == 0)
       continue;
@@ -188,7 +188,7 @@ uint64_t ducking_hash(const void *key, int len) {
    }
    else if(ir->operand_num_ == 1){
    string res = "";
-   if(ir->op_ != NULL){
+   if(ir->op_ != nullptr){
    res += ir->op_->prefix_ + " ";
    res += ir->left_->name_ + " ";
    res += ir->op_->middle_ + " ";
@@ -198,7 +198,7 @@ uint64_t ducking_hash(const void *key, int len) {
    }
    else if(ir->operand_num_ == 2){
    string res = "";
-   if(ir->op_ != NULL){
+   if(ir->op_ != nullptr){
    res += ir->op_->prefix_ + " ";
    res += ir->left_->name_ + " ";
    res += ir->op_->middle_ + " ";
@@ -214,8 +214,8 @@ uint64_t ducking_hash(const void *key, int len) {
 
    void print_ir(IR * ir){
 
-   if(ir->left_ != NULL) print_ir(ir->left_);
-   if(ir->right_ != NULL) print_ir(ir->right_);
+   if(ir->left_ != nullptr) print_ir(ir->left_);
+   if(ir->right_ != nullptr) print_ir(ir->right_);
 
    if(ir->operand_num_ == 0){
    if(ir->type_ == kconst_int)
@@ -229,7 +229,7 @@ uint64_t ducking_hash(const void *key, int len) {
    }
    else if(ir->operand_num_ == 1){
    string res = "";
-   if(ir->op_ != NULL){
+   if(ir->op_ != nullptr){
    res += ir->op_->prefix_ + " ";
    res += ir->left_->name_ + " ";
    res += ir->op_->middle_ + " ";
@@ -239,7 +239,7 @@ uint64_t ducking_hash(const void *key, int len) {
    }
    else if(ir->operand_num_ == 2){
    string res = "";
-   if(ir->op_ != NULL){
+   if(ir->op_ != nullptr){
    res += ir->op_->prefix_ + " ";
    res += ir->left_->name_ + " ";
    res += ir->op_->middle_ + " ";

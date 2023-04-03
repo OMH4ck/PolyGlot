@@ -31,7 +31,7 @@ class IROperator {
 
 class IR {
  public:
-  IR(IRTYPE type, IROperator *op, IR *left = NULL, IR *right = NULL,
+  IR(IRTYPE type, IROperator *op, IR *left = nullptr, IR *right = nullptr,
      DATATYPE data_type = kDataWhatever);
 
   IR(IRTYPE type, string str_val, DATATYPE data_type = kDataWhatever,
@@ -74,9 +74,9 @@ class IR {
 
   string str_val_;
 
-  IROperator *op_ = NULL;
-  IR *left_ = NULL;
-  IR *right_ = NULL;
+  IROperator *op_ = nullptr;
+  IR *left_ = nullptr;
+  IR *right_ = nullptr;
   int operand_num_;
   unsigned int mutated_times_ = 0;
 

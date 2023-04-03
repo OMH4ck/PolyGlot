@@ -28,7 +28,7 @@ size_t PolyGlotMutator::generate(const char *test_case) {
   Program *program_root;
   vector<IR *> ir_set, mutated_tree;
   program_root = parser(test_case);
-  if (program_root == NULL) {
+  if (program_root == nullptr) {
     return 0;
   }
 

@@ -18,7 +18,7 @@ static unsigned long id_counter;
 
 #define STORE_IR_SCOPE()                                                       \
   if (scope_tranlation) {                                                      \
-    if (g_scope_current == NULL)                                               \
+    if (g_scope_current == nullptr) \
       return;                                                                  \
     g_scope_current->v_ir_set_.push_back(this);                                \
     this->scope_id_ = g_scope_current->scope_id_;                              \
@@ -31,7 +31,7 @@ Node *generate_ast_node_by_type(IRTYPE type) {
 
   ALLCLASS(DECLARE_CASE);
 #undef DECLARE_CASE
-  return NULL;
+  return nullptr;
 }
 
 NODETYPE get_nodetype_by_string(string s) {
@@ -74,7 +74,7 @@ DATATYPE get_datatype_by_string(string s) {
   return kDataWhatever;
 }
 
-IR *Node::translate(vector<IR *> &v_ir_collector) { return NULL; }
+IR *Node::translate(vector<IR *> &v_ir_collector) { return nullptr; }
 
 /*
 void set_scope_translation_flag(bool flag) {

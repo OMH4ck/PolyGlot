@@ -20,7 +20,7 @@ class PolyGlotMutator {
   std::string current_input_;
   polyglot::typesystem::TypeSystem g_typesystem;
   char *g_libary_path;
-  char *g_current_input = NULL;
+  char *g_current_input = nullptr;
   std::vector<std::string> save_test_cases_;
 };
 

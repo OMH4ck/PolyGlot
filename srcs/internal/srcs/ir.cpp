@@ -17,7 +17,7 @@ static unsigned long id_counter;
 
 #define STORE_IR_SCOPE()                          \
   if (scope_tranlation) {                         \
-    if (g_scope_current == NULL) return;          \
+    if (g_scope_current == nullptr) return;       \
     g_scope_current->v_ir_set_.push_back(this);   \
     this->scope_id_ = g_scope_current->scope_id_; \
   }
@@ -37,9 +37,9 @@ IR::IR(IRTYPE type, string str_val, DATATYPE data_type, int scope,
        DATAFLAG flag)
     : type_(type),
       str_val_(str_val),
-      op_(NULL),
-      left_(NULL),
-      right_(NULL),
+      op_(nullptr),
+      left_(nullptr),
+      right_(nullptr),
       operand_num_(0),
       data_type_(data_type),
       scope_(scope),
@@ -52,9 +52,9 @@ IR::IR(IRTYPE type, const char *str_val, DATATYPE data_type, int scope,
        DATAFLAG flag)
     : type_(type),
       str_val_(str_val),
-      op_(NULL),
-      left_(NULL),
-      right_(NULL),
+      op_(nullptr),
+      left_(nullptr),
+      right_(nullptr),
       operand_num_(0),
       data_type_(data_type),
       scope_(scope),
@@ -66,9 +66,9 @@ IR::IR(IRTYPE type, const char *str_val, DATATYPE data_type, int scope,
 IR::IR(IRTYPE type, bool b_val, DATATYPE data_type, int scope, DATAFLAG flag)
     : type_(type),
       bool_val_(b_val),
-      left_(NULL),
-      op_(NULL),
-      right_(NULL),
+      left_(nullptr),
+      op_(nullptr),
+      right_(nullptr),
       operand_num_(0),
       data_type_(kDataWhatever),
       scope_(scope),
@@ -81,9 +81,9 @@ IR::IR(IRTYPE type, unsigned long long_val, DATATYPE data_type, int scope,
        DATAFLAG flag)
     : type_(type),
       long_val_(long_val),
-      left_(NULL),
-      op_(NULL),
-      right_(NULL),
+      left_(nullptr),
+      op_(nullptr),
+      right_(nullptr),
       operand_num_(0),
       data_type_(kDataWhatever),
       scope_(scope),
@@ -95,9 +95,9 @@ IR::IR(IRTYPE type, unsigned long long_val, DATATYPE data_type, int scope,
 IR::IR(IRTYPE type, int int_val, DATATYPE data_type, int scope, DATAFLAG flag)
     : type_(type),
       int_val_(int_val),
-      left_(NULL),
-      op_(NULL),
-      right_(NULL),
+      left_(nullptr),
+      op_(nullptr),
+      right_(nullptr),
       operand_num_(0),
       data_type_(kDataWhatever),
       scope_(scope),
@@ -109,9 +109,9 @@ IR::IR(IRTYPE type, int int_val, DATATYPE data_type, int scope, DATAFLAG flag)
 IR::IR(IRTYPE type, double f_val, DATATYPE data_type, int scope, DATAFLAG flag)
     : type_(type),
       float_val_(f_val),
-      left_(NULL),
-      op_(NULL),
-      right_(NULL),
+      left_(nullptr),
+      op_(nullptr),
+      right_(nullptr),
       operand_num_(0),
       data_type_(kDataWhatever),
       scope_(scope),
@@ -141,7 +141,7 @@ IR::IR(IRTYPE type, IROperator *op, IR *left, IR *right, double f_val,
 IR::IR(const IR *ir, IR *left, IR *right) {
   // STORE_IR_SCOPE();
   this->type_ = ir->type_;
-  if (ir->op_ != NULL)
+  if (ir->op_ != nullptr)
     this->op_ = OP3(ir->op_->prefix_, ir->op_->middle_, ir->op_->suffix_);
   else {
     this->op_ = OP0();
@@ -159,7 +159,7 @@ IR::IR(const IR *ir, IR *left, IR *right) {
 }
 
 void deep_delete(IR *root) {
-  if (root == NULL) return;
+  if (root == nullptr) return;
   if (root->left_) deep_delete(root->left_);
   if (root->right_) deep_delete(root->right_);
 
@@ -169,7 +169,7 @@ void deep_delete(IR *root) {
 }
 
 IR *deep_copy(const IR *root) {
-  IR *left = NULL, *right = NULL, *copy_res;
+  IR *left = nullptr, *right = nullptr, *copy_res;
 
   if (root->left_)
     left = deep_copy(root->left_);  // do you have a second version for
@@ -219,21 +219,21 @@ void IR::to_string_core(std::string &res) {
     absl::StrAppend(&res, str_val_);
   }
 
-  if (op_ != NULL) {
+  if (op_ != nullptr) {
     absl::StrAppend(&res, op_->prefix_, " ");
   }
-  if (left_ != NULL) {
+  if (left_ != nullptr) {
     left_->to_string_core(res);
     absl::StrAppend(&res, " ");
   }
-  if (op_ != NULL) {
+  if (op_ != nullptr) {
     absl::StrAppend(&res, op_->middle_, " ");
   }
-  if (right_ != NULL) {
+  if (right_ != nullptr) {
     right_->to_string_core(res);
     absl::StrAppend(&res, " ");
   }
-  if (op_ != NULL) {
+  if (op_ != nullptr) {
     absl::StrAppend(&res, op_->suffix_);
   }
 }
@@ -256,12 +256,12 @@ int cal_list_num(IR *ir) { return cal_list_num_dfs(ir, ir->type_); }
 IR *locate_parent(IR *root, IR *old_ir) {
   if (root->left_ == old_ir || root->right_ == old_ir) return root;
 
-  if (root->left_ != NULL)
+  if (root->left_ != nullptr)
     if (auto res = locate_parent(root->left_, old_ir)) return res;
-  if (root->right_ != NULL)
+  if (root->right_ != nullptr)
     if (auto res = locate_parent(root->right_, old_ir)) return res;
 
-  return NULL;
+  return nullptr;
 }
 
 IR *locate_define_top_ir(IR *root, IR *ir) {
@@ -282,7 +282,7 @@ IR *locate_define_top_ir(IR *root, IR *ir) {
   cout << "root: " << root->to_string() << endl;
   cout << "find: " << ir->to_string() << endl;
   assert(0);
-  return NULL;
+  return nullptr;
 }
 
 void set_scope_translation_flag(bool flag) {
