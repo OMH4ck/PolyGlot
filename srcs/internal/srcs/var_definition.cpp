@@ -462,7 +462,7 @@ shared_ptr<FunctionType> make_function_type_by_scope(shared_ptr<Scope> scope) {
   */
 }
 
-void Scope::add_definition(int type, IR *ir) {
+void Scope::add_definition(int type, IRPtr ir) {
   if (type == 0) return;
   m_define_ir_[type].push_back(ir);
 }
@@ -655,7 +655,7 @@ shared_ptr<Scope> gen_scope(ScopeType scope_type) {
   return res;
 }
 
-void CompoundType::remove_unfix(IR *ir) {
+void CompoundType::remove_unfix(IRPtr ir) {
   can_be_fixed_ir_.erase(ir);
   v_members_[ir->value_type_].push_back(ir->str_val_);
 }

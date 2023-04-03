@@ -3,6 +3,7 @@
 #include "ast.h"
 #include "bison_parser.h"
 #include "flex_lexer.h"
+#include "gen_ir.h"
 #include "typesystem.h"
 #include "var_definition.h"
 
@@ -64,7 +65,7 @@ int gen_int() { return 1; }
 
 typedef unsigned long uint64_t;
 
-TopASTNode *parser(string sql) {
+std::shared_ptr<TopASTNode> parser(string sql) {
   yyscan_t scanner;
   YY_BUFFER_STATE state;
   TopASTNode *p = new TopASTNode();
@@ -85,7 +86,8 @@ TopASTNode *parser(string sql) {
     return nullptr;
   }
 
-  return p;
+  std::shared_ptr<TopASTNode> p1(p);
+  return p1;
 }
 
 vector<string> get_all_files_in_dir(const char *dir_name) {
@@ -173,7 +175,7 @@ uint64_t ducking_hash(const void *key, int len) {
 }
 
 /*
-   void print_v_ir(vector<IR *> &v_ir_collector){
+   void print_v_ir(vector<IRPtr > &v_ir_collector){
    for(auto ir: v_ir_collector){
    if(ir->operand_num_ == 0){
    if(ir->type_ == kconst_int)
@@ -212,7 +214,7 @@ uint64_t ducking_hash(const void *key, int len) {
    return;
    }
 
-   void print_ir(IR * ir){
+   void print_ir(IRPtr  ir){
 
    if(ir->left_ != nullptr) print_ir(ir->left_);
    if(ir->right_ != nullptr) print_ir(ir->right_);

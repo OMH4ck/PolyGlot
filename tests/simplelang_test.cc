@@ -15,20 +15,20 @@ class ParserTest : public ::testing::TestWithParam<std::string_view> {};
 TEST_P(ParserTest, ParseValidTestCaseReturnNotNull) {
   std::string_view test_case = GetParam();
 
-  Program* program_root = parser(test_case.data());
+  auto program_root = parser(test_case.data());
   ASSERT_TRUE(program_root != nullptr);
-  program_root->deep_delete();
+  // program_root->deep_delete();
 }
 
 TEST_P(ParserTest, ValidTestCaseCanTranslate) {
   std::string_view test_case = GetParam();
 
-  Program* program_root = parser(test_case.data());
+  auto program_root = parser(test_case.data());
   ASSERT_TRUE(program_root != nullptr);
 
-  std::vector<IR*> ir_set;
+  std::vector<IRPtr> ir_set;
   auto root = program_root->translate(ir_set);
-  program_root->deep_delete();
+  // program_root->deep_delete();
 
   ASSERT_FALSE(ir_set.empty());
   deep_delete(root);
@@ -97,10 +97,10 @@ TEST_F(MutatorTestF, MutateGenerateDifferentTestCases) {
 
   while (unique_test_cases.size() < 20) {
     // Avoid mutated_times_ too large, so we make it clean every time.
-    vector<IR*> ir_set;
-    Program* program_root = parser(test_case.data());
+    vector<IRPtr> ir_set;
+    auto program_root = parser(test_case.data());
     auto root = program_root->translate(ir_set);
-    program_root->deep_delete();
+    // program_root->deep_delete();
 
     auto mutated_irs = mutator.mutate_all(ir_set);
     for (auto& ir : mutated_irs) {
@@ -117,16 +117,16 @@ TEST_F(MutatorTestF, MutateGenerateParsableTestCases) {
   std::string_view test_case = "INT a = 1;";
 
   for (size_t i = 0; i < 1000; ++i) {
-    vector<IR*> ir_set;
-    Program* program_root = parser(test_case.data());
+    vector<IRPtr> ir_set;
+    auto program_root = parser(test_case.data());
     auto root = program_root->translate(ir_set);
-    program_root->deep_delete();
+    // program_root->deep_delete();
 
     auto mutated_irs = mutator.mutate_all(ir_set);
     for (auto& ir : mutated_irs) {
-      Program* new_root = parser(ir->to_string());
+      auto new_root = parser(ir->to_string());
       ASSERT_TRUE(new_root != nullptr) << ir->to_string();
-      new_root->deep_delete();
+      // new_root->deep_delete();
       deep_delete(ir);
     }
     deep_delete(root);
@@ -137,10 +137,10 @@ TEST(TypeSystemTest, ValidateFixDefineUse) {
   std::string_view test_case = "INT a = 1;\n c + c;\n";
   std::string_view validated_test_case = "INT a = 1 ;\n a + a ;\n ";
 
-  Program* program_root = parser(test_case.data());
-  std::vector<IR*> ir_set;
+  auto program_root = parser(test_case.data());
+  std::vector<IRPtr> ir_set;
   auto root = program_root->translate(ir_set);
-  program_root->deep_delete();
+  // program_root->deep_delete();
 
   mutation::Mutator mutator;
   mutator.extract_struct(root);
@@ -152,4 +152,9 @@ TEST(TypeSystemTest, ValidateFixDefineUse) {
   ASSERT_TRUE(root != nullptr);
   EXPECT_EQ(root->to_string(), validated_test_case);
   deep_delete(root);
+}
+
+int main(int argc, char** argv) {
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

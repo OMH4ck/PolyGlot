@@ -25,7 +25,7 @@
   break;        \
   }
 
-#define TRANSLATESTART IR *res = nullptr;
+#define TRANSLATESTART IRPtr res = nullptr;
 
 #define GENERATESTART(len) case_idx_ = rand() % len;
 
@@ -47,39 +47,39 @@
 #define SAFETRANSLATE(a) (assert(a != nullptr), a->translate(v_ir_collector))
 
 #define SAFEDELETE(a) \
-  if (a != nullptr) a->deep_delete()
+  if (a != nullptr) a = nullptr
 
 #define SAFEDELETELIST(a) \
   for (auto _i : a) SAFEDELETE(_i)
 
-#define OP1(a) new IROperator(a)
+#define OP1(a) std::make_shared<IROperator>(a)
 
-#define OP2(a, b) new IROperator(a, b)
+#define OP2(a, b) std::make_shared<IROperator>(a, b)
 
-#define OP3(a, b, c) new IROperator(a, b, c)
+#define OP3(a, b, c) std::make_shared<IROperator>(a, b, c)
 
-#define OPSTART(a) new IROperator(a)
+#define OPSTART(a) std::make_shared<IROperator>(a)
 
-#define OPMID(a) new IROperator("", a, "")
+#define OPMID(a) std::make_shared<IROperator>("", a, "")
 
-#define OPEND(a) new IROperator("", "", a)
+#define OPEND(a) std::make_shared<IROperator>("", "", a)
 
-#define OP0() new IROperator()
+#define OP0() std::make_shared<IROperator>()
 
-#define TRANSLATELIST(t, a, b)           \
-  res = SAFETRANSLATE(a[0]);             \
-  res = new IR(t, OP0(), res);           \
-  v_ir_collector.push_back(res);         \
-  for (int i = 1; i < a.size(); i++) {   \
-    IR *tmp = SAFETRANSLATE(a[i]);       \
-    res = new IR(t, OPMID(b), res, tmp); \
-    v_ir_collector.push_back(res);       \
+#define TRANSLATELIST(t, a, b)                         \
+  res = SAFETRANSLATE(a[0]);                           \
+  res = std::make_shared<IR>(t, OP0(), res);           \
+  v_ir_collector.push_back(res);                       \
+  for (int i = 1; i < a.size(); i++) {                 \
+    IRPtr tmp = SAFETRANSLATE(a[i]);                   \
+    res = std::make_shared<IR>(t, OPMID(b), res, tmp); \
+    v_ir_collector.push_back(res);                     \
   }
 
 #define PUSH(a) v_ir_collector.push_back(a)
 
 #define MUTATESTART               \
-  IR *res = nullptr;              \
+  IRPtr res = nullptr;            \
   auto randint = get_rand_int(3); \
   switch (randint) {
 #define DOLEFT case 0: {
