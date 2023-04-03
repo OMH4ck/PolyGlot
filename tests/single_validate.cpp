@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
     cout << "Failed in validation!" << endl;
   }
 
-  deep_delete(root);
+  ;
 
   return 0;
 }

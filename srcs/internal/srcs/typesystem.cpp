@@ -92,7 +92,7 @@ void TypeSystem::init_one_internal_obj(string filename) {
     cout << "[init_internal_obj] setup " << filename << " failed" << endl;
   is_internal_obj_setup = false;
 
-  deep_delete(res);
+  ;
 }
 
 void TypeSystem::init() {
@@ -2116,7 +2116,7 @@ void extract_struct_after_mutation(IRPtr root) {
       if (contain_fixme(root->left_)) {
         auto save_ir_id = root->left_->id_;
         auto save_scope = root->left_->scope_id_;
-        deep_delete(root->left_);
+        ;
         root->left_ = std::make_shared<IR>(kStringLiteral, "FIXME");
         root->left_->scope_id_ = save_scope;
         root->left_->id_ = save_ir_id;
@@ -2130,7 +2130,7 @@ void extract_struct_after_mutation(IRPtr root) {
       if (contain_fixme(root->right_)) {
         auto save_ir_id = root->right_->id_;
         auto save_scope = root->right_->scope_id_;
-        deep_delete(root->right_);
+        ;
         root->right_ = std::make_shared<IR>(kStringLiteral, "FIXME");
         root->right_->scope_id_ = save_scope;
         root->right_->id_ = save_ir_id;
@@ -2165,7 +2165,7 @@ bool TypeSystem::validate(IRPtr &root) {
   if (!gen::IsWeakType()) {
     ast->translate(ivec);
     // ast->deep_delete();
-    deep_delete(root);
+    ;
     root = ivec.back();
     extract_struct_after_mutation(root);
 
@@ -2179,13 +2179,13 @@ bool TypeSystem::validate(IRPtr &root) {
 
     ast->translate(ivec);
     // ast->deep_delete();
-    deep_delete(root);
+    ;
     root = ivec.back();
   } else {
     set_scope_translation_flag(true);
     ast->translate(ivec);
     // ast->deep_delete();
-    deep_delete(root);
+    ;
     root = ivec.back();
     extract_struct_after_mutation(root);
   }
@@ -2193,14 +2193,14 @@ bool TypeSystem::validate(IRPtr &root) {
   res = type_fix_framework(root);
   if (res == false) {
     type_fix_framework_fail_counter++;
-    deep_delete(root);
+    ;
     root = nullptr;
   } else {
     std::cerr << "Scuessfully fix the type error! " << std::endl;
     res = top_fix(root);
     if (res == false) {
       top_fix_fail_counter++;
-      deep_delete(root);
+      ;
       root = nullptr;
     }
     top_fix_success_counter++;

@@ -20,7 +20,7 @@ class Mutator {
   ~Mutator() {
     for (auto &k : ir_library_) {
       for (auto ir : k.second) {
-        deep_delete(ir);
+        ;
       }
     }
   }

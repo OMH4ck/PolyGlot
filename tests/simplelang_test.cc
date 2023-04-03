@@ -31,7 +31,7 @@ TEST_P(ParserTest, ValidTestCaseCanTranslate) {
   // program_root->deep_delete();
 
   ASSERT_FALSE(ir_set.empty());
-  deep_delete(root);
+  ;
 }
 
 INSTANTIATE_TEST_SUITE_P(ValidTestCase, ParserTest,
@@ -105,9 +105,8 @@ TEST_F(MutatorTestF, MutateGenerateDifferentTestCases) {
     auto mutated_irs = mutator.mutate_all(ir_set);
     for (auto& ir : mutated_irs) {
       unique_test_cases.insert(ir->to_string());
-      deep_delete(ir);
-    }
-    deep_delete(root);
+      ;
+    };
   }
 
   ASSERT_GE(unique_test_cases.size(), 20);
@@ -127,9 +126,8 @@ TEST_F(MutatorTestF, MutateGenerateParsableTestCases) {
       auto new_root = parser(ir->to_string());
       ASSERT_TRUE(new_root != nullptr) << ir->to_string();
       // new_root->deep_delete();
-      deep_delete(ir);
-    }
-    deep_delete(root);
+      ;
+    };
   }
 }
 
@@ -151,7 +149,7 @@ TEST(TypeSystemTest, ValidateFixDefineUse) {
   ASSERT_TRUE(ts.validate(root));
   ASSERT_TRUE(root != nullptr);
   EXPECT_EQ(root->to_string(), validated_test_case);
-  deep_delete(root);
+  ;
 }
 
 int main(int argc, char** argv) {

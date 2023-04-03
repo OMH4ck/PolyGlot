@@ -161,19 +161,6 @@ IR::IR(const IRPtr ir, IRPtr left, IRPtr right) {
   this->mutated_times_ = ir->mutated_times_;
 }
 
-void deep_delete(IRPtr root) {
-  return;
-  /*
-  if (root == nullptr) return;
-  if (root->left_) deep_delete(root->left_);
-  if (root->right_) deep_delete(root->right_);
-
-  if (root->op_) delete root->op_;
-
-  delete root;
-  */
-}
-
 IRPtr deep_copy(const IRPtr root) {
   IRPtr left = nullptr, right = nullptr, copy_res;
 

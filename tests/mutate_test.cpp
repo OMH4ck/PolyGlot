@@ -107,19 +107,19 @@ int main(int argc, char *argv[]) {
           cout << "Validate fail..." << endl;
         }
 
-        deep_delete(ir);
+        ;
         // getchar();
       }
     }
     for (auto k : v_ir) {
-      deep_delete(k.back());
+      ;
     }
     v_ir = tmptmp;
   }
 
-  // deep_delete(root);
+  // ;
   for (auto k : v_ir) {
-    deep_delete(k.back());
+    ;
   }
 
   return 0;

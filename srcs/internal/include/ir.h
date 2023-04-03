@@ -98,8 +98,6 @@ int cal_list_num(IRPtr);
 IRPtr locate_define_top_ir(IRPtr, IRPtr);
 IRPtr locate_parent(IRPtr root, IRPtr old_ir);
 
-void deep_delete(IRPtr root);
-
 unsigned int calc_node_num(IRPtr root);
 bool contain_fixme(IRPtr);
 

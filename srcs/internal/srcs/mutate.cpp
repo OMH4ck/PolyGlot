@@ -109,13 +109,13 @@ vector<IRPtr> Mutator::mutate_all(vector<IRPtr> &irs_to_mutate) {
       string tmp = new_ir_tree->to_string();
       unsigned tmp_hash = hash(tmp);
       if (res_hash.find(tmp_hash) != res_hash.end()) {
-        deep_delete(new_ir_tree);
-        deep_delete(backup);
+        ;
+        ;
         continue;
       }
 
       res_hash.insert(tmp_hash);
-      deep_delete(new_ir_tree);
+      ;
 
       res.push_back(backup);
     }
@@ -146,7 +146,7 @@ void Mutator::add_ir_to_library_limited(IRPtr cur) {
     ir_library_[type][rand_idx] = ir_library_[type].back();
     ir_library_[type].pop_back();
     auto removed_h = hash(removed_ir);
-    deep_delete(removed_ir);
+    ;
     ir_library_hash_[type].erase(removed_h);
   }
 
@@ -183,7 +183,7 @@ bool Mutator::init_ir_library_from_a_file(string filename) {
   p = nullptr;
 
   add_ir_to_library(res);
-  deep_delete(res);
+  ;
   cout << "init " << filename << " success" << endl;
   return true;
 }
@@ -229,11 +229,11 @@ bool Mutator::replace(IRPtr root, IRPtr old_ir, IRPtr new_ir) {
   }
   */
   if (parent_ir->left_ == old_ir) {
-    deep_delete(old_ir);
+    ;
     parent_ir->left_ = new_ir;
     return true;
   } else if (parent_ir->right_ == old_ir) {
-    deep_delete(old_ir);
+    ;
     parent_ir->right_ = new_ir;
     return true;
   }
@@ -273,21 +273,21 @@ IRPtr Mutator::strategy_replace_with_constraint(IRPtr cur) {
 
   if (res->left_ && !cur->left_ || cur->left_ && !res->left_ ||
       res->right_ && !cur->right_ || cur->right_ && !res->right_) {
-    // deep_delete(res);
+    // ;
     // if(cur->type_ == kIterationStatement) cout << "failed" << endl;
     return nullptr;
   }
 
   if (res->left_ &&
       !is_ir_type_connvertable(res->left_->type_, cur->left_->type_)) {
-    // deep_delete(res);
+    // ;
     // if(cur->type_ == kIterationStatement) cout << "failed" << endl;
     return nullptr;
   }
 
   if (res->right_ &&
       !is_ir_type_connvertable(res->right_->type_, cur->right_->type_)) {
-    // deep_delete(res);
+    // ;
     // if(cur->type_ == kIterationStatement) cout << "failed" << endl;
     return nullptr;
   }
@@ -325,7 +325,7 @@ IRPtr Mutator::strategy_replace(IRPtr cur) {
       if (cur->left_ != nullptr && not_unknown(cur->left_)) {
         res = deep_copy(cur);
         auto new_node = get_ir_from_library(res->left_->type_);
-        deep_delete(res->left_);
+        ;
         res->left_ = deep_copy(new_node);
       }
       break;
@@ -334,7 +334,7 @@ IRPtr Mutator::strategy_replace(IRPtr cur) {
       if (cur->right_ != nullptr && not_unknown(cur->right_)) {
         res = deep_copy(cur);
         auto new_node = get_ir_from_library(res->right_->type_);
-        deep_delete(res->right_);
+        ;
         res->right_ = deep_copy(new_node);
       }
       break;
@@ -346,10 +346,10 @@ IRPtr Mutator::strategy_replace(IRPtr cur) {
 
         auto new_left = get_ir_from_library(res->left_->type_);
         auto new_right = get_ir_from_library(res->right_->type_);
-        deep_delete(res->right_);
+        ;
         res->right_ = deep_copy(new_right);
 
-        deep_delete(res->left_);
+        ;
         res->left_ = deep_copy(new_left);
       }
       break;
@@ -398,7 +398,7 @@ void Mutator::extract_struct(IRPtr root) {
 #ifndef SYNTAX_ONLY
   if (root->left_) {
     if (root->left_->data_type_ == kDataFixUnit) {
-      deep_delete(root->left_);
+      ;
       root->left_ = std::make_shared<IR>(kStringLiteral, "FIXME");
     } else {
       extract_struct(root->left_);
@@ -406,7 +406,7 @@ void Mutator::extract_struct(IRPtr root) {
   }
   if (root->right_) {
     if (root->right_->data_type_ == kDataFixUnit) {
-      deep_delete(root->right_);
+      ;
       root->right_ = std::make_shared<IR>(kStringLiteral, "FIXME");
     } else {
       extract_struct(root->right_);

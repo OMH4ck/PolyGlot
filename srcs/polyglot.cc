@@ -20,7 +20,7 @@ void PolyGlotMutator::add_to_library(const char *mem) {
     auto root_ir = p_strip_sql->translate(ir_set);
     // p_strip_sql->deep_delete();
     g_mutator.add_ir_to_library(root_ir);
-    deep_delete(root_ir);
+    ;
   }
 }
 
@@ -43,13 +43,12 @@ size_t PolyGlotMutator::generate(const char *test_case) {
   // program_root->deep_delete();
 
   mutated_tree = g_mutator.mutate_all(ir_set);
-  deep_delete(ir_set[ir_set.size() - 1]);
+  ;
 
   for (auto &ir : mutated_tree) {
     if (polyglot::typesystem::TypeSystem::validate(ir)) {
       save_test_cases_.push_back(ir->to_string());
-    }
-    deep_delete(ir);
+    };
   }
 
   return save_test_cases_.size();
