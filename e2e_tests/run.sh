@@ -28,7 +28,6 @@ cd lua && bash ./build_lua.sh
 
 # Project root path
 
-
 export AFL_CUSTOM_MUTATOR_ONLY=1
 export AFL_DISABLE_TRIM=1
 export AFL_CUSTOM_MUTATOR_LIBRARY=$ROOT/release/libpolyglot_mutator.so
