@@ -132,29 +132,33 @@ void Mutator::add_ir_to_library(IRPtr cur) {
 }
 
 void Mutator::add_ir_to_library_limited(IRPtr cur) {
-  auto type = cur->type_;
-  auto h = hash(cur);
+  const auto type = cur->type_;
+  const auto h = hash(cur);
 
-  if (ir_library_hash_[type].find(h) != ir_library_hash_[type].end()) {
+  if (ir_library_hash_[type].contains(h)) {
     return;
   }
 
-  constexpr unsigned kMaxIRNumForOneType = 0x200;
-  if (ir_library_[type].size() >= kMaxIRNumForOneType) {
-    auto rand_idx = get_rand_int(ir_library_[type].size());
-    auto removed_ir = ir_library_[type][rand_idx];
-    ir_library_[type][rand_idx] = ir_library_[type].back();
-    ir_library_[type].pop_back();
-    auto removed_h = hash(removed_ir);
-    ;
+  constexpr size_t kMaxIRNumForOneType = 0x200;
+  auto &ir_type_library = ir_library_[type];
+  if (ir_type_library.size() >= kMaxIRNumForOneType) {
+    const auto rand_idx = get_rand_int(ir_type_library.size());
+    std::swap(ir_type_library[rand_idx], ir_type_library.back());
+    const auto removed_ir = std::move(ir_type_library.back());
+    ir_type_library.pop_back();
+    const auto removed_h = hash(removed_ir);
     ir_library_hash_[type].erase(removed_h);
   }
 
-  ir_library_[type].push_back(deep_copy(cur));
+  ir_type_library.push_back(deep_copy(cur));
   ir_library_hash_[type].insert(h);
 
-  if (cur->left_) add_ir_to_library_limited(cur->left_);
-  if (cur->right_) add_ir_to_library_limited(cur->right_);
+  if (cur->left_) {
+    add_ir_to_library_limited(cur->left_);
+  }
+  if (cur->right_) {
+    add_ir_to_library_limited(cur->right_);
+  }
 }
 
 void Mutator::init_convertable_ir_type_map() {
@@ -325,7 +329,6 @@ IRPtr Mutator::strategy_replace(IRPtr cur) {
       if (cur->left_ != nullptr && not_unknown(cur->left_)) {
         res = deep_copy(cur);
         auto new_node = get_ir_from_library(res->left_->type_);
-        ;
         res->left_ = deep_copy(new_node);
       }
       break;
@@ -334,7 +337,6 @@ IRPtr Mutator::strategy_replace(IRPtr cur) {
       if (cur->right_ != nullptr && not_unknown(cur->right_)) {
         res = deep_copy(cur);
         auto new_node = get_ir_from_library(res->right_->type_);
-        ;
         res->right_ = deep_copy(new_node);
       }
       break;
@@ -349,7 +351,6 @@ IRPtr Mutator::strategy_replace(IRPtr cur) {
         ;
         res->right_ = deep_copy(new_right);
 
-        ;
         res->left_ = deep_copy(new_left);
       }
       break;
