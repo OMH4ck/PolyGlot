@@ -23,7 +23,7 @@ cd lua && bash ./build_lua.sh
 
 # Project root path
 cd $ROOT
-mkdir release && cd release && cmake .. -DCMAKE_BUILD_TYPE=Debug -DLANG=lua && make -j
+mkdir release && cd release && cmake .. -DCMAKE_BUILD_TYPE=Release -DLANG=lua && make -j
 
 
 export AFL_CUSTOM_MUTATOR_ONLY=1
