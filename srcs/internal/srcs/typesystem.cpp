@@ -177,7 +177,6 @@ bool TypeSystem::type_fix_framework(IRPtr root) {
     }
     if (DBG) cout << "[splitted] " << cur->to_string() << endl;
     if (is_contain_definition(cur)) {
-      std::cerr << "Contain definition: " << cur->to_string() << std::endl;
       collect_definition(cur);
     }
     q.pop();
@@ -315,7 +314,7 @@ void TypeSystem::collect_simple_variable_defintion_wt(IRPtr cur) {
   for (auto i = 0; i < name_vec.size(); i++) {
     auto name_ir = name_vec[i];
     auto type = type_vec[i];
-    std::cerr << "Adding: " << name_ir->to_string() << endl;
+
     if (DBG) cout << "Scope: " << scope_type << endl;
     if (DBG) cout << "Type:" << get_type_name_by_id(type) << endl;
     if (cur_scope->scope_type_ == kScopeClass) {
@@ -426,7 +425,6 @@ void TypeSystem::collect_structure_definition_wt(IRPtr cur, IRPtr root) {
 void collect_simple_variable_defintion(IRPtr cur) {
   string var_type;
 
-  std::cerr << "Collecting: " << cur->to_string() << endl;
   vector<IRPtr> ir_vec;
 
   search_by_data_type(cur, kDataVarType, ir_vec);
@@ -802,7 +800,7 @@ bool TypeSystem::collect_definition(IRPtr cur) {
         }
         return true;
       default:
-        std::cerr << "duck default" << endl;
+
         // handle structure and function ,array ,etc..
         if (gen::IsWeakType()) {
           collect_simple_variable_defintion_wt(cur);
@@ -2196,7 +2194,6 @@ bool TypeSystem::validate(IRPtr &root) {
     ;
     root = nullptr;
   } else {
-    std::cerr << "Scuessfully fix the type error! " << std::endl;
     res = top_fix(root);
     if (res == false) {
       top_fix_fail_counter++;

@@ -1,0 +1,1 @@
+debug.setfenv(3, {})

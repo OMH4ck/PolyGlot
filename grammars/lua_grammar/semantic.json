@@ -1,6 +1,6 @@
 {
     "__comments": "",
-    "InitFileDir":"/home/yongheng/FuzzerFactory/testcases/lua_input/",
+    "InitFileDir":"grammars/lua_grammar/input/",
     "BuiltinObjFile":"",
     "IsWeakType": 1,
     "IRHandlers": [

@@ -21,28 +21,11 @@ return PREFIX_STRINGLITERAL;
 yylval->sval = strdup(yytext);
 return PREFIX_IDENTIFIER;
 +++++
-\'
+[']([^'\\\n]|\\(.|\n))*[']
 -----
-BEGIN singlequotedstring; strbuf = std::stringstream{}; strbuf << '\'';
-+++++
-<singlequotedstring>\'\'
------
-strbuf << '\'';
-+++++
-<singlequotedstring>[^']*
------
-strbuf << yytext;
-+++++
-<singlequotedstring>\'
------
-BEGIN 0; 
-strbuf << '\'';
-yylval->sval = strdup(strbuf.str().c_str());
+std::string s(yytext);
+yylval->sval = strdup(s.substr(0, s.size()).c_str());
 return PREFIX_STRINGLITERAL;
-+++++
-<singlequotedstring><<EOF>>
------
-return 0;
 +++++
 [ \t]+
 -----

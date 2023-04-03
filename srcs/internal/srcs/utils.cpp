@@ -100,7 +100,7 @@ vector<string> get_all_files_in_dir(const char *dir_name) {
   struct stat s;
   lstat(dir_name, &s);
   if (!S_ISDIR(s.st_mode)) {
-    cout << "dir_name is not a valid directory !" << endl;
+    cout << dir_name << "is not a valid directory !" << endl;
     return file_list;
   }
 

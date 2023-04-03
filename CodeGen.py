@@ -4,7 +4,10 @@ import subprocess
 
 # Generate template code based on language and input grammar dir
 def generate_template_code(grammar_dir):
-    os.chdir("..")
+    # Get script dir
+    script_dir = os.path.dirname(os.path.realpath(__file__))
+    os.chdir(script_dir)
+    # os.chdir("..")
     if not os.path.exists("gen"):
         os.mkdir("gen")
     if not os.path.exists("gen/parser"):
