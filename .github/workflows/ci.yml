@@ -31,4 +31,4 @@ jobs:
       - name: unittest
         run: cd build && ctest
       - name: end to end test
-        run: cd e2e_test && bash ./run.sh
+        run: cd e2e_tests && bash ./run.sh
