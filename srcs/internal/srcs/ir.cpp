@@ -15,14 +15,17 @@ static unsigned long id_counter;
 // name_ = gen_id_name();
 #define GEN_NAME() id_ = id_counter++;
 
+// TODO: Put this back to STORE_IR_SCOPE()
+// g_scope_current->v_ir_set_.push_back(this);
+
 #define STORE_IR_SCOPE()                          \
   if (scope_tranlation) {                         \
     if (g_scope_current == nullptr) return;       \
-    g_scope_current->v_ir_set_.push_back(this);   \
     this->scope_id_ = g_scope_current->scope_id_; \
   }
 
-IR::IR(IRTYPE type, IROperator *op, IR *left, IR *right, DATATYPE data_type)
+IR::IR(IRTYPE type, std::shared_ptr<IROperator> op, IRPtr left, IRPtr right,
+       DATATYPE data_type)
     : type_(type),
       op_(op),
       left_(left),
@@ -120,9 +123,9 @@ IR::IR(IRTYPE type, double f_val, DATATYPE data_type, int scope, DATAFLAG flag)
   STORE_IR_SCOPE();
 }
 
-IR::IR(IRTYPE type, IROperator *op, IR *left, IR *right, double f_val,
-       string str_val, string name, unsigned int mutated_times, int scope,
-       DATAFLAG flag)
+IR::IR(IRTYPE type, std::shared_ptr<IROperator> op, IRPtr left, IRPtr right,
+       double f_val, string str_val, string name, unsigned int mutated_times,
+       int scope, DATAFLAG flag)
     : type_(type),
       op_(op),
       left_(left),
@@ -138,7 +141,7 @@ IR::IR(IRTYPE type, IROperator *op, IR *left, IR *right, double f_val,
   STORE_IR_SCOPE();
 }
 
-IR::IR(const IR *ir, IR *left, IR *right) {
+IR::IR(const IRPtr ir, IRPtr left, IRPtr right) {
   // STORE_IR_SCOPE();
   this->type_ = ir->type_;
   if (ir->op_ != nullptr)
@@ -158,7 +161,9 @@ IR::IR(const IR *ir, IR *left, IR *right) {
   this->mutated_times_ = ir->mutated_times_;
 }
 
-void deep_delete(IR *root) {
+void deep_delete(IRPtr root) {
+  return;
+  /*
   if (root == nullptr) return;
   if (root->left_) deep_delete(root->left_);
   if (root->right_) deep_delete(root->right_);
@@ -166,10 +171,11 @@ void deep_delete(IR *root) {
   if (root->op_) delete root->op_;
 
   delete root;
+  */
 }
 
-IR *deep_copy(const IR *root) {
-  IR *left = nullptr, *right = nullptr, *copy_res;
+IRPtr deep_copy(const IRPtr root) {
+  IRPtr left = nullptr, right = nullptr, copy_res;
 
   if (root->left_)
     left = deep_copy(root->left_);  // do you have a second version for
@@ -177,7 +183,7 @@ IR *deep_copy(const IR *root) {
   if (root->right_)
     right = deep_copy(root->right_);  // no I forget to update here
 
-  copy_res = new IR(root, left, right);
+  copy_res = std::make_shared<IR>(root, left, right);
 
   return copy_res;
 }
@@ -238,7 +244,7 @@ void IR::to_string_core(std::string &res) {
   }
 }
 
-static int cal_list_num_dfs(IR *ir, IRTYPE type) {
+static int cal_list_num_dfs(IRPtr ir, IRTYPE type) {
   int res = 0;
 
   if (ir->type_ == type) res++;
@@ -249,11 +255,11 @@ static int cal_list_num_dfs(IR *ir, IRTYPE type) {
   return res;
 }
 
-void trim_list_to_num(IR *ir, int num) { return; }
+void trim_list_to_num(IRPtr ir, int num) { return; }
 
-int cal_list_num(IR *ir) { return cal_list_num_dfs(ir, ir->type_); }
+int cal_list_num(IRPtr ir) { return cal_list_num_dfs(ir, ir->type_); }
 
-IR *locate_parent(IR *root, IR *old_ir) {
+IRPtr locate_parent(IRPtr root, IRPtr old_ir) {
   if (root->left_ == old_ir || root->right_ == old_ir) return root;
 
   if (root->left_ != nullptr)
@@ -264,7 +270,7 @@ IR *locate_parent(IR *root, IR *old_ir) {
   return nullptr;
 }
 
-IR *locate_define_top_ir(IR *root, IR *ir) {
+IRPtr locate_define_top_ir(IRPtr root, IRPtr ir) {
   static set<IRTYPE> define_top_set;
   static bool is_init = false;
 
@@ -293,7 +299,7 @@ void set_scope_translation_flag(bool flag) {
 }
 bool get_scope_translation_flag() { return scope_tranlation; }
 
-unsigned int calc_node_num(IR *root) {
+unsigned int calc_node_num(IRPtr root) {
   unsigned int res = 0;
   if (root->left_) res += calc_node_num(root->left_);
   if (root->right_) res += calc_node_num(root->right_);
@@ -301,7 +307,7 @@ unsigned int calc_node_num(IR *root) {
   return res + 1;
 }
 
-bool contain_fixme(IR *ir) {
+bool contain_fixme(IRPtr ir) {
   bool res = false;
   if (ir->left_ || ir->right_) {
     if (ir->left_) {

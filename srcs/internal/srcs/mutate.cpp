@@ -32,9 +32,9 @@ namespace mutation {
 
 #define MUTATE_DBG 0
 
-static inline bool not_unknown(IR *r) { return r->type_ != kUnknown; }
+static inline bool not_unknown(IRPtr r) { return r->type_ != kUnknown; }
 
-static inline bool is_leaf(IR *r) {
+static inline bool is_leaf(IRPtr r) {
   return r->left_ == nullptr && r->right_ == nullptr;
 }
 
@@ -46,9 +46,9 @@ Mutator::Mutator() {
   init_convertable_ir_type_map();
 }
 // Need No fix
-IR *Mutator::deep_copy_with_record(const IR *root, const IR *record) {
+IRPtr Mutator::deep_copy_with_record(const IRPtr root, const IRPtr record) {
   Expects(record != nullptr);
-  IR *left = nullptr, *right = nullptr, *copy_res;
+  IRPtr left = nullptr, right = nullptr, copy_res;
 
   if (root->left_)
     left = deep_copy_with_record(
@@ -58,14 +58,14 @@ IR *Mutator::deep_copy_with_record(const IR *root, const IR *record) {
     right = deep_copy_with_record(root->right_,
                                   record);  // no I forget to update here
 
-  IROperator *op = nullptr;
+  std::shared_ptr<IROperator> op = nullptr;
   if (root->op_ != nullptr) {
-    op = new IROperator(root->op_->prefix_, root->op_->middle_,
-                        root->op_->suffix_);
+    op = std::make_shared<IROperator>(root->op_->prefix_, root->op_->middle_,
+                                      root->op_->suffix_);
   }
-  copy_res =
-      new IR(root->type_, op, left, right, root->float_val_, root->str_val_,
-             root->name_, root->mutated_times_, root->scope_, root->data_flag_);
+  copy_res = std::make_shared<IR>(
+      root->type_, op, left, right, root->float_val_, root->str_val_,
+      root->name_, root->mutated_times_, root->scope_, root->data_flag_);
 
   copy_res->data_type_ = root->data_type_;
 
@@ -76,7 +76,7 @@ IR *Mutator::deep_copy_with_record(const IR *root, const IR *record) {
   return copy_res;
 }
 
-bool Mutator::should_mutate(IR *cur) {
+bool Mutator::should_mutate(IRPtr cur) {
   if (cur->type_ == kUnknown) return false;
   if (not_mutatable_types_.find(cur->type_) != not_mutatable_types_.end())
     return false;
@@ -85,26 +85,26 @@ bool Mutator::should_mutate(IR *cur) {
   return true;
 }
 
-vector<IR *> Mutator::mutate_all(vector<IR *> &irs_to_mutate) {
-  vector<IR *> res;
+vector<IRPtr> Mutator::mutate_all(vector<IRPtr> &irs_to_mutate) {
+  vector<IRPtr> res;
   std::unordered_set<unsigned long> res_hash;
-  IR *root = irs_to_mutate.back();
+  IRPtr root = irs_to_mutate.back();
 
   auto tmp_str = root->to_string();
   res_hash.insert(hash(tmp_str));
-  for (IR *ir : irs_to_mutate) {
+  for (IRPtr ir : irs_to_mutate) {
     if (ir == root || !should_mutate(ir)) continue;
 
     spdlog::debug("Mutating type: {}", get_string_by_nodetype(ir->type_));
-    vector<IR *> new_variants = mutate(ir);
+    vector<IRPtr> new_variants = mutate(ir);
 
-    for (IR *i : new_variants) {
-      IR *new_ir_tree = deep_copy_with_record(root, ir);
+    for (IRPtr i : new_variants) {
+      IRPtr new_ir_tree = deep_copy_with_record(root, ir);
       spdlog::debug("NEW type: {}", get_string_by_nodetype(i->type_));
 
       replace(new_ir_tree, this->record_, i);
 
-      IR *backup = deep_copy(new_ir_tree);
+      IRPtr backup = deep_copy(new_ir_tree);
       extract_struct(new_ir_tree);
       string tmp = new_ir_tree->to_string();
       unsigned tmp_hash = hash(tmp);
@@ -124,14 +124,14 @@ vector<IR *> Mutator::mutate_all(vector<IR *> &irs_to_mutate) {
   return res;
 }
 
-void Mutator::add_ir_to_library(IR *cur) {
+void Mutator::add_ir_to_library(IRPtr cur) {
   extract_struct(cur);
 
   add_ir_to_library_limited(cur);
   return;
 }
 
-void Mutator::add_ir_to_library_limited(IR *cur) {
+void Mutator::add_ir_to_library_limited(IRPtr cur) {
   auto type = cur->type_;
   auto h = hash(cur);
 
@@ -177,9 +177,9 @@ bool Mutator::init_ir_library_from_a_file(string filename) {
     return false;
   }
   // cout << filename << endl;
-  vector<IR *> v_ir;
+  vector<IRPtr> v_ir;
   auto res = p->translate(v_ir);
-  p->deep_delete();
+  // p->deep_delete();
   p = nullptr;
 
   add_ir_to_library(res);
@@ -188,8 +188,8 @@ bool Mutator::init_ir_library_from_a_file(string filename) {
   return true;
 }
 
-vector<IR *> Mutator::mutate(IR *input) {
-  vector<IR *> res;
+vector<IRPtr> Mutator::mutate(IRPtr input) {
+  vector<IRPtr> res;
 
   if (!lucky_enough_to_be_mutated(input->mutated_times_)) {
     // TODO: Why this is not triggered?
@@ -199,28 +199,28 @@ vector<IR *> Mutator::mutate(IR *input) {
 
   constexpr size_t kConstraintReplaceTimes = 0x6;
   for (int i = 0; i < kConstraintReplaceTimes; i++) {
-    if (IR *tmp = strategy_replace_with_constraint(input)) {
+    if (IRPtr tmp = strategy_replace_with_constraint(input)) {
       res.push_back(tmp);
     }
   }
 
-  // if (IR *tmp = strategy_insert(input)) {
+  // if (IRPtr tmp = strategy_insert(input)) {
   //   res.push_back(tmp);
   //  }
 
-  if (IR *tmp = strategy_replace(input)) {
+  if (IRPtr tmp = strategy_replace(input)) {
     res.push_back(tmp);
   }
 
   input->mutated_times_ += res.size();
-  for (IR *i : res) {
+  for (IRPtr i : res) {
     assert(i != nullptr && "should not be null");
     i->mutated_times_ = input->mutated_times_;
   }
   return res;
 }
 
-bool Mutator::replace(IR *root, IR *old_ir, IR *new_ir) {
+bool Mutator::replace(IRPtr root, IRPtr old_ir, IRPtr new_ir) {
   auto parent_ir = locate_parent(root, old_ir);
   assert(parent_ir);
   /*
@@ -252,7 +252,7 @@ bool Mutator::is_ir_type_connvertable(IRTYPE a, IRTYPE b) {
   return true;
 }
 
-IR *Mutator::strategy_replace_with_constraint(IR *cur) {
+IRPtr Mutator::strategy_replace_with_constraint(IRPtr cur) {
   assert(cur);
   // if(!can_be_mutated(cur)) return nullptr;
 
@@ -315,10 +315,10 @@ IR *Mutator::strategy_replace_with_constraint(IR *cur) {
   return res;
 }
 
-IR *Mutator::strategy_replace(IR *cur) {
+IRPtr Mutator::strategy_replace(IRPtr cur) {
   assert(cur);
 
-  IR *res = nullptr;
+  IRPtr res = nullptr;
   auto randint = get_rand_int(3);
   switch (randint) {
     case 0:
@@ -367,8 +367,8 @@ bool Mutator::lucky_enough_to_be_mutated(unsigned int mutated_times) {
 }
 
 // Fix, if no item, generate from scratch
-IR *Mutator::get_ir_from_library(IRTYPE type) {
-  static IR *empty_ir = new IR(kStringLiteral, "");
+IRPtr Mutator::get_ir_from_library(IRTYPE type) {
+  static IRPtr empty_ir = std::make_shared<IR>(kStringLiteral, "");
   if (ir_library_[type].empty()) return empty_ir;
   return vector_rand_ele(ir_library_[type]);
 }
@@ -377,13 +377,13 @@ unsigned long Mutator::hash(string &sql) {
   return ducking_hash(sql.c_str(), sql.size());
 }
 
-unsigned long Mutator::hash(IR *root) {
+unsigned long Mutator::hash(IRPtr root) {
   auto tmp_str = root->to_string();
   return this->hash(tmp_str);
 }
 
 // Need No Fix
-void Mutator::debug(IR *root) {
+void Mutator::debug(IRPtr root) {
   // cout << get_string_by_type(root->type_) << endl;
   cout << ir_library_.size() << endl;
   for (auto &i : ir_library_) {
@@ -391,7 +391,7 @@ void Mutator::debug(IR *root) {
   }
 }
 
-void Mutator::extract_struct(IR *root) {
+void Mutator::extract_struct(IRPtr root) {
   static unsigned long iid = 0;
   auto type = root->type_;
 
@@ -399,7 +399,7 @@ void Mutator::extract_struct(IR *root) {
   if (root->left_) {
     if (root->left_->data_type_ == kDataFixUnit) {
       deep_delete(root->left_);
-      root->left_ = new IR(kStringLiteral, "FIXME");
+      root->left_ = std::make_shared<IR>(kStringLiteral, "FIXME");
     } else {
       extract_struct(root->left_);
     }
@@ -407,7 +407,7 @@ void Mutator::extract_struct(IR *root) {
   if (root->right_) {
     if (root->right_->data_type_ == kDataFixUnit) {
       deep_delete(root->right_);
-      root->right_ = new IR(kStringLiteral, "FIXME");
+      root->right_ = std::make_shared<IR>(kStringLiteral, "FIXME");
     } else {
       extract_struct(root->right_);
     }
@@ -447,7 +447,7 @@ void Mutator::extract_struct(IR *root) {
   }
 }
 
-bool Mutator::can_be_mutated(IR *cur) {
+bool Mutator::can_be_mutated(IRPtr cur) {
   // #ifdef SYNTAX_ONLY
   // return true;
   // #else

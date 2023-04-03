@@ -74,7 +74,7 @@ DATATYPE get_datatype_by_string(string s) {
   return kDataWhatever;
 }
 
-IR *Node::translate(vector<IR *> &v_ir_collector) { return nullptr; }
+IRPtr Node::translate(vector<IRPtr> &v_ir_collector) { return nullptr; }
 
 /*
 void set_scope_translation_flag(bool flag) {

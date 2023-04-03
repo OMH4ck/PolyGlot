@@ -72,6 +72,7 @@ enum DATAFLAG {
 #define isInsertable(a) ((a)&kInsertable)
 
 class IR;
+typedef shared_ptr<IR> IRPtr;
 // AST Node
 class Node {
  public:
@@ -81,11 +82,14 @@ class Node {
   DATAFLAG data_flag_;
   int scope_;
   unsigned int case_idx_;
-  virtual IR *translate(vector<IR *> &v_ir_collector);
+  virtual IRPtr translate(vector<IRPtr> &v_ir_collector);
   virtual void generate() {}
+
+  // Only call this function at parsing failured. You should almost never call
+  // it manually.
   virtual void deep_delete() {}
   Node(){};
-  ~Node(){};
+  virtual ~Node(){};
 };
 
 Node *generate_ast_node_by_type(IRTYPE);

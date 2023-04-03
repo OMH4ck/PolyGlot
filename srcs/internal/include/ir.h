@@ -29,10 +29,13 @@ class IROperator {
   string suffix_;
 };
 
+class IR;
+typedef shared_ptr<IR> IRPtr;
+
 class IR {
  public:
-  IR(IRTYPE type, IROperator *op, IR *left = nullptr, IR *right = nullptr,
-     DATATYPE data_type = kDataWhatever);
+  IR(IRTYPE type, std::shared_ptr<IROperator> op, IRPtr left = nullptr,
+     IRPtr right = nullptr, DATATYPE data_type = kDataWhatever);
 
   IR(IRTYPE type, string str_val, DATATYPE data_type = kDataWhatever,
      int scope = -1, DATAFLAG flag = kUse);
@@ -51,11 +54,11 @@ class IR {
   IR(IRTYPE type, double f_val, DATATYPE data_type = kDataWhatever,
      int scope = -1, DATAFLAG flag = kUse);
 
-  IR(IRTYPE type, IROperator *op, IR *left, IR *right, double f_val,
-     string str_val, string name, unsigned int mutated_times, int scope,
-     DATAFLAG flag);
+  IR(IRTYPE type, std::shared_ptr<IROperator> op, IRPtr left, IRPtr right,
+     double f_val, string str_val, string name, unsigned int mutated_times,
+     int scope, DATAFLAG flag);
 
-  IR(const IR *ir, IR *left, IR *right);
+  IR(const IRPtr ir, IRPtr left, IRPtr right);
 
   union {
     int int_val_;
@@ -74,9 +77,9 @@ class IR {
 
   string str_val_;
 
-  IROperator *op_ = nullptr;
-  IR *left_ = nullptr;
-  IR *right_ = nullptr;
+  std::shared_ptr<IROperator> op_ = nullptr;
+  IRPtr left_ = nullptr;
+  IRPtr right_ = nullptr;
   int operand_num_;
   unsigned int mutated_times_ = 0;
 
@@ -88,16 +91,16 @@ class IR {
   void to_string_core(string &str);
 };
 
-IR *deep_copy(const IR *root);
+IRPtr deep_copy(const IRPtr root);
 
-int cal_list_num(IR *);
+int cal_list_num(IRPtr);
 
-IR *locate_define_top_ir(IR *, IR *);
-IR *locate_parent(IR *root, IR *old_ir);
+IRPtr locate_define_top_ir(IRPtr, IRPtr);
+IRPtr locate_parent(IRPtr root, IRPtr old_ir);
 
-void deep_delete(IR *root);
+void deep_delete(IRPtr root);
 
-unsigned int calc_node_num(IR *root);
-bool contain_fixme(IR *);
+unsigned int calc_node_num(IRPtr root);
+bool contain_fixme(IRPtr);
 
 #endif
