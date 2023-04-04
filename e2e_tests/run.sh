@@ -33,7 +33,7 @@ export AFL_DISABLE_TRIM=1
 export AFL_CUSTOM_MUTATOR_LIBRARY=$ROOT/release/libpolyglot_mutator.so
 export AFL_NO_UI=1
 
-$AFLPATH/afl-fuzz -i $ROOT/grammars/lua_grammar/input -E 20000 -o $OUT/lua_out -- $OUT/fuzz_lua @@
+$AFLPATH/afl-fuzz -i $ROOT/grammars/lua_grammar/input -V 100 -o $OUT/lua_out -- $OUT/fuzz_lua @@
 
 # check the number of files in the output directory is larger than 1000
 if [ $(ls -1 $OUT/lua_out/default/queue | wc -l) -gt 500 ]; then
