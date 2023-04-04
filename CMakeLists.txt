@@ -31,6 +31,7 @@ conan_cmake_configure(
   spdlog/1.11.0
   ms-gsl/4.0.0
   abseil/20230125.2
+  antlr4-cppruntime/4.12.0
   GENERATORS
   CMakeDeps
   CMakeToolchain)
@@ -50,6 +51,7 @@ conan_cmake_install(
 find_package(spdlog)
 find_package(Microsoft.GSL REQUIRED)
 find_package(absl REQUIRED)
+find_package(antlr4-runtime REQUIRED)
 
 # TODO: Add more
 list(APPEND SUPPORTED_LANG lua php c simplelang)
@@ -99,6 +101,7 @@ target_link_libraries(polyglot_mutator PRIVATE polyglot_lib)
 target_link_options(polyglot_mutator PRIVATE $<$<CONFIG:DEBUG>:
                     -fsanitize=address -shared-libasan>)
 
+add_subdirectory(experiments)
 include(lint.cmake)
 enable_testing()
 add_subdirectory(tests)
