@@ -15,6 +15,7 @@ export OUT=/tmp/out
 mkdir -p $OUT
 
 pushd $ROOT
+rm -rf gen
 mkdir release && cd release && cmake .. -DCMAKE_BUILD_TYPE=Release -DLANG=lua && make -j
 popd
 
