@@ -10,6 +10,8 @@ public:
 
     int customAttribute = 0;
 
+
+    bool isLiteral = false;
     void setCustomAttribute(int value) {
         customAttribute = value;
     }

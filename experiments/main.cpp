@@ -10,39 +10,85 @@
 //  Created by Mike Lischke on 13.03.16.
 //
 
-#include <iostream>
-
+#include "SimpleLangBaseVisitor.h"
+#include "SimpleLangLexer.h"
+#include "SimpleLangParser.h"
 #include "antlr4-runtime.h"
-#include "TLexer.h"
-#include "TParser.h"
-#include "TParserBaseVisitor.h"
-//#include "cus.h"
+// #include "cus.h"
+#include <iostream>
+#include <optional>
+#include <stack>
+#include <variant>
+
+#include "custom_rule_context.h"
+#include "ir_translater.h"
 
 using namespace antlrcpptest;
 using namespace antlr4;
 
-
-class CustomExprVisitor : public TParserBaseVisitor {
-public:
-    virtual antlrcpp::Any visitChildren(antlr4::tree::ParseTree *node) override {
-        auto res = TParserVisitor::visitChildren(node);
-        std::cout << "Visiting node: " << node->getText() << std::endl;
-        CustomRuleContext* ctx = (CustomRuleContext*)node;
-        std::cout << "Atribute: " << ctx->customAttribute << std::endl;
-        std::cout << "Alt: " << ctx->getRuleIndex() << std::endl;
-        // Call base implementation to visit child nodes
-        return res;
+class CustomExprVisitor : public SimpleLangBaseVisitor {
+ public:
+  virtual antlrcpp::Any visitChildren(antlr4::tree::ParseTree* node) override {
+    std::cout << "Child number: " << node->children.size() << std::endl;
+    auto res = SimpleLangBaseVisitor::visitChildren(node);
+    std::cout << "Visiting node: " << node->getText() << std::endl;
+    CustomRuleContext* ctx = (CustomRuleContext*)node;
+    std::cout << "Atribute: " << ctx->customAttribute << std::endl;
+    std::cout << "Alt number: " << ctx->getRuleIndex() << std::endl;
+    std::cout << "Child number: " << ctx->children.size() << std::endl;
+    if (ctx->getTreeType() == antlr4::tree::ParseTreeType::TERMINAL) {
+      std::cout << "Terminal node: " << std::endl;
     }
+    if (auto* terminalNode = dynamic_cast<antlr4::tree::TerminalNode*>(node)) {
+    }
+    // Call base implementation to visit child nodes
+    return res;
+  }
 
-    CustomExprVisitor(TParser* parser) : parser_(parser) {}
-private:
-    TParser* parser_;
+  CustomExprVisitor(SimpleLangParser* parser) : parser_(parser) {}
+
+ private:
+  SimpleLangParser* parser_;
 };
 
-int main(int , const char **) {
-  std::string a = u8"🍴 = 🍐 + \"😎\";(((x * π))) * µ + ∰; a + (x * (y ? 0 : 1) + z);";
+// DFS visit the parse tree
+void visitParseTree(tree::ParseTree* node, antlr4::Parser* parser) {
+  std::cout << "Visiting node: " << node->toStringTree(parser) << std::endl;
+  CustomRuleContext* ctx = (CustomRuleContext*)node;
+  if (node->getTreeType() == antlr4::tree::ParseTreeType::TERMINAL) {
+    std::cout << antlr4::Token::MIN_USER_TOKEN_TYPE << std::endl;
+    // check whether the terminal is a charset or literal
+    auto token = (antlr4::tree::TerminalNode*)node;
+    std::cout << token->getSymbol()->getType() << std::endl;
+    std::cout << " is a terminal node." << std::endl;
+    return;
+  }
+
+  if (ctx->isLiteral) {
+    std::cout << " is a literal." << std::endl;
+  }
+  std::stack<tree::ParseTree*> stk;
+  for (auto child : node->children) {
+    std::cout << "Child: " << child->toStringTree(parser) << std::endl;
+    stk.push(child);
+    visitParseTree(child, parser);
+  }
+  std::cout << "Atribute: " << ctx->customAttribute << std::endl;
+  std::cout << "Alt number: " << ctx->getRuleIndex() << std::endl;
+  std::cout << "Child number: " << ctx->children.size() << std::endl;
+}
+
+int main(int, const char**) {
+  std::string a = R"V0G0N(
+  STRUCT c {
+  INT a;
+  INT b;
+  INT c;
+  STRUCT d e = f;
+  };
+  )V0G0N";
   ANTLRInputStream input(a);
-  TLexer lexer(&input);
+  SimpleLangLexer lexer(&input);
   CommonTokenStream tokens(&lexer);
 
   tokens.fill();
@@ -50,12 +96,16 @@ int main(int , const char **) {
     std::cout << token->toString() << std::endl;
   }
 
-  TParser parser(&tokens);
-  tree::ParseTree* tree = parser.main();
+  SimpleLangParser parser(&tokens);
+  tree::ParseTree* tree = parser.program();
 
   std::cout << tree->toStringTree(&parser) << std::endl << std::endl;
 
-  CustomExprVisitor visitor(&parser);
-  visitor.visit(tree);
+  // CustomExprVisitor visitor(&parser);
+  // visitor.visit(tree);
+  visitParseTree(tree, &parser);
+
+  std::cout << "Test translation" << std::endl;
+  IRPtr ir = TranslateToIR(a);
   return 0;
 }
