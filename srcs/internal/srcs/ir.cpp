@@ -16,7 +16,7 @@ static unsigned long id_counter;
 #define GEN_NAME() id_ = id_counter++;
 
 // TODO: Put this back to STORE_IR_SCOPE()
-// g_scope_current->v_ir_set_.push_back(this);
+// g_scope_current->v_ir_set_.push_back(this);   \
 
 #define STORE_IR_SCOPE()                          \
   if (scope_tranlation) {                         \

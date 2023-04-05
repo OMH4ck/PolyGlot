@@ -2397,6 +2397,7 @@ OPRule TypeSystem::parse_op_rule(string s) {
   }
 }
 
+/*
 bool TypeSystem::insert_definition(int scope_id, int type_id, string var_name) {
   auto scope_ptr = get_scope_by_id(scope_id);
   auto type_ptr = get_type_by_type_id(type_id);
@@ -2427,6 +2428,7 @@ bool TypeSystem::insert_definition(int scope_id, int type_id, string var_name) {
 
   return true;
 }
+*/
 
 }  // namespace typesystem
 }  // namespace polyglot

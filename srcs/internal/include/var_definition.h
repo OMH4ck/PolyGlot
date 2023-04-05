@@ -30,7 +30,8 @@ class Scope {
   Scope(int scope_id, ScopeType scope_type)
       : scope_id_(scope_id), scope_type_(scope_type) {}
   ~Scope() {}
-  vector<IRPtr> v_ir_set_;  // all the irs in this scope;
+  // TODO: Avoid using raw pointer
+  // vector<IR*> v_ir_set_;  // all the irs in this scope;
   map<int, vector<IRPtr>> m_define_ir_;
   int scope_id_;
   map<int, shared_ptr<Scope>> children_;
@@ -81,7 +82,7 @@ class CompoundType : public VarType {
   vector<TYPEID> parent_class_;
   map<TYPEID, vector<string>> v_members_;
   set<IRPtr> can_be_fixed_ir_;
-  IRPtr define_root_;
+  // IRPtr define_root_;
 
   string get_member_by_type(TYPEID type);
   void remove_unfix(IRPtr);

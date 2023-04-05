@@ -379,7 +379,7 @@ shared_ptr<CompoundType> make_compound_type_by_scope(shared_ptr<Scope> scope,
     }
   }
 
-  res->define_root_ = scope->v_ir_set_.back();
+  // res->define_root_ = scope->v_ir_set_.back();
   if (DBG)
     cout << "FUCK me in make compound typeid:" << res->type_id_
          << " Scope id:" << scope->scope_id_ << endl;

@@ -181,7 +181,7 @@ class TypeSystem {
   static int get_op_property(int op_id);
   static int gen_counter_, function_gen_counter_, current_fix_scope_;
 
-  static bool insert_definition(int scope_id, int type_id, string var_name);
+  // static bool insert_definition(int scope_id, int type_id, string var_name);
 
   // set up internal object
   static void init_internal_obj(string dir_name);
