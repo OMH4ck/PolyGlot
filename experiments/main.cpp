@@ -25,12 +25,13 @@ using namespace antlr4;
 class CustomExprVisitor : public TParserBaseVisitor {
 public:
     virtual antlrcpp::Any visitChildren(antlr4::tree::ParseTree *node) override {
+        auto res = TParserVisitor::visitChildren(node);
         std::cout << "Visiting node: " << node->getText() << std::endl;
         CustomRuleContext* ctx = (CustomRuleContext*)node;
         std::cout << "Atribute: " << ctx->customAttribute << std::endl;
         std::cout << "Alt: " << ctx->getRuleIndex() << std::endl;
         // Call base implementation to visit child nodes
-        return TParserVisitor::visitChildren(node);
+        return res;
     }
 
     CustomExprVisitor(TParser* parser) : parser_(parser) {}
