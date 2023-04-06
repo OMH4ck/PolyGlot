@@ -19,6 +19,8 @@ typedef int TYPEID;
 #define ANYTYPE 6
 
 enum ScopeType {
+  // No scope.
+  kScopeDefault,
   kScopeGlobal,
   kScopeFunction,
   kScopeStatement,

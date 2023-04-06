@@ -169,14 +169,20 @@ TEST(TypeSystemTest, ValidateFixDefineUse) {
   std::string_view test_case = "INT a = 1;\n c + c;\n";
   std::string_view validated_test_case = "INT a = 1 ;\n a + a ;\n ";
 
+  /*
   auto program_root = parser(test_case.data());
   std::vector<IRPtr> ir_set;
   auto root = program_root->translate(ir_set);
+  */
 
-  mutation::Mutator mutator;
+  std::shared_ptr<Frontend> frontend = std::make_shared<AntlrFrontend>();
+  auto root = frontend->TranslateToIR(test_case.data());
+  std::cerr << "Before extract: " << root->to_string() << std::endl;
+  mutation::Mutator mutator(frontend);
   mutator.extract_struct(root);
 
-  typesystem::TypeSystem ts;
+  std::cerr << "After extract: " << root->to_string() << std::endl;
+  typesystem::TypeSystem ts(frontend);
   ts.init();
 
   ASSERT_TRUE(ts.validate(root));

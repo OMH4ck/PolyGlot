@@ -301,7 +301,7 @@ void TypeSystem::collect_simple_variable_defintion_wt(IRPtr cur) {
   search_by_data_type(cur, kDataVarName, name_vec);
   search_by_data_type(cur, kDataInitiator, init_vec);
   if (name_vec.empty()) {
-    if (DBG) cout << "fail to search for the name" << endl;
+    cout << "fail to search for the name" << endl;
     return;
   } else if (name_vec.size() != init_vec.size()) {
     for (auto i = 0; i < name_vec.size(); i++) {
@@ -323,9 +323,11 @@ void TypeSystem::collect_simple_variable_defintion_wt(IRPtr cur) {
   auto cur_scope = get_scope_by_id(cur->scope_id_);
   for (auto i = 0; i < name_vec.size(); i++) {
     auto name_ir = name_vec[i];
+    std::cout << "Adding name: " << name_ir->to_string() << std::endl;
     auto type = type_vec[i];
 
-    if (DBG) cout << "Scope: " << scope_type << endl;
+    cout << "Scope: " << scope_type << endl;
+    cout << "name_ir id: " << name_ir->id_ << endl;
     if (DBG) cout << "Type:" << get_type_name_by_id(type) << endl;
     if (cur_scope->scope_type_ == kScopeClass) {
       if (DBG) {
@@ -780,6 +782,7 @@ DATATYPE TypeSystem::find_define_type(IRPtr cur) {
 bool TypeSystem::collect_definition(IRPtr cur) {
   bool res = false;
   if (cur->data_type_ == kDataVarDefine) {
+    std::cout << "YESSSSSSSSSSSS" << std::endl;
     auto define_type = find_define_type(cur);
 
     switch (define_type) {
@@ -813,6 +816,7 @@ bool TypeSystem::collect_definition(IRPtr cur) {
 
         // handle structure and function ,array ,etc..
         if (gen::IsWeakType()) {
+          std::cout << "HERE" << std::endl;
           collect_simple_variable_defintion_wt(cur);
         } else {
           collect_simple_variable_defintion(cur);
@@ -1180,8 +1184,10 @@ vector<map<int, vector<string>>> TypeSystem::collect_all_var_definition_by_type(
           }
           for (auto &var : iter.second) {
             if (var.second < ir_id) {
-              if (DBG) cout << "Collecting simple var: " << var.first << endl;
+              cout << "Collecting simple var: " << var.first << endl;
               simple_var[tmp_type].push_back(var.first);
+            } else {
+              cout << "Not collecting simple var: " << var.first << endl;
             }
           }
         }
@@ -1800,9 +1806,8 @@ string TypeSystem::generate_expression_by_type_core(int type, IRPtr ir) {
 
   if (gen_counter_ > 50) return gen_random_num_string();
   gen_counter_++;
-  if (DBG)
-    cout << "Generating type:" << get_type_name_by_id(type)
-         << ", type id: " << type << endl;
+  cout << "Generating type:" << get_type_name_by_id(type)
+       << ", type id: " << type << endl;
   string res;
 
   // collect all possible types
@@ -1844,6 +1849,7 @@ string TypeSystem::generate_expression_by_type_core(int type, IRPtr ir) {
   }
 
   if (all_satisfiable_types.find(type) == all_satisfiable_types.end()) {
+    std::cout << "No satifyting type?" << std::endl;
     // should invoke insert_definition;
     return gen_random_num_string();
     assert(0);
@@ -1997,7 +2003,7 @@ bool TypeSystem::simple_fix(IRPtr ir, int type) {
 
   // if (ir->type_ == kIdentifier && ir->str_val_ == "FIXME")
   if (ir->str_val_.empty() == false && ir->str_val_ == "FIXME") {
-    if (DBG) cout << "Reach here" << endl;
+    cout << "Reach here" << endl;
     ir->str_val_ = generate_expression_by_type(type, ir);
     return true;
   }
@@ -2184,6 +2190,7 @@ bool TypeSystem::validate(IRPtr &root) {
     extract_struct_after_mutation(root);
   }
   // init_internal_type();
+  std::cerr << "Generate IR: " << root->to_string() << "" << std::endl;
   res = type_fix_framework(root);
   if (res == false) {
     type_fix_framework_fail_counter++;

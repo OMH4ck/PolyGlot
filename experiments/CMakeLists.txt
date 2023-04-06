@@ -20,6 +20,7 @@ message("Generated files: ${GENERATED_FILES}")
 add_custom_command(
         OUTPUT ${GENERATED_FILES}
         COMMAND java -jar ${ANTLR4CPP_JAR_LOCATION} -Dlanguage=Cpp -o ${CMAKE_CURRENT_SOURCE_DIR}/generated -visitor -listener -package antlrcpptest ${GRAMMAR_FILE}
+        DEPENDS ${GRAMMAR_FILE}
 )
 
 

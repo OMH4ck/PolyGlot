@@ -64,7 +64,7 @@ void visitParseTree(tree::ParseTree* node, antlr4::Parser* parser) {
     return;
   }
 
-  if (ctx->isLiteral) {
+  if (ctx->isStringLiteral) {
     std::cout << " is a literal." << std::endl;
   }
   std::stack<tree::ParseTree*> stk;

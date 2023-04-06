@@ -9,7 +9,7 @@ options {
 #include "custom_rule_context.h"
 }
 
-program : stmtlist ;
+program : stmtlist {$ctx->SetScopeType(kScopeGlobal);};
 
 stmtlist : stmt stmtlist
          | stmt ;
@@ -18,7 +18,7 @@ stmt : forstmt
      | declaration_stmt ';'
      | expr ';' ;
 
-declaration_stmt : type assign_expr
+declaration_stmt : type assign_expr {$ctx->SetDataType(kDataVarDefine); $ctx->SetDataFlag(kDefine);}
                   | 'STRUCT' identifier assign_expr
                   | structure_declaration ;
 
@@ -30,8 +30,8 @@ declaration_stmt_list : declaration_stmt ';'
 type : 'INT'
      | 'FLOAT' ;
 
-assign_expr : identifier '=' expr
-            | identifier ;
+assign_expr : identifier '=' expr {$ctx->identifier()->SetDataType(kDataVarName); $ctx->identifier()->SetDataFlag(kDefine);}
+            | identifier  {$ctx->identifier()->SetDataType(kDataVarName); $ctx->identifier()->SetDataFlag(kDefine);} ;
 
 forstmt : 'FOR' '(' expr ')' '{' stmtlist '}' ;
 
@@ -52,11 +52,11 @@ cexpr : identifier
 
 float_literal : FLOATLITERAL ;
 
-int_literal : INTLITERAL ;
+int_literal : INTLITERAL {$ctx->isIntLiteral = true;};
 
 string_literal : STRINGLITERAL ;
 
-identifier : IDENTIFIER {$ctx->isLiteral=true;};
+identifier : IDENTIFIER {$ctx->isStringLiteral=true; $ctx->SetDataType(kDataFixUnit); $ctx->SetDataFlag(kUse);};
 
 IDENTIFIER : [a-zA-Z_][a-zA-Z0-9_]* ;
 INTLITERAL : [0-9]+;

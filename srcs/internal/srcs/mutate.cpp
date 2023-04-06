@@ -432,11 +432,11 @@ void Mutator::extract_struct(IRPtr root) {
 */
   // TODO: Verify whether this should be == or !=.
   if (root->data_type_ == kDataWhatever) {
+    std::cout << "IR to string: " << root->to_string() << std::endl;
     root->str_val_ = "x";
     return;
   }
   // #endif
-
   if (string_types_.find(type) != string_types_.end()) {
     root->str_val_ = "'x'";
   } else if (int_types_.find(type) != int_types_.end()) {
