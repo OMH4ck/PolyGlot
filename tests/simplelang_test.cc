@@ -164,6 +164,7 @@ TEST_F(MutatorTestF, MutateGenerateParsableTestCases) {
   }
 }
 
+// TODO: This is a flaky test, we need to fix it.
 TEST(TypeSystemTest, ValidateFixDefineUse) {
   std::string_view test_case = "INT a = 1;\n c + c;\n";
   std::string_view validated_test_case = "INT a = 1 ;\n a + a ;\n ";

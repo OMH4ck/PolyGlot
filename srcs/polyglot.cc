@@ -31,7 +31,7 @@ size_t PolyGlotMutator::generate(const char *test_case) {
   ;
 
   for (auto &ir : mutated_tree) {
-    if (polyglot::typesystem::TypeSystem::validate(ir)) {
+    if (g_typesystem.validate(ir)) {
       save_test_cases_.push_back(ir->to_string());
     };
   }
