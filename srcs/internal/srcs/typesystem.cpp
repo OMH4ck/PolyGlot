@@ -6,6 +6,7 @@
 #include "config_misc.h"
 #include "define.h"
 #include "gen_ir.h"
+#include "spdlog/spdlog.h"
 #include "utils.h"
 #include "var_definition.h"
 
@@ -46,20 +47,20 @@ unsigned long top_fix_success_counter = 0;
 static set<TYPEID> current_define_types;
 
 void TypeSystem::debug() {
-  cout << "---------debug-----------" << endl;
-  cout << "all_internal_compound_types: " << all_internal_compound_types.size()
-       << endl;
+  spdlog::info("---------debug-----------");
+  spdlog::info("all_internal_compound_types: {}",
+               all_internal_compound_types.size());
   for (auto i : all_internal_compound_types) {
     auto p = get_compound_type_by_type_id(i);
-    cout << "class: " << p->type_name_ << endl;
+    spdlog::info("class: {}", p->type_name_);
     for (auto &i : p->v_members_) {
       for (auto &name : i.second) {
-        cout << "\t" << name << endl;
+        spdlog::info("\t{}", name);
       }
     }
-    cout << endl;
+    spdlog::info("");
   }
-  cout << "---------end------------" << endl;
+  spdlog::info("---------end------------");
 }
 
 void TypeSystem::init_internal_obj(string dirname) {
@@ -70,7 +71,7 @@ void TypeSystem::init_internal_obj(string dirname) {
 }
 
 void TypeSystem::init_one_internal_obj(string filename) {
-  if (DBG) cout << "Initting builtin file: " << filename << endl;
+  spdlog::info("Initting builtin file: {}", filename);
   char content[0x4000] = {0};
   auto fd = open(filename.c_str(), 0);
 
@@ -81,13 +82,13 @@ void TypeSystem::init_one_internal_obj(string filename) {
   auto res = frontend_->TranslateToIR(content);
   set_scope_translation_flag(false);
   if (!res) {
-    cout << "[init_internal_obj] parse " << filename << " failed" << endl;
+    spdlog::error("[init_internal_obj] parse {} failed", filename);
     return;
   }
 
   is_internal_obj_setup = true;
   if (type_fix_framework(res) == false)
-    cout << "[init_internal_obj] setup " << filename << " failed" << endl;
+    spdlog::error("[init_internal_obj] setup {} failed", filename);
   is_internal_obj_setup = false;
 }
 
@@ -185,7 +186,7 @@ bool TypeSystem::type_fix_framework(IRPtr root) {
         return false;
       }
     }
-    if (DBG) cout << "[splitted] " << cur->to_string() << endl;
+    spdlog::info("[splitted] {}", cur->to_string());
     if (is_contain_definition(cur)) {
       collect_definition(cur);
     }
@@ -284,7 +285,7 @@ ScopeType scope_js(const string &s) {
 }
 
 void TypeSystem::collect_simple_variable_defintion_wt(IRPtr cur) {
-  if (DBG) cout << "Collecting: " << cur->to_string() << endl;
+  spdlog::info("Collecting: {}", cur->to_string());
 
   auto var_scope = search_by_data_type(cur, kDataVarScope);
   ScopeType scope_type = kScopeGlobal;
@@ -301,7 +302,7 @@ void TypeSystem::collect_simple_variable_defintion_wt(IRPtr cur) {
   search_by_data_type(cur, kDataVarName, name_vec);
   search_by_data_type(cur, kDataInitiator, init_vec);
   if (name_vec.empty()) {
-    cout << "fail to search for the name" << endl;
+    spdlog::info("fail to search for the name");
     return;
   } else if (name_vec.size() != init_vec.size()) {
     for (auto i = 0; i < name_vec.size(); i++) {
@@ -323,15 +324,15 @@ void TypeSystem::collect_simple_variable_defintion_wt(IRPtr cur) {
   auto cur_scope = get_scope_by_id(cur->scope_id_);
   for (auto i = 0; i < name_vec.size(); i++) {
     auto name_ir = name_vec[i];
-    std::cout << "Adding name: " << name_ir->to_string() << std::endl;
+    spdlog::info("Adding name: {}", name_ir->to_string());
     auto type = type_vec[i];
 
-    cout << "Scope: " << scope_type << endl;
-    cout << "name_ir id: " << name_ir->id_ << endl;
-    if (DBG) cout << "Type:" << get_type_name_by_id(type) << endl;
+    spdlog::info("Scope: {}", scope_type);
+    spdlog::info("name_ir id: {}", name_ir->id_);
+    if (DBG) spdlog::info("Type: {}", get_type_name_by_id(type));
     if (cur_scope->scope_type_ == kScopeClass) {
       if (DBG) {
-        cout << "Adding in class: " << name_ir->to_string() << endl;
+        spdlog::info("Adding in class: {}", name_ir->to_string());
       }
       cur_scope->add_definition(type, name_ir->to_string(), name_ir->id_,
                                 kScopeStatement);
@@ -343,7 +344,7 @@ void TypeSystem::collect_simple_variable_defintion_wt(IRPtr cur) {
 }
 
 void TypeSystem::collect_function_definition_wt(IRPtr cur) {
-  if (DBG) cout << "Collecting " << cur->to_string() << endl;
+  spdlog::info("Collecting {}", cur->to_string());
   auto function_name_ir = search_by_data_type(cur, kDataFunctionName);
   auto function_args_ir = search_by_data_type(cur, kDataFunctionArg);
   // assert(function_name_ir || function_args_ir);
@@ -360,10 +361,10 @@ void TypeSystem::collect_function_definition_wt(IRPtr cur) {
   if (function_args_ir) {
     search_by_data_type(function_args_ir, kDataVarName, args);
     num_function_args = args.size();
-    if (DBG) cout << "Num arg: " << num_function_args << endl;
+    spdlog::info("Num arg: {}", num_function_args);
     for (auto i : args) {
       arg_names.push_back(i->to_string());
-      if (DBG) cout << "Arg:" << i->to_string() << endl;
+      spdlog::info("Arg: {}", i->to_string());
       arg_types.push_back(ANYTYPE);
     }
     // assert(num_function_args == 3);
@@ -373,7 +374,7 @@ void TypeSystem::collect_function_definition_wt(IRPtr cur) {
   if (function_name.empty()) function_name = "Anoynmous" + to_string(cur->id_);
   auto function_type = make_function_type(function_name, ANYTYPE, arg_types);
   if (DBG) {
-    cout << "Collecing function name: " << function_name << endl;
+    spdlog::info("Collecing function name: {}", function_name);
   }
 
   cur_scope->add_definition(
@@ -389,8 +390,8 @@ void TypeSystem::collect_function_definition_wt(IRPtr cur) {
       cur_scope->add_definition(ANYTYPE, arg_names[i], args[i]->id_);
     }
     if (DBG)
-      cout << "Recursive on function body: " << function_body_ir->to_string()
-           << endl;
+      spdlog::info("Recursive on function body: {}",
+                   function_body_ir->to_string());
     type_fix_framework(function_body_ir);
   }
 }
@@ -407,13 +408,13 @@ void TypeSystem::collect_structure_definition_wt(IRPtr cur, IRPtr root) {
     shared_ptr<CompoundType> new_compound;
     string current_compound_name;
     if (structure_name.size() > 0) {
-      if (DBG) cout << "not anonymous " << structure_name[0]->str_val_ << endl;
+      spdlog::info("not anonymous {}", structure_name[0]->str_val_);
       // not anonymous
       new_compound = make_compound_type_by_scope(
           get_scope_by_id(struct_body->scope_id_), structure_name[0]->str_val_);
       current_compound_name = structure_name[0]->str_val_;
     } else {
-      if (DBG) cout << "anonymous" << endl;
+      spdlog::info("anonymous");
       // anonymous structure
       static int anonymous_idx = 1;
       string compound_name = string("ano") + std::to_string(anonymous_idx++);
@@ -421,7 +422,7 @@ void TypeSystem::collect_structure_definition_wt(IRPtr cur, IRPtr root) {
           get_scope_by_id(struct_body->scope_id_), compound_name);
       current_compound_name = compound_name;
     }
-    if (DBG) cout << struct_body->to_string() << endl;
+    spdlog::info("{}", struct_body->to_string());
     is_in_class = true;
     type_fix_framework(struct_body);
     is_in_class = false;
@@ -782,7 +783,6 @@ DATATYPE TypeSystem::find_define_type(IRPtr cur) {
 bool TypeSystem::collect_definition(IRPtr cur) {
   bool res = false;
   if (cur->data_type_ == kDataVarDefine) {
-    std::cout << "YESSSSSSSSSSSS" << std::endl;
     auto define_type = find_define_type(cur);
 
     switch (define_type) {
@@ -816,7 +816,6 @@ bool TypeSystem::collect_definition(IRPtr cur) {
 
         // handle structure and function ,array ,etc..
         if (gen::IsWeakType()) {
-          std::cout << "HERE" << std::endl;
           collect_simple_variable_defintion_wt(cur);
         } else {
           collect_simple_variable_defintion(cur);

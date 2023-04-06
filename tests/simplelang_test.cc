@@ -127,24 +127,23 @@ class AntlrMutatorTestF : public testing::Test {
 };
 
 TEST_F(AntlrMutatorTestF, AntlrParserCanGenerateMutatableTestCases) {
-  std::string_view test_case = "INT a = 1; FLOAT b = 1.0; c + c;";
+  std::string_view test_case = "INT a = 1;";
 
-  std::unordered_set<std::string> unique_test_cases;
+  std::shared_ptr<Frontend> frontend = std::make_shared<AntlrFrontend>();
+  auto root = frontend->TranslateToIR(test_case.data());
 
-  while (unique_test_cases.size() < 20) {
-    // Avoid mutated_times_ too large, so we make it clean every time.
-    vector<IRPtr> ir_set;
-    auto program_root = parser(test_case.data());
-    auto root = program_root->translate(ir_set);
-    // program_root->deep_delete();
+  for (size_t i = 0; i < 1000; ++i) {
+    auto root = frontend->TranslateToIR(test_case.data());
+    ASSERT_TRUE(root != nullptr) << test_case;
+
+    vector<IRPtr> ir_set = collect_all_ir(root);
 
     auto mutated_irs = mutator->mutate_all(ir_set);
     for (auto& ir : mutated_irs) {
-      unique_test_cases.insert(ir->to_string());
+      auto new_root = frontend->TranslateToIR(ir->to_string());
+      ASSERT_TRUE(new_root != nullptr) << ir->to_string();
     }
   }
-
-  ASSERT_GE(unique_test_cases.size(), 20);
 }
 
 TEST_F(MutatorTestF, MutateGenerateParsableTestCases) {

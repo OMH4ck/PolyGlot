@@ -160,9 +160,6 @@ IRPtr TranslateToIR(std::string input_program) {
   CommonTokenStream tokens(&lexer);
 
   tokens.fill();
-  for (auto token : tokens.getTokens()) {
-    std::cout << token->toString() << std::endl;
-  }
 
   SimpleLangParser parser(&tokens);
   tree::ParseTree* tree = parser.program();
