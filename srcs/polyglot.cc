@@ -14,33 +14,18 @@ std::string_view PolyGlotMutator::get_next_test_case() {
 }
 
 void PolyGlotMutator::add_to_library(const char *mem) {
-  vector<IRPtr> ir_set;
-  auto p_strip_sql = parser(mem);
-  if (p_strip_sql) {
-    auto root_ir = p_strip_sql->translate(ir_set);
-    // p_strip_sql->deep_delete();
-    g_mutator.add_ir_to_library(root_ir);
-    ;
+  if (auto ir = g_frontend->TranslateToIR(mem)) {
+    g_mutator.add_ir_to_library(ir);
   }
 }
 
 size_t PolyGlotMutator::generate(const char *test_case) {
-  vector<IRPtr> ir_set, mutated_tree;
-  auto program_root = parser(test_case);
-  if (program_root == nullptr) {
+  vector<IRPtr> mutated_tree;
+  auto root = g_frontend->TranslateToIR(test_case);
+  if (root == nullptr) {
     return 0;
   }
-
-  try {
-    program_root->translate(ir_set);
-  } catch (...) {
-    // for (auto ir : ir_set) {
-    //   delete ir;
-    // }
-    //  program_root->deep_delete();
-    return 0;
-  }
-  // program_root->deep_delete();
+  std::vector<IRPtr> ir_set = collect_all_ir(root);
 
   mutated_tree = g_mutator.mutate_all(ir_set);
   ;

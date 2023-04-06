@@ -3,6 +3,7 @@
 
 #include "ir.h"
 
+namespace polyglot {
 class Frontend {
  public:
   virtual bool Parsable(std::string input) = 0;
@@ -24,4 +25,5 @@ class BisonFrontend : public Frontend {
 
  private:
 };
+}  // namespace polyglot
 #endif

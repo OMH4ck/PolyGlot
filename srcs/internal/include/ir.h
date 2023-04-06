@@ -60,6 +60,7 @@ class IR {
 
   IR(const IRPtr ir, IRPtr left, IRPtr right);
 
+  std::vector<IRPtr> collect_children();
   union {
     int int_val_;
     unsigned long long_val_ = 0;
@@ -88,11 +89,13 @@ class IR {
   string print();
 
  private:
+  void collect_children_impl(std::vector<IRPtr> &children);
   void to_string_core(string &str);
 };
 
 IRPtr deep_copy(const IRPtr root);
 
+std::vector<IRPtr> collect_all_ir(IRPtr root);
 int cal_list_num(IRPtr);
 
 IRPtr locate_define_top_ir(IRPtr, IRPtr);

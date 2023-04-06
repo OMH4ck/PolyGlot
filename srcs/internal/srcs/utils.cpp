@@ -4,7 +4,7 @@
 #include "bison_parser.h"
 #include "flex_lexer.h"
 #include "gen_ir.h"
-#include "typesystem.h"
+//#include "typesystem.h"
 #include "var_definition.h"
 
 using std::string;
