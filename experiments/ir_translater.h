@@ -6,6 +6,8 @@
 
 #include <string>
 
+namespace antlr4{
 IRPtr TranslateToIR(std::string input);
+}
 
 #endif

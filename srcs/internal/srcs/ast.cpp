@@ -2,12 +2,12 @@
 
 #include <cassert>
 
-#include "config_misc.h"
+//#include "config_misc.h"
 #include "define.h"
 #include "ir.h"
-#include "typesystem.h"
+//#include "typesystem.h"
 #include "utils.h"
-#include "var_definition.h"
+//#include "var_definition.h"
 
 /*
 static bool scope_tranlation = false;

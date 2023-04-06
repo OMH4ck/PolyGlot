@@ -4,6 +4,7 @@
 #include <unordered_set>
 
 #include "config_misc.h"
+#include "frontend.h"
 #include "ir.h"
 #include "mutate.h"
 #include "typesystem.h"
@@ -31,7 +32,6 @@ TEST_P(ParserTest, ValidTestCaseCanTranslate) {
   // program_root->deep_delete();
 
   ASSERT_FALSE(ir_set.empty());
-  ;
 }
 
 INSTANTIATE_TEST_SUITE_P(ValidTestCase, ParserTest,
@@ -105,8 +105,43 @@ TEST_F(MutatorTestF, MutateGenerateDifferentTestCases) {
     auto mutated_irs = mutator.mutate_all(ir_set);
     for (auto& ir : mutated_irs) {
       unique_test_cases.insert(ir->to_string());
-      ;
-    };
+    }
+  }
+
+  ASSERT_GE(unique_test_cases.size(), 20);
+}
+
+class AntlrMutatorTestF : public testing::Test {
+ protected:
+  void SetUp() override {
+    std::shared_ptr<Frontend> frontend = std::make_shared<AntlrFrontend>();
+    mutator = std::make_unique<mutation::Mutator>(frontend);
+    std::string init_file_path = gen::GetInitDirPath();
+    vector<string> file_list = get_all_files_in_dir(init_file_path.c_str());
+    for (auto& f : file_list) {
+      mutator->init_ir_library_from_a_file(f);
+    }
+  }
+
+  std::unique_ptr<mutation::Mutator> mutator;
+};
+
+TEST_F(AntlrMutatorTestF, AntlrParserCanGenerateMutatableTestCases) {
+  std::string_view test_case = "INT a = 1; FLOAT b = 1.0; c + c;";
+
+  std::unordered_set<std::string> unique_test_cases;
+
+  while (unique_test_cases.size() < 20) {
+    // Avoid mutated_times_ too large, so we make it clean every time.
+    vector<IRPtr> ir_set;
+    auto program_root = parser(test_case.data());
+    auto root = program_root->translate(ir_set);
+    // program_root->deep_delete();
+
+    auto mutated_irs = mutator->mutate_all(ir_set);
+    for (auto& ir : mutated_irs) {
+      unique_test_cases.insert(ir->to_string());
+    }
   }
 
   ASSERT_GE(unique_test_cases.size(), 20);
@@ -125,12 +160,11 @@ TEST_F(MutatorTestF, MutateGenerateParsableTestCases) {
     for (auto& ir : mutated_irs) {
       auto new_root = parser(ir->to_string());
       ASSERT_TRUE(new_root != nullptr) << ir->to_string();
-      // new_root->deep_delete();
-      ;
-    };
+    }
   }
 }
 
+// TODO: This is a flaky test, we need to fix it.
 TEST(TypeSystemTest, ValidateFixDefineUse) {
   std::string_view test_case = "INT a = 1;\n c + c;\n";
   std::string_view validated_test_case = "INT a = 1 ;\n a + a ;\n ";
@@ -138,7 +172,6 @@ TEST(TypeSystemTest, ValidateFixDefineUse) {
   auto program_root = parser(test_case.data());
   std::vector<IRPtr> ir_set;
   auto root = program_root->translate(ir_set);
-  // program_root->deep_delete();
 
   mutation::Mutator mutator;
   mutator.extract_struct(root);
@@ -149,7 +182,6 @@ TEST(TypeSystemTest, ValidateFixDefineUse) {
   ASSERT_TRUE(ts.validate(root));
   ASSERT_TRUE(root != nullptr);
   EXPECT_EQ(root->to_string(), validated_test_case);
-  ;
 }
 
 int main(int argc, char** argv) {

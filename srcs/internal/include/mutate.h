@@ -5,6 +5,7 @@
 #include <map>
 #include <set>
 
+#include "frontend.h"
 #include "ir.h"
 
 namespace polyglot {
@@ -16,7 +17,7 @@ using std::set;
 
 class Mutator {
  public:
-  Mutator();
+  Mutator(std::shared_ptr<Frontend> frontend = nullptr);
   ~Mutator() {
     for (auto &k : ir_library_) {
       for (auto ir : k.second) {
@@ -32,6 +33,7 @@ class Mutator {
   void extract_struct(IRPtr);  // Done
 
  private:
+  std::shared_ptr<Frontend> frontend_;
   bool should_mutate(IRPtr cur);
   void init_convertable_ir_type_map();
   IRPtr deep_copy_with_record(const IRPtr root, const IRPtr record);

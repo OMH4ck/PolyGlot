@@ -5,7 +5,7 @@
 #include "absl/strings/str_cat.h"
 #include "config_misc.h"
 #include "define.h"
-#include "typesystem.h"
+//#include "typesystem.h"
 #include "utils.h"
 #include "var_definition.h"
 
@@ -229,6 +229,29 @@ void IR::to_string_core(std::string &res) {
   if (op_ != nullptr) {
     absl::StrAppend(&res, op_->suffix_);
   }
+}
+
+void IR::collect_children_impl(std::vector<IRPtr> &res) {
+  if (left_ != nullptr) {
+    left_->collect_children_impl(res);
+    res.push_back(left_);
+  }
+  if (right_ != nullptr) {
+    right_->collect_children_impl(res);
+    res.push_back(right_);
+  }
+}
+
+std::vector<IRPtr> IR::collect_children() {
+  std::vector<IRPtr> res;
+  collect_children_impl(res);
+  return res;
+}
+
+std::vector<IRPtr> collect_all_ir(IRPtr root) {
+  auto res = root->collect_children();
+  res.push_back(root);
+  return res;
 }
 
 static int cal_list_num_dfs(IRPtr ir, IRTYPE type) {

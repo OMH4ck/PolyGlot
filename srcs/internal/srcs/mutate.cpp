@@ -38,12 +38,17 @@ static inline bool is_leaf(IRPtr r) {
   return r->left_ == nullptr && r->right_ == nullptr;
 }
 
-Mutator::Mutator() {
+Mutator::Mutator(std::shared_ptr<Frontend> frontend) {
   srand(time(nullptr));
   float_types_.insert(kFloatLiteral);
   int_types_.insert(kIntLiteral);
   string_types_.insert(kStringLiteral);
   init_convertable_ir_type_map();
+  if (frontend_ == nullptr) {
+    frontend_ = std::make_shared<BisonFrontend>();
+  } else {
+    frontend_ = frontend;
+  }
 }
 // Need No fix
 IRPtr Mutator::deep_copy_with_record(const IRPtr root, const IRPtr record) {
@@ -175,19 +180,12 @@ bool Mutator::init_ir_library_from_a_file(string filename) {
   assert(read(fd, content, 0x3fff) > 0);
   close(fd);
 
-  auto p = parser(content);
-  if (p == nullptr) {
-    cout << "init " << filename << " failed" << endl;
+  auto res = frontend_->TranslateToIR(content);
+  if (res == nullptr) {
     return false;
   }
-  // cout << filename << endl;
-  vector<IRPtr> v_ir;
-  auto res = p->translate(v_ir);
-  // p->deep_delete();
-  p = nullptr;
 
   add_ir_to_library(res);
-  ;
   cout << "init " << filename << " success" << endl;
   return true;
 }

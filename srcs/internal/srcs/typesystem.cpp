@@ -1,8 +1,11 @@
 // #include "ast.h"
 #include "typesystem.h"
 
+#include <memory>
+
 #include "config_misc.h"
 #include "define.h"
+#include "gen_ir.h"
 #include "utils.h"
 #include "var_definition.h"
 
@@ -22,17 +25,17 @@ const char *member_str = "->";
 const char *member_str = ".";
 #endif
 
-map<int, vector<OPRule>> TypeSystem::op_rules_;
-map<string, map<string, map<string, OPTYPE>>> TypeSystem::op_id_map_;
-set<IRTYPE> TypeSystem::s_basic_unit_ = gen::GetBasicUnits();
-int TypeSystem::gen_counter_;
-int TypeSystem::function_gen_counter_;
-int TypeSystem::current_fix_scope_;
-bool TypeSystem::contain_used_;
-int TypeSystem::current_scope_id_;
-shared_ptr<Scope> TypeSystem::current_scope_ptr_;
-map<IRPtr, shared_ptr<map<TYPEID, vector<pair<TYPEID, TYPEID>>>>>
-    TypeSystem::cache_inference_map_;
+// map<int, vector<OPRule>> TypeSystem::op_rules_;
+// map<string, map<string, map<string, OPTYPE>>> TypeSystem::op_id_map_;
+// set<IRTYPE> TypeSystem::s_basic_unit_ = gen::GetBasicUnits();
+// int TypeSystem::gen_counter_;
+// int TypeSystem::function_gen_counter_;
+// int TypeSystem::current_fix_scope_;
+// bool TypeSystem::contain_used_;
+// int TypeSystem::current_scope_id_;
+// shared_ptr<Scope> TypeSystem::current_scope_ptr_;
+// map<IRPtr, shared_ptr<map<TYPEID, vector<pair<TYPEID, TYPEID>>>>>
+//     TypeSystem::cache_inference_map_;
 
 IRPtr cur_statement_root = nullptr;
 
@@ -74,28 +77,22 @@ void TypeSystem::init_one_internal_obj(string filename) {
   assert(read(fd, content, 0x3fff) > 0);
   close(fd);
 
-  auto p = parser(content);
-  if (p == nullptr) {
+  set_scope_translation_flag(true);
+  auto res = frontend_->TranslateToIR(content);
+  set_scope_translation_flag(false);
+  if (!res) {
     cout << "[init_internal_obj] parse " << filename << " failed" << endl;
     return;
   }
-
-  vector<IRPtr> v_ir;
-  set_scope_translation_flag(true);
-  auto res = p->translate(v_ir);
-  set_scope_translation_flag(false);
-  // p->deep_delete();
-  p = nullptr;
 
   is_internal_obj_setup = true;
   if (type_fix_framework(res) == false)
     cout << "[init_internal_obj] setup " << filename << " failed" << endl;
   is_internal_obj_setup = false;
-
-  ;
 }
 
 void TypeSystem::init() {
+  s_basic_unit_ = gen::GetBasicUnits();
   init_basic_types();
   init_convert_chain();
   init_type_dict();
@@ -114,9 +111,22 @@ void TypeSystem::init_type_dict() {
     op_rules_[rule.op_id_].push_back(rule);
   }
 }
+
 int TypeSystem::gen_id() {
   static int id = 1;
   return id++;
+}
+
+TypeSystem::TypeSystem(std::shared_ptr<Frontend> frontend) {
+  if (frontend == nullptr) {
+    frontend_ = std::make_shared<BisonFrontend>();
+  } else {
+    frontend_ = frontend;
+  }
+}
+void TypeSystem::split_to_basic_unit(IRPtr root, queue<IRPtr> &q,
+                                     map<IRPtr *, IRPtr> &m_save) {
+  split_to_basic_unit(root, q, m_save, s_basic_unit_);
 }
 
 void TypeSystem::split_to_basic_unit(IRPtr root, queue<IRPtr> &q,
@@ -2153,38 +2163,24 @@ bool TypeSystem::validate(IRPtr &root) {
 #else
   gen_counter_ = 0;
   current_fix_scope_ = -1;
-  auto ast = parser(root->to_string());
-  if (ast == nullptr) {
+  auto new_root = frontend_->TranslateToIR(root->to_string());
+  if (new_root == nullptr) {
     return false;
   }
 
-  vector<IRPtr> ivec;
-
   if (!gen::IsWeakType()) {
-    ast->translate(ivec);
-    // ast->deep_delete();
-    ;
-    root = ivec.back();
+    root = new_root;
     extract_struct_after_mutation(root);
 
-    ast = parser(root->to_string());
-    if (ast == nullptr) {
-      return false;
-    }
-    ivec.clear();
-
     set_scope_translation_flag(true);
-
-    ast->translate(ivec);
-    // ast->deep_delete();
-    ;
-    root = ivec.back();
+    new_root = frontend_->TranslateToIR(root->to_string());
+    if (new_root == nullptr) return false;
+    root = new_root;
   } else {
     set_scope_translation_flag(true);
-    ast->translate(ivec);
-    // ast->deep_delete();
-    ;
-    root = ivec.back();
+    new_root = frontend_->TranslateToIR(root->to_string());
+    if (new_root == nullptr) return false;
+    root = new_root;
     extract_struct_after_mutation(root);
   }
   // init_internal_type();
@@ -2197,7 +2193,6 @@ bool TypeSystem::validate(IRPtr &root) {
     res = top_fix(root);
     if (res == false) {
       top_fix_fail_counter++;
-      ;
       root = nullptr;
     }
     top_fix_success_counter++;

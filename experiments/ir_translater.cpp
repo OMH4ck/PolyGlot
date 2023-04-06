@@ -16,7 +16,6 @@
 #include "gen_ir.h"
 #include "ir.h"
 
-using namespace antlr4;
 using namespace antlrcpptest;
 
 using IM = std::variant<std::nullopt_t, std::string, IRPtr>;
@@ -63,6 +62,7 @@ OneIR ExtractOneIR(std::stack<IM>& stk) {
   return one_ir;
 }
 
+namespace antlr4{
 IRPtr TranslateNode(tree::ParseTree* node, SimpleLangParser* parser) {
   assert(node->getTreeType() == antlr4::tree::ParseTreeType::RULE);
 
@@ -115,6 +115,7 @@ IRPtr TranslateNode(tree::ParseTree* node, SimpleLangParser* parser) {
   return std::get<IRPtr>(stk.top());
 }
 
+
 IRPtr TranslateToIR(std::string input_program){
   ANTLRInputStream input(input_program);
   SimpleLangLexer lexer(&input);
@@ -127,7 +128,11 @@ IRPtr TranslateToIR(std::string input_program){
 
   SimpleLangParser parser(&tokens);
   tree::ParseTree* tree = parser.program();
+  if(parser.getNumberOfSyntaxErrors() > 0){
+    return nullptr;
+  }
   IRPtr ir = TranslateNode(tree, &parser);
   std::cout << ir->to_string() << std::endl;
   return ir;
+}
 }

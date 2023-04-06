@@ -14,6 +14,7 @@
 #include <string>
 #include <vector>
 
+#include "frontend.h"
 #include "ir.h"
 
 namespace polyglot {
@@ -76,118 +77,120 @@ class OPRule {
 
 class TypeSystem {
  private:
-  static map<string, map<string, map<string, int>>> op_id_map_;
-  static map<int, vector<OPRule>> op_rules_;
-  // static map<string, int> basic_types_;
-  static int current_scope_id_;
-  static shared_ptr<Scope> current_scope_ptr_;
-  static bool contain_used_;
-  static set<IRTYPE> s_basic_unit_;
+  std::shared_ptr<Frontend> frontend_;
+  map<string, map<string, map<string, int>>> op_id_map_;
+  map<int, vector<OPRule>> op_rules_;
+  // map<string, int> basic_types_;
+  int current_scope_id_;
+  shared_ptr<Scope> current_scope_ptr_;
+  bool contain_used_;
+  set<IRTYPE> s_basic_unit_;
 
  public:
-  // static map<IR*, map<int, vector<pair<int,int>>>> cache_inference_map_;
-  static map<IRPtr, shared_ptr<map<int, vector<pair<int, int>>>>>
-      cache_inference_map_;
+  TypeSystem(std::shared_ptr<Frontend> frontend = nullptr);
+  // map<IR*, map<int, vector<pair<int,int>>>> cache_inference_map_;
+  map<IRPtr, shared_ptr<map<int, vector<pair<int, int>>>>> cache_inference_map_;
   // void init_basic_types();
 
-  static int gen_id();
-  static void init_type_dict();
+  int gen_id();
+  void init_type_dict();
 
-  static void split_to_basic_unit(
-      IRPtr root, std::queue<IRPtr> &q, map<IRPtr *, IRPtr> &m_save,
-      set<IRTYPE> &s_basic_unit_ptr = s_basic_unit_);
+  void split_to_basic_unit(IRPtr root, std::queue<IRPtr> &q,
+                           map<IRPtr *, IRPtr> &m_save,
+                           set<IRTYPE> &s_basic_unit_ptr);
+  void split_to_basic_unit(IRPtr root, std::queue<IRPtr> &q,
+                           map<IRPtr *, IRPtr> &m_save);
 
-  static void connect_back(map<IRPtr *, IRPtr> &m_save);
+  void connect_back(map<IRPtr *, IRPtr> &m_save);
 
-  static FIXORDER get_fix_order(int type);  // need to finish
+  FIXORDER get_fix_order(int type);  // need to finish
 
-  static bool type_fix_framework(IRPtr root);
+  bool type_fix_framework(IRPtr root);
 
-  static int get_op_value(std::shared_ptr<IROperator> op);
+  int get_op_value(std::shared_ptr<IROperator> op);
 
-  static bool is_op_null(std::shared_ptr<IROperator> op);
+  bool is_op_null(std::shared_ptr<IROperator> op);
 
   // new
-  static bool type_inference_new(IRPtr cur, int scope_type = NOTEXIST);
-  static set<int> collect_usable_type(IRPtr cur);
-  static int locate_defined_variable_by_name(const string &var_name,
-                                             int scope_id);
-  static string get_class_member_by_type(int type, int target_type);
-  static string get_class_member_by_type_no_duplicate(int type, int target_type,
-                                                      set<int> &visit);
-  static string get_class_member(int type_id);
-  static vector<string> get_op_by_optype(OPTYPE op_type);
-  static pair<OPTYPE, vector<int>> collect_sat_op_by_result_type(
+  bool type_inference_new(IRPtr cur, int scope_type = NOTEXIST);
+  set<int> collect_usable_type(IRPtr cur);
+  int locate_defined_variable_by_name(const string &var_name, int scope_id);
+  string get_class_member_by_type(int type, int target_type);
+  string get_class_member_by_type_no_duplicate(int type, int target_type,
+                                               set<int> &visit);
+  string get_class_member(int type_id);
+  vector<string> get_op_by_optype(OPTYPE op_type);
+  pair<OPTYPE, vector<int>> collect_sat_op_by_result_type(
       int type, map<int, vector<set<int>>> &a,
       map<int, vector<string>> &function_map,
       map<int, vector<string>> &compound_var_map);
 
-  static DATATYPE find_define_type(IRPtr cur);
+  DATATYPE find_define_type(IRPtr cur);
 
-  static void collect_structure_definition(IRPtr cur, IRPtr root);
-  static void collect_function_definition(IRPtr cur);
+  void collect_structure_definition(IRPtr cur, IRPtr root);
+  void collect_function_definition(IRPtr cur);
 
-  static void collect_simple_variable_defintion_wt(IRPtr cur);
-  static void collect_function_definition_wt(IRPtr cur);
-  static void collect_structure_definition_wt(IRPtr cur, IRPtr root);
+  void collect_simple_variable_defintion_wt(IRPtr cur);
+  void collect_function_definition_wt(IRPtr cur);
+  void collect_structure_definition_wt(IRPtr cur, IRPtr root);
 
-  static bool is_contain_definition(IRPtr cur);
-  static bool collect_definition(IRPtr cur);
-  static string generate_expression_by_type(int type, IRPtr ir);
-  static string generate_expression_by_type_core(int type, IRPtr ir);
-  static vector<map<int, vector<string>>> collect_all_var_definition_by_type(
+  bool is_contain_definition(IRPtr cur);
+  bool collect_definition(IRPtr cur);
+  string generate_expression_by_type(int type, IRPtr ir);
+  string generate_expression_by_type_core(int type, IRPtr ir);
+  vector<map<int, vector<string>>> collect_all_var_definition_by_type(
       IRPtr cur);
 
-  static bool simple_fix(IRPtr ir, int type);
-  static bool validate(IRPtr &root);
-  static bool validate_syntax_only(IRPtr root);
-  static bool top_fix(IRPtr root);
+  bool simple_fix(IRPtr ir, int type);
+  bool validate(IRPtr &root);
+  bool validate_syntax_only(IRPtr root);
+  bool top_fix(IRPtr root);
   IRPtr locate_mutated_ir(IRPtr root);
 
-  static string generate_definition(string &var_name, int type);
-  static string generate_definition(vector<string> &var_name, int type);
-  // static bool insert_definition();
+  string generate_definition(string &var_name, int type);
+  string generate_definition(vector<string> &var_name, int type);
+  // bool insert_definition();
 
-  static bool filter_compound_type(map<int, vector<string>> &compound_var_map,
-                                   int type);
-  static bool filter_function_type(
-      map<int, vector<string>> &function_map,
-      const map<int, vector<string>> &compound_var_map,
-      const map<int, vector<string>> &simple_type, int type);
-  static set<int> calc_satisfiable_functions(const set<int> &function_type_set,
-                                             const set<int> &available_types);
-  static map<int, vector<set<int>>> collect_satisfiable_types(
+  bool filter_compound_type(map<int, vector<string>> &compound_var_map,
+                            int type);
+  bool filter_function_type(map<int, vector<string>> &function_map,
+                            const map<int, vector<string>> &compound_var_map,
+                            const map<int, vector<string>> &simple_type,
+                            int type);
+  set<int> calc_satisfiable_functions(const set<int> &function_type_set,
+                                      const set<int> &available_types);
+  map<int, vector<set<int>>> collect_satisfiable_types(
       IRPtr ir, map<int, vector<string>> &simple_var_map,
       map<int, vector<string>> &compound_var_map,
       map<int, vector<string>> &function_map);
-  static set<int> calc_possible_types_from_structure(int structure_type);
-  static string function_call_gen_handler(
-      map<int, vector<string>> &function_map, IRPtr ir);
-  static string structure_member_gen_handler(
+  set<int> calc_possible_types_from_structure(int structure_type);
+  string function_call_gen_handler(map<int, vector<string>> &function_map,
+                                   IRPtr ir);
+  string structure_member_gen_handler(
       map<int, vector<string>> &compound_var_map, int member_type);
-  static void update_pointer_var(map<int, vector<string>> &pointer_var_map,
-                                 map<int, vector<string>> &simple_var_map,
-                                 map<int, vector<string>> &compound_var_map);
+  void update_pointer_var(map<int, vector<string>> &pointer_var_map,
+                          map<int, vector<string>> &simple_var_map,
+                          map<int, vector<string>> &compound_var_map);
 
-  static string expression_gen_handler(
+  string expression_gen_handler(
       int type, map<int, vector<set<int>>> &all_satisfiable_types,
       map<int, vector<string>> &function_map,
       map<int, vector<string>> &compound_var_map, IRPtr ir);
-  static OPRule parse_op_rule(string s);
-  // static OPRule* get_op_rule_by_op_id(int);
-  static bool is_op1(int);
-  static bool is_op2(int);
-  static int query_result_type(int op, int, int = 0);
-  static int get_op_property(int op_id);
-  static int gen_counter_, function_gen_counter_, current_fix_scope_;
+  OPRule parse_op_rule(string s);
+  // OPRule* get_op_rule_by_op_id(int);
+  bool is_op1(int);
+  bool is_op2(int);
+  int query_result_type(int op, int, int = 0);
+  int get_op_property(int op_id);
+  int gen_counter_, function_gen_counter_, current_fix_scope_;
 
-  // static bool insert_definition(int scope_id, int type_id, string var_name);
+  // bool insert_definition(int scope_id, int type_id, string var_name);
 
   // set up internal object
-  static void init_internal_obj(string dir_name);
-  static void init_one_internal_obj(string filename);
-  static void init();
-  static void debug();
+  void init_internal_obj(string dir_name);
+  void init_one_internal_obj(string filename);
+  void init();
+  void debug();
 };
 
 void extract_struct_after_mutation(IRPtr);
