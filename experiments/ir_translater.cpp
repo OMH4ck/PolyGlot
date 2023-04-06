@@ -15,6 +15,7 @@
 #include "define.h"
 #include "gen_ir.h"
 #include "ir.h"
+#include "var_definition.h"
 
 using namespace antlrcpptest;
 
@@ -62,77 +63,111 @@ OneIR ExtractOneIR(std::stack<IM>& stk) {
   return one_ir;
 }
 
-namespace antlr4{
+namespace antlr4 {
 IRPtr TranslateNode(tree::ParseTree* node, SimpleLangParser* parser) {
   assert(node->getTreeType() == antlr4::tree::ParseTreeType::RULE);
 
   std::stack<IM> stk;
   CustomRuleContext* ctx = dynamic_cast<CustomRuleContext*>(node);
-  for (auto iter = node->children.rbegin(); iter != node->children.rend();
-       ++iter) {
-    if ((*iter)->getTreeType() == antlr4::tree::ParseTreeType::TERMINAL) {
-      stk.push((*iter)->getText());
-    } else {
-      stk.push(TranslateNode(*iter, parser));
-    }
+  if (ctx->GetScopeType() != kScopeDefault) {
+    enter_scope(ctx->GetScopeType());
   }
-  assert(!stk.empty());
-  do {
-    OneIR one_ir = ExtractOneIR(stk);
-    std::string op_prefix =
-        std::holds_alternative<std::string>(one_ir.op_prefix)
-            ? std::get<std::string>(one_ir.op_prefix)
-            : "";
-    std::string op_middle =
-        std::holds_alternative<std::string>(one_ir.op_middle)
-            ? std::get<std::string>(one_ir.op_middle)
-            : "";
-    std::string op_suffix =
-        std::holds_alternative<std::string>(one_ir.op_suffix)
-            ? std::get<std::string>(one_ir.op_suffix)
-            : "";
-    IRPtr left = std::holds_alternative<IRPtr>(one_ir.left)
-                     ? std::get<IRPtr>(one_ir.left)
-                     : nullptr;
-    IRPtr right = std::holds_alternative<IRPtr>(one_ir.right)
-                      ? std::get<IRPtr>(one_ir.right)
-                      : nullptr;
-
-    assert(right == nullptr || left != nullptr);
-    if (stk.empty()) {
-      stk.push(
-          IRPtr(new IR(static_cast<IRTYPE>(node->getTreeType()),
-                       OP3(op_prefix, op_middle, op_suffix), left, right)));
-    } else {
-      stk.push(IRPtr(
-          new IR(kUnknown, OP3(op_prefix, op_middle, op_suffix), left, right)));
+  if (ctx->isStringLiteral) {
+    //std::cout << "literal: " << ctx->getText() << "\n";
+    stk.push(std::make_shared<IR>((IRTYPE)ctx->getRuleIndex(), ctx->getText()));
+  } else if(ctx->isIntLiteral) {
+    stk.push(std::make_shared<IR>((IRTYPE)ctx->getRuleIndex(), std::stoi(ctx->getText())));
+  } else {
+    std::stack<IM> tmp_stk;
+    for (auto iter = node->children.begin(); iter != node->children.end();
+         ++iter) {
+      if ((*iter)->getTreeType() == antlr4::tree::ParseTreeType::TERMINAL) {
+        //std::cout << "terminal: " << (*iter)->getText() << "\n";
+        tmp_stk.push((*iter)->getText());
+      } else {
+        tmp_stk.push(TranslateNode(*iter, parser));
+      }
     }
-  } while (stk.size() > 1);
-  std::cout << "Visiting node: " << node->toStringTree(parser) << std::endl;
+    while(!tmp_stk.empty()){
+      stk.push(tmp_stk.top());
+      tmp_stk.pop();
+    }
+    //std::cout << "Visiting node: " << node->toStringTree(parser) << std::endl;
+    assert(!stk.empty());
+    do {
+      OneIR one_ir = ExtractOneIR(stk);
+      std::string op_prefix =
+          std::holds_alternative<std::string>(one_ir.op_prefix)
+              ? std::get<std::string>(one_ir.op_prefix)
+              : "";
+      std::string op_middle =
+          std::holds_alternative<std::string>(one_ir.op_middle)
+              ? std::get<std::string>(one_ir.op_middle)
+              : "";
+      std::string op_suffix =
+          std::holds_alternative<std::string>(one_ir.op_suffix)
+              ? std::get<std::string>(one_ir.op_suffix)
+              : "";
+      IRPtr left = std::holds_alternative<IRPtr>(one_ir.left)
+                       ? std::get<IRPtr>(one_ir.left)
+                       : nullptr;
+      IRPtr right = std::holds_alternative<IRPtr>(one_ir.right)
+                        ? std::get<IRPtr>(one_ir.right)
+                        : nullptr;
+
+
+      //std::cout << "op_prefix: " << op_prefix << "\n";
+      //std::cout << "op_middle: " << op_middle << "\n";
+      //std::cout << "op_suffix: " << op_suffix << "\n";
+      if(left){
+      //std::cout << "left: " << left->to_string() << "\n";
+      }
+      if(right){
+      //cout << "right: " << right->to_string() << "\n";
+      }
+      assert(right == nullptr || left != nullptr);
+      if (stk.empty()) {
+        stk.push(
+            IRPtr(new IR(static_cast<IRTYPE>(ctx->getRuleIndex()),
+                         OP3(op_prefix, op_middle, op_suffix), left, right)));
+      } else {
+        stk.push(IRPtr(new IR(kUnknown, OP3(op_prefix, op_middle, op_suffix),
+                              left, right)));
+      }
+    } while (stk.size() > 1);
+  }
+  // std::cout << "Visiting node: " << node->toStringTree(parser) << std::endl;
   assert(stk.size() == 1);
-  std::cout << stk.top().index() << std::endl;
+  // std::cout << stk.top().index() << std::endl;
   assert(std::holds_alternative<IRPtr>(stk.top()));
-  return std::get<IRPtr>(stk.top());
+  IRPtr new_ir = std::get<IRPtr>(stk.top());
+  if (ctx && ctx->GetDataType() != kDataDefault) {
+    // std::cout << "IR special: " << new_ir->to_string() << std::endl;
+    new_ir->data_flag_ = ctx->GetDataFlag();
+    new_ir->data_type_ = ctx->GetDataType();
+  }else{
+    new_ir->data_type_ = kDataDefault;
+  }
+  if (ctx->GetScopeType() != kScopeDefault) {
+    exit_scope();
+  }
+  return new_ir;
 }
 
-
-IRPtr TranslateToIR(std::string input_program){
+IRPtr TranslateToIR(std::string input_program) {
   ANTLRInputStream input(input_program);
   SimpleLangLexer lexer(&input);
   CommonTokenStream tokens(&lexer);
 
   tokens.fill();
-  for (auto token : tokens.getTokens()) {
-    std::cout << token->toString() << std::endl;
-  }
 
   SimpleLangParser parser(&tokens);
   tree::ParseTree* tree = parser.program();
-  if(parser.getNumberOfSyntaxErrors() > 0){
+  if (parser.getNumberOfSyntaxErrors() > 0) {
     return nullptr;
   }
   IRPtr ir = TranslateNode(tree, &parser);
-  std::cout << ir->to_string() << std::endl;
+  // std::cout << ir->to_string() << std::endl;
   return ir;
 }
-}
+}  // namespace antlr4

@@ -35,7 +35,8 @@ typedef NODETYPE IRTYPE;
   V(DataVarType)             \
   V(DataFixUnit)             \
   V(DataVarName)             \
-  V(DataVarScope)
+  V(DataVarScope)            \
+  V(DataDefault)
 
 enum DATATYPE {
 #define DECLARE_TYPE(v) k##v,

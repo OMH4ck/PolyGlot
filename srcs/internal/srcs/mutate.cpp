@@ -436,7 +436,6 @@ void Mutator::extract_struct(IRPtr root) {
     return;
   }
   // #endif
-
   if (string_types_.find(type) != string_types_.end()) {
     root->str_val_ = "'x'";
   } else if (int_types_.find(type) != int_types_.end()) {

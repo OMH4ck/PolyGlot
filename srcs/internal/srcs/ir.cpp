@@ -210,24 +210,24 @@ void IR::to_string_core(std::string &res) {
     absl::StrAppend(&res, int_val_);
   } else if (polyglot::gen::IsStringLiteral(type_)) {
     absl::StrAppend(&res, str_val_);
-  }
-
-  if (op_ != nullptr) {
-    absl::StrAppend(&res, op_->prefix_, " ");
-  }
-  if (left_ != nullptr) {
-    left_->to_string_core(res);
-    absl::StrAppend(&res, " ");
-  }
-  if (op_ != nullptr) {
-    absl::StrAppend(&res, op_->middle_, " ");
-  }
-  if (right_ != nullptr) {
-    right_->to_string_core(res);
-    absl::StrAppend(&res, " ");
-  }
-  if (op_ != nullptr) {
-    absl::StrAppend(&res, op_->suffix_);
+  } else {
+    if (op_ != nullptr) {
+      absl::StrAppend(&res, op_->prefix_, " ");
+    }
+    if (left_ != nullptr) {
+      left_->to_string_core(res);
+      absl::StrAppend(&res, " ");
+    }
+    if (op_ != nullptr) {
+      absl::StrAppend(&res, op_->middle_, " ");
+    }
+    if (right_ != nullptr) {
+      right_->to_string_core(res);
+      absl::StrAppend(&res, " ");
+    }
+    if (op_ != nullptr) {
+      absl::StrAppend(&res, op_->suffix_);
+    }
   }
 }
 
