@@ -466,9 +466,7 @@ std::optional<SymbolTable> collect_simple_variable_defintion(IRPtr cur) {
 #endif
   }
 
-  if (DBG) {
-    cout << "Variable type: " << var_type << ", typeid: " << type << endl;
-  }
+  spdlog::debug("Variable type: {}, typeid: {}", var_type, type);
   auto cur_scope = get_scope_by_id(cur->scope_id_);
 
   ir_vec.clear();
@@ -479,18 +477,18 @@ std::optional<SymbolTable> collect_simple_variable_defintion(IRPtr cur) {
   SymbolTable res;
   res.SetScopeId(cur->scope_id_);
   for (auto ir : ir_vec) {
-    if (DBG) cout << "var: " << ir->to_string() << endl;
+    spdlog::debug("var: {}", ir->to_string());
     auto name_ir = search_by_data_type(ir, kDataVarName);
     auto new_type = type;
     vector<IRPtr> tmp_vec;
     search_by_data_type(ir, kDataPointer, tmp_vec, kDataWhatever, true);
 
     if (!tmp_vec.empty()) {
-      if (DBG) cout << "This is a pointer definition" << endl;
-      if (DBG) cout << "Pointer level " << tmp_vec.size() << endl;
+      spdlog::debug("This is a pointer definition");
+      spdlog::debug("Pointer level {}", tmp_vec.size());
       new_type = generate_pointer_type(type, tmp_vec.size());
     } else {
-      if (DBG) cout << "This is not a pointer definition" << endl;
+      spdlog::debug("This is not a pointer definition");
       // handle other
     }
     if (name_ir == nullptr || cur_scope == nullptr) return res;
@@ -502,10 +500,8 @@ std::optional<SymbolTable> collect_simple_variable_defintion(IRPtr cur) {
 
 void TypeSystem::collect_structure_definition(IRPtr cur, IRPtr root) {
   if (cur->data_type_ == kDataClassType) {
-    if (DBG) cout << "to_string: " << cur->to_string() << endl;
-    if (DBG)
-      cout << "[collect_structure_definition] data_type_ = kDataClassType"
-           << endl;
+    spdlog::debug("to_string: {}", cur->to_string());
+    spdlog::debug("[collect_structure_definition] data_type_ = kDataClassType");
     auto cur_scope = get_scope_by_id(cur->scope_id_);
 
     if (isDefine(cur->data_flag_)) {  // with structure define
@@ -610,21 +606,17 @@ void TypeSystem::collect_structure_definition(IRPtr cur, IRPtr root) {
         if (structure_pointer_var.size() == 0) {  // not a pointer
           cur_scope->add_definition(compound_id, var_name->str_val_,
                                     var_name->id_);
-          if (DBG)
-            cout << "[struct]not a pointer, name: " << var_name->str_val_
-                 << endl;
+          spdlog::debug("[struct]not a pointer, name: {}", var_name->str_val_);
         } else {
           auto new_type =
               generate_pointer_type(compound_id, structure_pointer_var.size());
           cur_scope->add_definition(new_type, var_name->str_val_,
                                     var_name->id_);
-          if (DBG)
-            cout << "[struct]a pointer in level "
-                 << structure_pointer_var.size()
-                 << ", name: " << var_name->str_val_ << endl;
+          spdlog::debug("[struct]a pointer in level {}, name: {}",
+                        structure_pointer_var.size(), var_name->str_val_);
         }
-        structure_pointer_var.clear();
       }
+      structure_pointer_var.clear();
     }
   } else {
     if (cur->left_) collect_structure_definition(cur->left_, root);
@@ -2000,13 +1992,14 @@ bool TypeSystem::simple_fix(IRPtr ir, int type) {
   // if (contain_fixme(ir) == false)
   //     return true;
 
-  if (type == 0) return false;
-  if (DBG) cout << "NodeType: " << get_string_by_nodetype(ir->type_) << endl;
-  if (DBG) cout << "Type: " << type << endl;
+  if (type == NOTEXIST) return false;
+
+  spdlog::debug("NodeType: {}", get_string_by_nodetype(ir->type_));
+  spdlog::debug("Type: {}", type);
 
   // if (ir->type_ == kIdentifier && ir->str_val_ == "FIXME")
   if (ir->str_val_.empty() == false && ir->str_val_ == "FIXME") {
-    cout << "Reach here" << endl;
+    spdlog::debug("Reach here");
     ir->str_val_ = generate_expression_by_type(type, ir);
     return true;
   }
@@ -2025,12 +2018,10 @@ bool TypeSystem::simple_fix(IRPtr ir, int type) {
       }
 
       type = new_type;
-      if (DBG)
-        cout << "nothing in cache_inference_map_: " << ir->to_string() << endl;
-      if (DBG)
-        cout << "NodeType: " << get_string_by_nodetype(ir->type_) << endl;
+      spdlog::debug("nothing in cache_inference_map_: {}", ir->to_string());
+      spdlog::debug("NodeType: {}", get_string_by_nodetype(ir->type_));
     }
-    if (cache_inference_map_[ir]->HasCandidate(type)) return false;
+    if (!cache_inference_map_[ir]->HasCandidate(type)) return false;
     if (ir->left_) {
       auto iter = *random_pick(cache_inference_map_[ir]->GetCandidates(type));
       if (ir->right_) {
@@ -2061,17 +2052,12 @@ bool TypeSystem::top_fix(IRPtr root) {
       // if(root->type_ == kSingleExpression){
       if (root->str_val_ == "FIXME") {
         int type = ALLTYPES;
-        if (get_rand_int(3) != 0) {
-          type = ANYTYPE;
-        }
-
         res = simple_fix(root, type);
       } else {
         if (root->right_) stk.push(root->right_);
         if (root->left_) stk.push(root->left_);
       }
     } else {
-      // if (root->type_ == kAssignmentExpression)
       if (root->type_ == gen::Configuration::GetInstance().GetFixIRType() ||
           root->str_val_ == "FIXME") {
         if (contain_fixme(root) == false) continue;
