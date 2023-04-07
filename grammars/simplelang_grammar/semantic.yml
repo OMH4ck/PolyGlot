@@ -1,6 +1,6 @@
 ---
 __comments: ""
-InitFileDir: /workspaces/fuzzerfactory_refactor/grammars/simplelang_grammar/init/
+InitFileDir: ../grammars/simplelang_grammar/init/
 BuiltinObjFile: "/home/yongheng/FuzzerFactory_php/php_grammar/php_internal_object/"
 IsWeakType: true
 BasicUnits:
