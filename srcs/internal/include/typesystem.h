@@ -81,8 +81,6 @@ class OPRule {
 class TypeSystem {
  private:
   std::shared_ptr<Frontend> frontend_;
-  map<string, map<string, map<string, int>>> op_id_map_;
-  map<int, vector<OPRule>> op_rules_;
   // map<string, int> basic_types_;
   int current_scope_id_;
   shared_ptr<Scope> current_scope_ptr_;
@@ -98,6 +96,10 @@ class TypeSystem {
 
   TypeSystem(std::shared_ptr<Frontend> frontend = nullptr);
   // TODO: Return ValidationError instead of bool
+  // The validation consists of three steps:
+  // 1. It builds the sysmbol table in each scope.
+  // 2. It infers the types of the IRs that need fixing.
+  // 3. Fix the IRs based on their inferred types and symbol tables.
   bool validate(IRPtr &root);
   void init();
 
@@ -152,14 +154,46 @@ class TypeSystem {
         candidates_;
   };
 
+  class TypeInferer {
+   public:
+    bool Infer(IRPtr &root, int scope_type = NOTEXIST);
+    std::shared_ptr<CandidateTypes> GetCandidateTypes(IRPtr &root) {
+      if (cache_inference_map_.find(root) == cache_inference_map_.end())
+        return nullptr;
+      else
+        return cache_inference_map_[root];
+    }
+    // Operator related functions, since they are configuration so they are
+    // static.
+    // TODO: Mark them as const if possible
+    static OPRule parse_op_rule(string s);
+    static bool is_op1(int);
+    static bool is_op2(int);
+    static int query_result_type(int op, int, int = 0);
+    static int get_op_property(int op_id);
+    static void init_type_dict();
+    static FIXORDER get_fix_order(int type);  // need to finish
+    static int get_op_value(std::shared_ptr<IROperator> op);
+    static bool is_op_null(std::shared_ptr<IROperator> op);
+    static vector<string> get_op_by_optype(OPTYPE op_type);
+    static pair<OPTYPE, vector<int>> collect_sat_op_by_result_type(
+        int type, map<int, vector<set<int>>> &a,
+        map<int, vector<string>> &function_map,
+        map<int, vector<string>> &compound_var_map);
+
+   private:
+    static map<string, map<string, map<string, int>>> op_id_map_;
+    static map<int, vector<OPRule>> op_rules_;
+    bool type_inference_new(IRPtr cur, int scope_type = NOTEXIST);
+    int locate_defined_variable_by_name(const string &var_name, int scope_id);
+    set<int> collect_usable_type(IRPtr cur);
+    std::map<IRPtr, std::shared_ptr<CandidateTypes>> cache_inference_map_;
+  };
+
  private:
   // map<IR*, map<int, vector<pair<int,int>>>> cache_inference_map_;
   // TODO: Make type explicit
-  map<IRPtr, std::shared_ptr<CandidateTypes>> cache_inference_map_;
   // void init_basic_types();
-
-  int gen_id();
-  void init_type_dict();
 
   void split_to_basic_unit(IRPtr root, std::queue<IRPtr> &q,
                            map<IRPtr *, IRPtr> &m_save,
@@ -169,27 +203,13 @@ class TypeSystem {
 
   void connect_back(map<IRPtr *, IRPtr> &m_save);
 
-  FIXORDER get_fix_order(int type);  // need to finish
-
   bool create_symbol_table(IRPtr root);
 
-  int get_op_value(std::shared_ptr<IROperator> op);
-
-  bool is_op_null(std::shared_ptr<IROperator> op);
-
   // new
-  bool type_inference_new(IRPtr cur, int scope_type = NOTEXIST);
-  set<int> collect_usable_type(IRPtr cur);
-  int locate_defined_variable_by_name(const string &var_name, int scope_id);
   string get_class_member_by_type(int type, int target_type);
   string get_class_member_by_type_no_duplicate(int type, int target_type,
                                                set<int> &visit);
   string get_class_member(int type_id);
-  vector<string> get_op_by_optype(OPTYPE op_type);
-  pair<OPTYPE, vector<int>> collect_sat_op_by_result_type(
-      int type, map<int, vector<set<int>>> &a,
-      map<int, vector<string>> &function_map,
-      map<int, vector<string>> &compound_var_map);
 
   DATATYPE find_define_type(IRPtr cur);
 
@@ -209,7 +229,7 @@ class TypeSystem {
   vector<map<int, vector<string>>> collect_all_var_definition_by_type(
       IRPtr cur);
 
-  bool simple_fix(IRPtr ir, int type);
+  bool simple_fix(IRPtr ir, int type, TypeInferer &inferer);
   bool validate_syntax_only(IRPtr root);
   bool top_fix(IRPtr root);
   IRPtr locate_mutated_ir(IRPtr root);
@@ -243,12 +263,6 @@ class TypeSystem {
       int type, map<int, vector<set<int>>> &all_satisfiable_types,
       map<int, vector<string>> &function_map,
       map<int, vector<string>> &compound_var_map, IRPtr ir);
-  OPRule parse_op_rule(string s);
-  // OPRule* get_op_rule_by_op_id(int);
-  bool is_op1(int);
-  bool is_op2(int);
-  int query_result_type(int op, int, int = 0);
-  int get_op_property(int op_id);
   int gen_counter_, function_gen_counter_, current_fix_scope_;
 
   // bool insert_definition(int scope_id, int type_id, string var_name);

@@ -38,6 +38,8 @@ const char *member_str = ".";
 // shared_ptr<Scope> TypeSystem::current_scope_ptr_;
 // map<IRPtr, shared_ptr<map<TYPEID, vector<pair<TYPEID, TYPEID>>>>>
 //     TypeSystem::cache_inference_map_;
+map<int, vector<OPRule>> TypeSystem::TypeInferer::op_rules_;
+map<string, map<string, map<string, int>>> TypeSystem::TypeInferer::op_id_map_;
 
 IRPtr cur_statement_root = nullptr;
 
@@ -97,12 +99,12 @@ void TypeSystem::init() {
   s_basic_unit_ = gen::Configuration::GetInstance().GetBasicUnits();
   init_basic_types();
   init_convert_chain();
-  init_type_dict();
+  TypeInferer::init_type_dict();
   init_internal_obj(
       gen::Configuration::GetInstance().GetBuiltInObjectFilePath());
 }
 
-void TypeSystem::init_type_dict() {
+void TypeSystem::TypeInferer::init_type_dict() {
   // string line;
   // ifstream input_file("./js_grammar/type_dict");
 
@@ -115,7 +117,7 @@ void TypeSystem::init_type_dict() {
   }
 }
 
-int TypeSystem::gen_id() {
+int gen_id() {
   static int id = 1;
   return id++;
 }
@@ -199,7 +201,7 @@ bool TypeSystem::create_symbol_table(IRPtr root) {
   return true;
 }
 
-FIXORDER TypeSystem::get_fix_order(int op) {
+FIXORDER TypeSystem::TypeInferer::get_fix_order(int op) {
   assert(op_rules_.find(op) != op_rules_.end());
   assert(op_rules_[op].empty() == false);
   return op_rules_[op].front().fix_order_;
@@ -211,12 +213,12 @@ FIXORDER TypeSystem::get_fix_order(int op) {
   */
 }
 
-int TypeSystem::get_op_value(std::shared_ptr<IROperator> op) {
+int TypeSystem::TypeInferer::get_op_value(std::shared_ptr<IROperator> op) {
   if (op == nullptr) return 0;
   return op_id_map_[op->prefix_][op->middle_][op->suffix_];
 }
 
-bool TypeSystem::is_op_null(std::shared_ptr<IROperator> op) {
+bool TypeSystem::TypeInferer::is_op_null(std::shared_ptr<IROperator> op) {
   return (op == nullptr ||
           (op->suffix_ == "" && op->middle_ == "" && op->prefix_ == ""));
 }
@@ -311,12 +313,16 @@ void TypeSystem::collect_simple_variable_defintion_wt(IRPtr cur) {
     }
   } else {
     for (auto t : init_vec) {
+      // TODO: Double check this logis. We should use type inference during
+      // collections.
+      /*
       bool flag = type_inference_new(t);
-      int type = ALLTYPES;
       if (flag == true) {
         type = cache_inference_map_[t]->GetARandomCandidateType();
       }
+      */
       // cout << "Infer type: " << type << endl;
+      int type = ALLTYPES;
       if (type == ALLTYPES || type == NOTEXIST) type = ANYTYPE;
       type_vec.push_back(type);
     }
@@ -830,8 +836,11 @@ bool TypeSystem::collect_definition(IRPtr cur) {
 
 // map<IR*, shared_ptr<map<TYPEID, vector<pair<TYPEID, TYPEID>>>>>
 // TypeSystem::cache_inference_map_;
+bool TypeSystem::TypeInferer::Infer(IRPtr &cur, int scope_type) {
+  return type_inference_new(cur, scope_type);
+}
 
-bool TypeSystem::type_inference_new(IRPtr cur, int scope_type) {
+bool TypeSystem::TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
   auto cur_type = std::make_shared<CandidateTypes>();
   int res_type = NOTEXIST;
   bool flag;
@@ -1070,8 +1079,8 @@ bool TypeSystem::type_inference_new(IRPtr cur, int scope_type) {
   return cur_type->HasCandidate();
 }
 
-int TypeSystem::locate_defined_variable_by_name(const string &var_name,
-                                                int scope_id) {
+int TypeSystem::TypeInferer::locate_defined_variable_by_name(
+    const string &var_name, int scope_id) {
   int result = NOTEXIST;
   auto current_scope = get_scope_by_id(scope_id);
   while (current_scope) {
@@ -1086,7 +1095,7 @@ int TypeSystem::locate_defined_variable_by_name(const string &var_name,
   return result;
 }
 
-set<int> TypeSystem::collect_usable_type(IRPtr cur) {
+set<int> TypeSystem::TypeInferer::collect_usable_type(IRPtr cur) {
   set<int> result;
   auto ir_id = cur->id_;
   auto current_scope = get_scope_by_id(cur->scope_id_);
@@ -1249,7 +1258,8 @@ vector<map<int, vector<string>>> TypeSystem::collect_all_var_definition_by_type(
   return result;
 }
 
-pair<OPTYPE, vector<int>> TypeSystem::collect_sat_op_by_result_type(
+pair<OPTYPE, vector<int>>
+TypeSystem::TypeInferer::collect_sat_op_by_result_type(
     int type, map<int, vector<set<int>>> &all_satisfiable_types,
     map<int, vector<string>> &function_map,
     map<int, vector<string>> &compound_var_map) {
@@ -1318,7 +1328,7 @@ pair<OPTYPE, vector<int>> TypeSystem::collect_sat_op_by_result_type(
   return res;
 }
 
-vector<string> TypeSystem::get_op_by_optype(OPTYPE op_type) {
+vector<string> TypeSystem::TypeInferer::get_op_by_optype(OPTYPE op_type) {
   for (auto &s1 : op_id_map_) {
     for (auto &s2 : s1.second) {
       for (auto &s3 : s2.second) {
@@ -1746,7 +1756,7 @@ string TypeSystem::expression_gen_handler(
     map<int, vector<string>> &function_map,
     map<int, vector<string>> &compound_var_map, IRPtr ir) {
   string res;
-  auto sat_op = collect_sat_op_by_result_type(
+  auto sat_op = TypeInferer::collect_sat_op_by_result_type(
       type, all_satisfiable_types, function_map,
       compound_var_map);  // map<OPTYPE, vector<typeid>>
   if (DBG) cout << "OP id: " << sat_op.first << endl;
@@ -1755,10 +1765,10 @@ string TypeSystem::expression_gen_handler(
   }
   assert(sat_op.first);
 
-  auto op = get_op_by_optype(
+  auto op = TypeInferer::get_op_by_optype(
       sat_op.first);  // vector<string> for prefix, middle, suffix
   assert(op.size());  // should not be an empty operator
-  if (is_op1(sat_op.first)) {
+  if (TypeInferer::is_op1(sat_op.first)) {
     auto arg1_type = sat_op.second[0];
     auto arg1 = generate_expression_by_type_core(arg1_type, ir);
     assert(arg1.size());
@@ -1988,7 +1998,7 @@ IRPtr TypeSystem::locate_mutated_ir(IRPtr root) {
   return nullptr;
 }
 
-bool TypeSystem::simple_fix(IRPtr ir, int type) {
+bool TypeSystem::simple_fix(IRPtr ir, int type, TypeInferer &inferer) {
   // if (contain_fixme(ir) == false)
   //     return true;
 
@@ -2005,10 +2015,10 @@ bool TypeSystem::simple_fix(IRPtr ir, int type) {
   }
 
   if (!gen::Configuration::GetInstance().IsWeakType()) {
-    if (!cache_inference_map_[ir]->HasCandidate(type)) {
+    if (!inferer.GetCandidateTypes(ir)->HasCandidate(type)) {
       auto new_type = NOTEXIST;
       int counter = 0;
-      for (auto &iter : cache_inference_map_[ir]->GetCandidates()) {
+      for (auto &iter : inferer.GetCandidateTypes(ir)->GetCandidates()) {
         if (is_derived_type(type, iter.first)) {
           if (new_type == NOTEXIST || get_rand_int(counter) == 0) {
             new_type = iter.first;
@@ -2021,19 +2031,20 @@ bool TypeSystem::simple_fix(IRPtr ir, int type) {
       spdlog::debug("nothing in cache_inference_map_: {}", ir->to_string());
       spdlog::debug("NodeType: {}", get_string_by_nodetype(ir->type_));
     }
-    if (!cache_inference_map_[ir]->HasCandidate(type)) return false;
+    if (!inferer.GetCandidateTypes(ir)->HasCandidate(type)) return false;
     if (ir->left_) {
-      auto iter = *random_pick(cache_inference_map_[ir]->GetCandidates(type));
+      auto iter =
+          *random_pick(inferer.GetCandidateTypes(ir)->GetCandidates(type));
       if (ir->right_) {
-        simple_fix(ir->left_, iter.left);
-        simple_fix(ir->right_, iter.right);
+        simple_fix(ir->left_, iter.left, inferer);
+        simple_fix(ir->right_, iter.right, inferer);
       } else {
-        simple_fix(ir->left_, iter.left);
+        simple_fix(ir->left_, iter.left, inferer);
       }
     }
   } else {
-    if (ir->left_) simple_fix(ir->left_, type);
-    if (ir->right_) simple_fix(ir->right_, type);
+    if (ir->left_) simple_fix(ir->left_, type, inferer);
+    if (ir->right_) simple_fix(ir->right_, type, inferer);
   }
   return true;
 }
@@ -2045,6 +2056,7 @@ bool TypeSystem::top_fix(IRPtr root) {
 
   bool res = true;
 
+  TypeInferer inferer;
   while (res && !stk.empty()) {
     root = stk.top();
     stk.pop();
@@ -2052,7 +2064,7 @@ bool TypeSystem::top_fix(IRPtr root) {
       // if(root->type_ == kSingleExpression){
       if (root->str_val_ == "FIXME") {
         int type = ALLTYPES;
-        res = simple_fix(root, type);
+        res = simple_fix(root, type, inferer);
       } else {
         if (root->right_) stk.push(root->right_);
         if (root->left_) stk.push(root->left_);
@@ -2062,14 +2074,15 @@ bool TypeSystem::top_fix(IRPtr root) {
           root->str_val_ == "FIXME") {
         if (contain_fixme(root) == false) continue;
 
-        bool flag = type_inference_new(root, 0);
+        bool flag = inferer.Infer(root, 0);
         if (!flag) {
           res = false;
           break;
         }
-        auto iter = random_pick(cache_inference_map_[root]->GetCandidates());
+        auto iter =
+            random_pick(inferer.GetCandidateTypes(root)->GetCandidates());
         auto t = iter->first;
-        res = simple_fix(root, t);
+        res = simple_fix(root, t, inferer);
       } else {
         if (root->right_) stk.push(root->right_);
         if (root->left_) stk.push(root->left_);
@@ -2192,7 +2205,7 @@ bool TypeSystem::validate(IRPtr &root) {
     top_fix_success_counter++;
   }
 
-  cache_inference_map_.clear();
+  // cache_inference_map_.clear();
   clear_definition_all();
   set_scope_translation_flag(false);
 
@@ -2259,7 +2272,7 @@ int OPRule::apply(int arg1, int arg2) {
   return least_upper_common_type(arg1, arg2);
 }
 
-int TypeSystem::query_result_type(int op, int arg1, int arg2) {
+int TypeSystem::TypeInferer::query_result_type(int op, int arg1, int arg2) {
   bool isop1 = arg2 == 0;
 
   if (op_rules_.find(op) == op_rules_.end()) {
@@ -2295,14 +2308,14 @@ int TypeSystem::query_result_type(int op, int arg1, int arg2) {
   return NOTEXIST;
 }
 
-int TypeSystem::get_op_property(int op_id) {
+int TypeSystem::TypeInferer::get_op_property(int op_id) {
   assert(op_rules_.find(op_id) != op_rules_.end());
   assert(op_rules_[op_id].size());
 
   return op_rules_[op_id][0].property_;
 }
 
-bool TypeSystem::is_op1(int op_id) {
+bool TypeSystem::TypeInferer::is_op1(int op_id) {
   if (op_rules_.find(op_id) == op_rules_.end()) {
     return false;
   }
@@ -2312,7 +2325,7 @@ bool TypeSystem::is_op1(int op_id) {
   return op_rules_[op_id][0].operand_num_ == 1;
 }
 
-bool TypeSystem::is_op2(int op_id) {
+bool TypeSystem::TypeInferer::is_op2(int op_id) {
   if (op_rules_.find(op_id) == op_rules_.end()) {
     return false;
   }
@@ -2332,7 +2345,7 @@ void OPRule::add_property(const string &s) {
   }
 }
 
-OPRule TypeSystem::parse_op_rule(string s) {
+OPRule TypeSystem::TypeInferer::parse_op_rule(string s) {
   vector<string> v_strbuf;
   int pos = 0, last_pos = 0;
   while ((pos = s.find(" # ", last_pos)) != string::npos) {
