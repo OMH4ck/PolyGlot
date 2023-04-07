@@ -855,33 +855,27 @@ bool TypeSystem::TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
   if (cur->type_ == kIdentifier) {
     // handle here
     if (cur->str_val_ == "FIXME") {
-      if (DBG) cout << "See a fixme!" << endl;
+      spdlog::debug("See a fixme!");
       auto v_usable_type = collect_usable_type(cur);
-      // auto cur_type = make_shared<map<TYPEID, vector<pair<TYPEID,
-      // TYPEID>>>>();
-      if (DBG)
-        cout << "collect_usable_type.size(): " << v_usable_type.size() << endl;
-      // if(DBG) cout << "collect_usable_type.size(): " << v_usable_type.size()
-      // << endl;
+      spdlog::debug("collect_usable_type.size(): {}", v_usable_type.size());
       for (auto t : v_usable_type) {
-        if (DBG) cout << "Type: " << get_type_name_by_id(t) << endl;
+        spdlog::debug("Type: {}", get_type_name_by_id(t));
         assert(t);
         cur_type->AddCandidate(t, t, 0);
       }
       cache_inference_map_[cur] = cur_type;
       return cur_type->HasCandidate();
-      // eturn cur->value_type_ = ALLTYPES;
     }
 
     if (scope_type == NOTEXIST) {
       // match name in cur->scope_
 
       res_type = locate_defined_variable_by_name(cur->str_val_, cur->scope_id_);
-      if (DBG) cout << "Name: " << cur->str_val_ << endl;
-      if (DBG) cout << "Type: " << res_type << endl;
-      // auto cur_type = make_shared<map<TYPEID, vector<pair<TYPEID,
-      // TYPEID>>>>();
-      if (!res_type) res_type = ANYTYPE;  // should fix
+      spdlog::debug("Name: {}", cur->str_val_);
+      spdlog::debug("Type: {}", res_type);
+      if (!res_type) {
+        res_type = ANYTYPE;
+      }
       cur_type->AddCandidate(res_type, res_type, 0);
       cache_inference_map_[cur] = cur_type;
       return true;
