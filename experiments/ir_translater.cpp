@@ -1,8 +1,6 @@
 #include "ir_translater.h"
 
-#include "SimpleLangBaseVisitor.h"
-#include "SimpleLangLexer.h"
-#include "SimpleLangParser.h"
+#include "generated_header.h"
 #include "antlr4-runtime.h"
 // #include "cus.h"
 #include <iostream>
@@ -64,7 +62,7 @@ OneIR ExtractOneIR(std::stack<IM>& stk) {
 }
 
 namespace antlr4 {
-IRPtr TranslateNode(tree::ParseTree* node, SimpleLangParser* parser) {
+IRPtr TranslateNode(tree::ParseTree* node, PolyGlotGrammarParser* parser) {
   assert(node->getTreeType() == antlr4::tree::ParseTreeType::RULE);
 
   std::stack<IM> stk;
@@ -156,12 +154,12 @@ IRPtr TranslateNode(tree::ParseTree* node, SimpleLangParser* parser) {
 
 IRPtr TranslateToIR(std::string input_program) {
   ANTLRInputStream input(input_program);
-  SimpleLangLexer lexer(&input);
+  PolyGlotGrammarLexer lexer(&input);
   CommonTokenStream tokens(&lexer);
 
   tokens.fill();
 
-  SimpleLangParser parser(&tokens);
+  PolyGlotGrammarParser parser(&tokens);
   tree::ParseTree* tree = parser.program();
   if (parser.getNumberOfSyntaxErrors() > 0) {
     return nullptr;

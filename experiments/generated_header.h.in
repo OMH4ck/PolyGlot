@@ -1,0 +1,14 @@
+#ifndef __GENARATED_HEADER_H__
+#define __GENARATED_HEADER_H__
+#include "@GRAMMAR_NAME@Parser.h"
+#include "@GRAMMAR_NAME@Lexer.h"
+#include "@GRAMMAR_NAME@BaseVisitor.h"
+
+using namespace antlr4;
+using namespace antlrcpptest;
+
+using PolyGlotGrammarParser = @GRAMMAR_NAME@Parser;
+using PolyGlotGrammarLexer = @GRAMMAR_NAME@Lexer;
+using PolyGlotGrammarBaseVisitor = @GRAMMAR_NAME@BaseVisitor;
+
+#endif
