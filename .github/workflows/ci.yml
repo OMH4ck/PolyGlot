@@ -30,6 +30,6 @@ jobs:
       - name: build
         run: mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DLANG=simplelang && make -j
       - name: unittest
-        run: cd build && ctest
+        run: cd build && ./tests/simplelang_test
       - name: end to end test
         run: cd e2e_tests && bash ./run.sh
