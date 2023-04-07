@@ -109,7 +109,7 @@ TEST_F(MutatorTestF, MutateGenerateDifferentTestCases) {
 
   std::unordered_set<std::string> unique_test_cases;
 
-  while (unique_test_cases.size() < 20) {
+  for (size_t i = 0; i < 200; ++i) {
     // Avoid mutated_times_ too large, so we make it clean every time.
     vector<IRPtr> ir_set;
     auto program_root = parser(test_case.data());
