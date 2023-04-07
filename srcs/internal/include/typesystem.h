@@ -30,6 +30,7 @@ using std::vector;
 #define NOTEXIST 0
 typedef int VALUETYPE;
 typedef int OPTYPE;
+using TYPEID = int;
 class Scope;
 
 // extern unsigned long type_fix_framework_fail_counter;
@@ -101,7 +102,12 @@ class TypeSystem {
 
  private:
   // map<IR*, map<int, vector<pair<int,int>>>> cache_inference_map_;
-  map<IRPtr, shared_ptr<map<int, vector<pair<int, int>>>>> cache_inference_map_;
+  // TODO: Make type explicit
+  map<IRPtr,
+      shared_ptr<map<
+          int /*result type*/,
+          vector<pair<int /*left operand type*/, int /*right operand type*/>>>>>
+      cache_inference_map_;
   // void init_basic_types();
 
   int gen_id();
@@ -147,6 +153,8 @@ class TypeSystem {
   void collect_structure_definition_wt(IRPtr cur, IRPtr root);
 
   bool is_contain_definition(IRPtr cur);
+
+  // TODO: It should return the collected definitions instead of bool.
   bool collect_definition(IRPtr cur);
   string generate_expression_by_type(int type, IRPtr ir);
   string generate_expression_by_type_core(int type, IRPtr ir);

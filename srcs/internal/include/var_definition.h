@@ -40,7 +40,8 @@ class SymbolTable {
  public:
   void AddDefinition(int type, const string &var_name, ORDERID id);
   void AddDefinition(Definition def);
-
+  void SetScopeId(int scope_id) { scope_id_ = scope_id; }
+  int GetScopeId() const { return scope_id_; }
   std::optional<Definition> GetDefinition(std::string_view var_name) const;
   const std::map<TYPEID, std::vector<Definition>> &GetTable() const {
     return m_table_;

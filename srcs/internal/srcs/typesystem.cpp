@@ -2,6 +2,7 @@
 #include "typesystem.h"
 
 #include <memory>
+#include <optional>
 
 #include "config_misc.h"
 #include "define.h"
@@ -435,7 +436,7 @@ void TypeSystem::collect_structure_definition_wt(IRPtr cur, IRPtr root) {
   }
 }
 
-void collect_simple_variable_defintion(IRPtr cur) {
+std::optional<SymbolTable> collect_simple_variable_defintion(IRPtr cur) {
   string var_type;
 
   vector<IRPtr> ir_vec;
@@ -473,8 +474,10 @@ void collect_simple_variable_defintion(IRPtr cur) {
   ir_vec.clear();
 
   search_by_data_type(cur, kDataDeclarator, ir_vec);
-  if (ir_vec.empty()) return;
+  if (ir_vec.empty()) return std::nullopt;
 
+  SymbolTable res;
+  res.SetScopeId(cur->scope_id_);
   for (auto ir : ir_vec) {
     if (DBG) cout << "var: " << ir->to_string() << endl;
     auto name_ir = search_by_data_type(ir, kDataVarName);
@@ -490,9 +493,11 @@ void collect_simple_variable_defintion(IRPtr cur) {
       if (DBG) cout << "This is not a pointer definition" << endl;
       // handle other
     }
-    if (name_ir == nullptr || cur_scope == nullptr) return;
+    if (name_ir == nullptr || cur_scope == nullptr) return res;
     cur_scope->add_definition(new_type, name_ir->str_val_, name_ir->id_);
+    res.AddDefinition(new_type, name_ir->str_val_, name_ir->id_);
   }
+  return res;
 }
 
 void TypeSystem::collect_structure_definition(IRPtr cur, IRPtr root) {
