@@ -1,14 +1,13 @@
 #include "utils.h"
 
-#include "ast.h"
-#include "bison_parser.h"
-#include "flex_lexer.h"
-#include "gen_ir.h"
 //#include "typesystem.h"
-#include "var_definition.h"
+//#include "var_definition.h"
 
-using std::string;
-using std::vector;
+#include <cstring>
+#include <iostream>
+#include <string>
+
+using namespace std;
 
 static unsigned long g_id_counter;
 
@@ -64,31 +63,6 @@ long gen_long() { return 1; }
 int gen_int() { return 1; }
 
 typedef unsigned long uint64_t;
-
-std::shared_ptr<TopASTNode> parser(string sql) {
-  yyscan_t scanner;
-  YY_BUFFER_STATE state;
-  TopASTNode *p = new TopASTNode();
-  reset_scope();
-
-  if (ff_lex_init(&scanner)) {
-    return nullptr;
-  }
-  state = ff__scan_string(sql.c_str(), scanner);
-
-  int ret = ff_parse(p, scanner);
-
-  ff__delete_buffer(state, scanner);
-  ff_lex_destroy(scanner);
-
-  if (ret != 0) {
-    p->deep_delete();
-    return nullptr;
-  }
-
-  std::shared_ptr<TopASTNode> p1(p);
-  return p1;
-}
 
 vector<string> get_all_files_in_dir(const char *dir_name) {
   vector<string> file_list;

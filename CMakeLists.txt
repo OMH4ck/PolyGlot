@@ -85,21 +85,20 @@ include_directories(${spdlog_INCLUDE_DIRS})
 set(AFLPP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/AFLplusplus/include)
 include_directories(${AFLPP_DIR})
 
-add_library(config_lib OBJECT ${CMAKE_SOURCE_DIR}/srcs/internal/srcs/configuration.cpp ${GENERATED_FILES})
-target_include_directories(config_lib PUBLIC ${CMAKE_SOURCE_DIR}/srcs/internal/include ${CMAKE_SOURCE_DIR}/gen/parser ${CMAKE_SOURCE_DIR}/gen)
+add_library(frontend_lib STATIC srcs/internal/srcs/frontend.cpp srcs/internal/srcs/ast.cpp ${GENERATED_FILES})
+target_include_directories(frontend_lib PUBLIC ${CMAKE_SOURCE_DIR}/srcs/internal/include ${CMAKE_SOURCE_DIR}/gen/parser ${CMAKE_SOURCE_DIR}/gen)
+target_compile_options(frontend_lib PRIVATE -fPIC)
+target_link_libraries(frontend_lib PUBLIC ir_translator)
+
+add_library(config_lib OBJECT ${CMAKE_SOURCE_DIR}/srcs/internal/srcs/configuration.cpp)
+target_include_directories(config_lib PUBLIC ${CMAKE_SOURCE_DIR}/srcs/internal/include)
 target_compile_options(config_lib PRIVATE -fPIC)
 target_link_libraries(config_lib PRIVATE yaml-cpp absl::str_format)
 
-add_library(ir_lib STATIC srcs/internal/srcs/ir.cpp srcs/internal/srcs/ast.cpp srcs/internal/srcs/var_definition.cpp srcs/internal/srcs/utils.cpp)
+add_library(ir_lib OBJECT srcs/internal/srcs/ir.cpp srcs/internal/srcs/var_definition.cpp srcs/internal/srcs/utils.cpp)
 target_include_directories(ir_lib PUBLIC ${CMAKE_SOURCE_DIR}/srcs/internal/include)
-target_link_libraries(ir_lib PUBLIC absl::str_format config_lib)
+target_link_libraries(ir_lib PUBLIC absl::str_format)
 target_compile_options(ir_lib PRIVATE -fPIC)
-
-add_library(frontend_lib STATIC srcs/internal/srcs/frontend.cpp)
-target_include_directories(frontend_lib PUBLIC ${CMAKE_SOURCE_DIR}/srcs/internal/include)
-target_compile_options(frontend_lib PRIVATE -fPIC)
-target_link_libraries(frontend_lib PUBLIC ir_lib config_lib ir_translator)
-
 
 add_library(polyglot_lib STATIC srcs/polyglot.cc srcs/internal/srcs/mutate.cpp srcs/internal/srcs/typesystem.cpp)
 target_include_directories(polyglot_lib
@@ -108,7 +107,7 @@ target_include_directories(polyglot_lib PUBLIC ${CMAKE_SOURCE_DIR}/srcs)
 target_compile_options(polyglot_lib PRIVATE -fPIC -Werror)
 target_link_libraries(polyglot_lib PRIVATE spdlog::spdlog Microsoft.GSL::GSL
                                            absl::str_format)
-target_link_libraries(polyglot_lib PUBLIC frontend_lib)
+target_link_libraries(polyglot_lib PUBLIC ir_lib frontend_lib config_lib)
 target_link_options(polyglot_lib PRIVATE $<$<CONFIG:DEBUG>: -fsanitize=address
                     -shared-libasan>)
 

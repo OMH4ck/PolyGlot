@@ -4,7 +4,7 @@
 
 #include "absl/strings/str_join.h"
 #include "config_misc.h"
-#include "gen_ir.h"
+#include "frontend.h"
 #include "typesystem.h"
 #include "var_definition.h"
 #include "yaml-cpp/yaml.h"
@@ -26,6 +26,20 @@ bool Configuration::Initialize(std::string_view config_file_path) {
 bool Configuration::Init(std::string_view config_file_path) {
   try {
     YAML::Node config = YAML::LoadFile(config_file_path.data());
+    if (config["Frontend"]) {
+      std::string frontend_name = config["Frontend"].as<std::string>();
+      if (frontend_name == "bison") {
+        frontend_ = std::make_unique<BisonFrontend>();
+      } else if (frontend_name == "antlr") {
+        frontend_ = std::make_unique<AntlrFrontend>();
+      } else {
+        assert(false);
+        return false;
+      }
+    } else {
+      // TODO: By default use bison. Should fix after migration.
+      frontend_ = std::make_unique<BisonFrontend>();
+    }
     if (config["IsWeakType"]) {
       is_weak_type_ = config["IsWeakType"].as<bool>();
     } else {
@@ -34,8 +48,9 @@ bool Configuration::Init(std::string_view config_file_path) {
     }
     if (config["FixIRType"]) {
       fix_ir_type_ =
-          get_nodetype_by_string(config["FixIRType"].as<std::string>());
-      assert(fix_ir_type_ != kUnknown && "FixIRType is not valid");
+          frontend_->GetIRTypeByStr(config["FixIRType"].as<std::string>());
+      assert(fix_ir_type_ != frontend_->GetUnknownType() &&
+             "FixIRType is not valid");
     } else {
       if (!is_weak_type_) {
         assert(false);
@@ -48,16 +63,16 @@ bool Configuration::Init(std::string_view config_file_path) {
       return false;
     }
     if (config["FunctionArgumentUnit"]) {
-      function_arg_node_type_.insert(get_nodetype_by_string(
+      function_arg_node_type_.insert(frontend_->GetIRTypeByStr(
           config["FunctionArgumentUnit"].as<std::string>()));
-      assert(function_arg_node_type_.find(kUnknown) ==
+      assert(function_arg_node_type_.find(frontend_->GetUnknownType()) ==
                  function_arg_node_type_.end() &&
              "FunctionArgumentUnit is not valid");
     } else {
       if (!is_weak_type_) {
         assert(false);
       }
-      function_arg_node_type_.insert(kUnknown);
+      function_arg_node_type_.insert(frontend_->GetUnknownType());
     }
     if (config["StringLiteralType"]) {
       // Ensure it is an array
@@ -66,12 +81,12 @@ bool Configuration::Init(std::string_view config_file_path) {
       // Iterate through the array
       for (const auto &type : config["StringLiteralType"]) {
         string_literal_type_.insert(
-            get_nodetype_by_string(type.as<std::string>()));
+            frontend_->GetIRTypeByStr(type.as<std::string>()));
       }
     } else {
       // TODO: Fix the hardcoded string literal type
-      string_literal_type_.insert(kStringLiteral);
-      string_literal_type_.insert(kIdentifier);
+      string_literal_type_.insert(frontend_->GetStringLiteralType());
+      string_literal_type_.insert(frontend_->GetIdentifierType());
     }
     if (config["FloatLiteralType"]) {
       // Ensure it is an array
@@ -80,10 +95,10 @@ bool Configuration::Init(std::string_view config_file_path) {
       // Iterate through the array
       for (const auto &type : config["FloatLiteralType"]) {
         float_literal_type_.insert(
-            get_nodetype_by_string(type.as<std::string>()));
+            frontend_->GetIRTypeByStr(type.as<std::string>()));
       }
     } else {
-      float_literal_type_.insert(kFloatLiteral);
+      float_literal_type_.insert(frontend_->GetFloatLiteralType());
     }
     if (config["IntLiteralType"]) {
       // Ensure it is an array
@@ -92,17 +107,17 @@ bool Configuration::Init(std::string_view config_file_path) {
       // Iterate through the array
       for (const auto &type : config["IntLiteralType"]) {
         int_literal_type_.insert(
-            get_nodetype_by_string(type.as<std::string>()));
+            frontend_->GetIRTypeByStr(type.as<std::string>()));
       }
     } else {
-      int_literal_type_.insert(kIntLiteral);
+      int_literal_type_.insert(frontend_->GetIntLiteralType());
     }
     if (config["BasicUnits"]) {
       // Ensure it is an array
       assert(config["BasicUnits"].IsSequence() && "BasicUnit is not an array");
       // Iterate through the array
       for (const auto &type : config["BasicUnits"]) {
-        basic_units_.insert(get_nodetype_by_string(type.as<std::string>()));
+        basic_units_.insert(frontend_->GetIRTypeByStr(type.as<std::string>()));
       }
     } else {
       assert(false);
@@ -203,7 +218,7 @@ bool Configuration::Init(std::string_view config_file_path) {
 bool Configuration::IsWeakType() const { return is_weak_type_; }
 
 IRTYPE Configuration::GetFixIRType() const { return fix_ir_type_; }
-std::set<NODETYPE> Configuration::GetFunctionArgNodeType() const {
+std::set<IRTYPE> Configuration::GetFunctionArgNodeType() const {
   return function_arg_node_type_;
 }
 
@@ -221,24 +236,20 @@ bool Configuration::HandleBasicType(
     IRTYPE ir_type,
     std::shared_ptr<typesystem::TypeSystem::CandidateTypes> &cur_type) const {
   int res_type = NOTEXIST;
-  switch (ir_type) {
-    case kStringLiteral:
-      res_type = get_type_id_by_string("ANYTYPE");
-      cur_type->AddCandidate(res_type, 0, 0);
-      // cache_inference_map_[cur] = cur_type;
-      return true;
-    case kIntLiteral:
-      res_type = get_type_id_by_string("ANYTYPE");
-      cur_type->AddCandidate(res_type, 0, 0);
-      // cache_inference_map_[cur] = cur_type;
-      return true;
-    case kFloatLiteral:
-      res_type = get_type_id_by_string("ANYTYPE");
-      cur_type->AddCandidate(res_type, 0, 0);
-      // cache_inference_map_[cur] = cur_type;
-      return true;
-    default:
-      return false;
+  if (ir_type == frontend_->GetStringLiteralType()) {
+    res_type = get_type_id_by_string("ANYTYPE");
+    cur_type->AddCandidate(res_type, 0, 0);
+    return true;
+  } else if (ir_type == frontend_->GetIntLiteralType()) {
+    res_type = get_type_id_by_string("ANYTYPE");
+    cur_type->AddCandidate(res_type, 0, 0);
+    return true;
+  } else if (ir_type == frontend_->GetFloatLiteralType()) {
+    res_type = get_type_id_by_string("ANYTYPE");
+    cur_type->AddCandidate(res_type, 0, 0);
+    return true;
+  } else {
+    return false;
   }
 }
 
@@ -256,15 +267,15 @@ std::vector<std::string> Configuration::GetBasicTypeStr() const {
   return basic_types_;
 }
 
-bool Configuration::IsFloatLiteral(NODETYPE type) const {
+bool Configuration::IsFloatLiteral(IRTYPE type) const {
   return float_literal_type_.find(type) != float_literal_type_.end();
 }
 
-bool Configuration::IsIntLiteral(NODETYPE type) const {
+bool Configuration::IsIntLiteral(IRTYPE type) const {
   return int_literal_type_.find(type) != int_literal_type_.end();
 }
 
-bool Configuration::IsStringLiteral(NODETYPE type) const {
+bool Configuration::IsStringLiteral(IRTYPE type) const {
   return string_literal_type_.find(type) != string_literal_type_.end();
 }
 

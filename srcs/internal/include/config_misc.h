@@ -12,6 +12,7 @@
 
 namespace polyglot {
 
+class Frontend;
 namespace typesystem {
 class TypeSystem;
 }
@@ -26,7 +27,7 @@ class Configuration {
 
   bool IsWeakType() const;
   IRTYPE GetFixIRType() const;
-  std::set<NODETYPE> GetFunctionArgNodeType() const;
+  std::set<IRTYPE> GetFunctionArgNodeType() const;
 
   std::set<IRTYPE> GetBasicUnits() const;
 
@@ -45,12 +46,12 @@ class Configuration {
 
   std::vector<std::string> GetBasicTypeStr() const;
 
-  // std::string LiteralTypeToString(NODETYPE type);
+  // std::string LiteralTypeToString(IRTYPE type);
 
-  bool IsFloatLiteral(NODETYPE type) const;
-  bool IsIntLiteral(NODETYPE type) const;
-  bool IsStringLiteral(NODETYPE type) const;
-  // bool IsIdentifier(NODETYPE type);
+  bool IsFloatLiteral(IRTYPE type) const;
+  bool IsIntLiteral(IRTYPE type) const;
+  bool IsStringLiteral(IRTYPE type) const;
+  // bool IsIdentifier(IRTYPE type);
 
   std::string GetInitDirPath() const;
 
@@ -70,7 +71,7 @@ class Configuration {
   bool is_weak_type_;
   IRTYPE fix_ir_type_;
   std::string init_dir_path_;
-  std::set<NODETYPE> function_arg_node_type_;
+  std::set<IRTYPE> function_arg_node_type_;
   std::unordered_set<IRTYPE> float_literal_type_;
   std::unordered_set<IRTYPE> int_literal_type_;
   std::unordered_set<IRTYPE> string_literal_type_;
@@ -80,6 +81,7 @@ class Configuration {
   std::vector<std::pair<std::string, std::string>> convertable_type_map_;
   std::vector<std::pair<std::string, std::string>> convert_chain_;
   std::vector<string> op_rules_;
+  std::shared_ptr<Frontend> frontend_;
 };
 }  // namespace gen
 }  // namespace polyglot

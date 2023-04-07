@@ -57,14 +57,14 @@ add_custom_command(
     antlrcpptest ${GRAMMAR_FILE}
   DEPENDS ${GRAMMAR_FILE})
 
-add_library(ir_translator STATIC ir_translater.cpp ${GENERATED_SRC_FILES})
+add_library(ir_translator OBJECT ir_translater.cpp ${GENERATED_SRC_FILES})
 target_include_directories(
   ir_translator PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/generated
                        ${CMAKE_CURRENT_SOURCE_DIR}/)
-target_link_libraries(ir_translator PUBLIC antlr4_static ir_lib)
+target_link_libraries(ir_translator PUBLIC antlr4_static ir_lib absl::flat_hash_map config_lib)
 target_compile_options(ir_translator PRIVATE -fPIC)
 
 add_executable(AntlrTest main.cpp)
 # target_include_directories(AntlrTest PUBLIC
 # ${CMAKE_CURRENT_SOURCE_DIR}/generated ${CMAKE_CURRENT_SOURCE_DIR}/)
-target_link_libraries(AntlrTest PRIVATE antlr4_static ir_translator)
+target_link_libraries(AntlrTest PRIVATE antlr4_static ir_translator frontend_lib ir_lib config_lib)

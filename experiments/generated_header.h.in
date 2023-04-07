@@ -11,4 +11,5 @@ using PolyGlotGrammarParser = @GRAMMAR_NAME@Parser;
 using PolyGlotGrammarLexer = @GRAMMAR_NAME@Lexer;
 using PolyGlotGrammarBaseVisitor = @GRAMMAR_NAME@BaseVisitor;
 
+using IRTYPE = unsigned int;
 #endif

@@ -14,6 +14,9 @@
 using TYPEID = int;
 using ORDERID = unsigned long;
 
+class IR;
+using IRPtr = std::shared_ptr<IR>;
+
 #define ALLTYPES 1
 #define ALLCOMPOUNDTYPE 2
 #define ALLFUNCTION 3
@@ -38,7 +41,7 @@ struct Definition {
 // Inside one scope.
 class SymbolTable {
  public:
-  void AddDefinition(int type, const string &var_name, ORDERID id);
+  void AddDefinition(int type, const std::string &var_name, ORDERID id);
   void AddDefinition(Definition def);
   void SetScopeId(int scope_id) { scope_id_ = scope_id; }
   int GetScopeId() const { return scope_id_; }
@@ -58,28 +61,28 @@ class Scope {
       : scope_id_(scope_id), scope_type_(scope_type) {}
   ~Scope() {}
   // TODO: Avoid using raw pointer
-  // vector<IR*> v_ir_set_;  // all the irs in this scope;
-  map<int, vector<IRPtr>> m_define_ir_;
+  // std::vector<IR*> v_ir_set_;  // all the irs in this scope;
+  std::map<int, std::vector<IRPtr>> m_define_ir_;
   int scope_id_;
-  map<int, shared_ptr<Scope>> children_;
-  weak_ptr<Scope> parent_;
+  std::map<int, std::shared_ptr<Scope>> children_;
+  std::weak_ptr<Scope> parent_;
   ScopeType scope_type_;  // for what type of scope
 
-  // map<TYPEID, vector<Definition>> definitions_;
+  // map<TYPEID, std::vector<Definition>> definitions_;
   SymbolTable definitions_;
-  set<string> s_defined_variable_names_;
-  void add_definition(int type, const string &var_name, unsigned long id,
+  std::set<std::string> s_defined_variable_names_;
+  void add_definition(int type, const std::string &var_name, unsigned long id,
                       ScopeType stype);
-  void add_definition(int type, const string &var_name, unsigned long id);
+  void add_definition(int type, const std::string &var_name, unsigned long id);
   void add_definition(int type, IRPtr ir);
 };
 
 class VarType {
  public:
   TYPEID type_id_;
-  string type_name_;
-  vector<shared_ptr<VarType>> base_type_;
-  vector<weak_ptr<VarType>> derived_type_;
+  std::string type_name_;
+  std::vector<std::shared_ptr<VarType>> base_type_;
+  std::vector<std::weak_ptr<VarType>> derived_type_;
   TYPEID get_type_id() const;
   virtual bool is_pointer_type() { return false; }
   virtual bool is_compound_type() { return false; };
@@ -88,17 +91,17 @@ class VarType {
 
 class FunctionType : public VarType {
  public:
-  // pair<TYPEID, string> return_value_;
-  vector<IRPtr> return_value_ir_;
+  // pair<TYPEID, std::string> return_value_;
+  std::vector<IRPtr> return_value_ir_;
   IRPtr return_definition_ir_;
   TYPEID return_type_;
-  // map<int, vector<string>> arguments_; // Should be IR*?
-  // vector<pair<TYPEID, string>> v_arguments_;
-  vector<IRPtr> v_arguments_;
-  vector<TYPEID> v_arg_types_;
+  // map<int, std::vector<std::string>> arguments_; // Should be IR*?
+  // std::vector<pair<TYPEID, std::string>> v_arguments_;
+  std::vector<IRPtr> v_arguments_;
+  std::vector<TYPEID> v_arg_types_;
   int arg_num();
-  string get_arg_by_order(int);
-  string get_arg_by_type(TYPEID);
+  std::string get_arg_by_order(int);
+  std::string get_arg_by_type(TYPEID);
   virtual bool is_pointer_type() { return false; }
   virtual bool is_compound_type() { return false; };
   virtual bool is_function_type() { return true; };
@@ -106,12 +109,12 @@ class FunctionType : public VarType {
 
 class CompoundType : public VarType {
  public:
-  vector<TYPEID> parent_class_;
-  map<TYPEID, vector<string>> v_members_;
-  set<IRPtr> can_be_fixed_ir_;
+  std::vector<TYPEID> parent_class_;
+  std::map<TYPEID, std::vector<std::string>> v_members_;
+  std::set<IRPtr> can_be_fixed_ir_;
   // IRPtr define_root_;
 
-  string get_member_by_type(TYPEID type);
+  std::string get_member_by_type(TYPEID type);
   void remove_unfix(IRPtr);
   virtual bool is_pointer_type() { return false; }
   virtual bool is_compound_type() { return true; };
@@ -128,68 +131,70 @@ class PointerType : public VarType {
   virtual bool is_function_type() { return false; };
 };
 
-// extern shared_ptr<Scope> g_scope_root;
-shared_ptr<Scope> get_scope_root();
-// extern map<int, shared_ptr<Scope>> scope_id_map;
-extern shared_ptr<Scope> g_scope_current;
-// extern map<TYPEID, shared_ptr<VarType>> type_map;
-// extern map<string, int> basic_types;
-extern set<int> all_compound_types;
-// extern set<int> all_functions;
+// extern std::shared_ptr<Scope> g_scope_root;
+std::shared_ptr<Scope> get_scope_root();
+// extern map<int, std::shared_ptr<Scope>> scope_id_map;
+extern std::shared_ptr<Scope> g_scope_current;
+// extern map<TYPEID, std::shared_ptr<VarType>> type_map;
+// extern map<std::string, int> basic_types;
+extern std::set<int> all_compound_types;
+// extern std::set<int> all_functions;
 extern bool is_internal_obj_setup;
 extern bool is_in_class;
 
 // for internal type
-extern set<int> all_internal_compound_types;
-extern set<int> all_internal_functions;
-extern map<TYPEID, shared_ptr<VarType>> internal_type_map;
-map<TYPEID, vector<string>> &get_all_builtin_simple_var_types();
-map<TYPEID, vector<string>> &get_all_builtin_compound_types();
-map<TYPEID, vector<string>> &get_all_builtin_function_types();
+extern std::set<int> all_internal_compound_types;
+extern std::set<int> all_internal_functions;
+extern std::map<TYPEID, std::shared_ptr<VarType>> internal_type_map;
+std::map<TYPEID, std::vector<std::string>> &get_all_builtin_simple_var_types();
+std::map<TYPEID, std::vector<std::string>> &get_all_builtin_compound_types();
+std::map<TYPEID, std::vector<std::string>> &get_all_builtin_function_types();
 bool is_builtin_type(TYPEID type_id);
 
 void init_convert_chain();
 bool is_derived_type(TYPEID dtype, TYPEID btype);
 
 void init_basic_types();
-void forward_add_compound_type(string &structure_name);
-shared_ptr<Scope> get_scope_by_id(int);
-shared_ptr<CompoundType> make_compound_type_by_scope(shared_ptr<Scope> scope,
-                                                     string &structure_name);
-shared_ptr<FunctionType> make_function_type_by_scope(shared_ptr<Scope> scope);
-shared_ptr<FunctionType> make_function_type(string &function_name,
-                                            TYPEID return_type,
-                                            vector<TYPEID> &args);
-shared_ptr<VarType> get_type_by_type_id(TYPEID type_id);
-shared_ptr<CompoundType> get_compound_type_by_type_id(TYPEID type_id);
-shared_ptr<FunctionType> get_function_type_by_type_id(TYPEID type_id);
-shared_ptr<FunctionType> get_function_type_by_return_type_id(TYPEID type_id);
-void make_basic_type_add_map(TYPEID id, const string &s);
-shared_ptr<VarType> make_basic_type(TYPEID id, const string &s);
+void forward_add_compound_type(std::string &structure_name);
+std::shared_ptr<Scope> get_scope_by_id(int);
+std::shared_ptr<CompoundType> make_compound_type_by_scope(
+    std::shared_ptr<Scope> scope, std::string &structure_name);
+std::shared_ptr<FunctionType> make_function_type_by_scope(
+    std::shared_ptr<Scope> scope);
+std::shared_ptr<FunctionType> make_function_type(std::string &function_name,
+                                                 TYPEID return_type,
+                                                 std::vector<TYPEID> &args);
+std::shared_ptr<VarType> get_type_by_type_id(TYPEID type_id);
+std::shared_ptr<CompoundType> get_compound_type_by_type_id(TYPEID type_id);
+std::shared_ptr<FunctionType> get_function_type_by_type_id(TYPEID type_id);
+std::shared_ptr<FunctionType> get_function_type_by_return_type_id(
+    TYPEID type_id);
+void make_basic_type_add_map(TYPEID id, const std::string &s);
+std::shared_ptr<VarType> make_basic_type(TYPEID id, const std::string &s);
 bool is_basic_type(TYPEID type_id);
 bool is_compound_type(TYPEID type_id);
 bool is_function_type(TYPEID type_id);
-bool is_basic_type(const string &s);
-TYPEID get_basic_type_id_by_string(const string &s);
-TYPEID get_type_id_by_string(const string &s);
-TYPEID get_compound_type_id_by_string(const string &s);
+bool is_basic_type(const std::string &s);
+TYPEID get_basic_type_id_by_string(const std::string &s);
+TYPEID get_type_id_by_string(const std::string &s);
+TYPEID get_compound_type_id_by_string(const std::string &s);
 void duck_debug();
 int gen_type_id();
-string get_type_name_by_id(TYPEID type_id);
-void debug_scope_tree(shared_ptr<Scope> cur);
+std::string get_type_name_by_id(TYPEID type_id);
+void debug_scope_tree(std::shared_ptr<Scope> cur);
 void enter_scope(ScopeType scope_type);
 void exit_scope();
-set<int> get_all_class();
+std::set<int> get_all_class();
 TYPEID convert_to_real_type_id(TYPEID, TYPEID);
 TYPEID least_upper_common_type(TYPEID, TYPEID);
-shared_ptr<Scope> gen_scope(ScopeType scope_type);
+std::shared_ptr<Scope> gen_scope(ScopeType scope_type);
 
 // for pointer
 int generate_pointer_type(int original_type, int pointer_level);
 int get_or_create_pointer_type(int type);
-void debug_pointer_type(shared_ptr<PointerType> &p);
+void debug_pointer_type(std::shared_ptr<PointerType> &p);
 bool is_pointer_type(int type);
-shared_ptr<PointerType> get_pointer_type_by_type_id(TYPEID type_id);
+std::shared_ptr<PointerType> get_pointer_type_by_type_id(TYPEID type_id);
 
 void reset_scope();
 void clear_definition_all();

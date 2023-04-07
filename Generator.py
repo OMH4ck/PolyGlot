@@ -1271,7 +1271,7 @@ enum NODETYPE  : unsigned int {
 
 def genGenIRSrc(allClass):
     res = '#include "gen_ir.h"\n'
-    res = '#include "var_definition.h"\n'
+    res += '#include "var_definition.h"\n'
     for each_class in allClass:
         res += genTranslate(each_class)
         res += genDeepDelete(each_class)

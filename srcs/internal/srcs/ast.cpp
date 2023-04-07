@@ -6,6 +6,7 @@
 #include "define.h"
 #include "ir.h"
 //#include "typesystem.h"
+#include "gen_ir.h"
 #include "utils.h"
 //#include "var_definition.h"
 
@@ -44,14 +45,15 @@ NODETYPE get_nodetype_by_string(string s) {
   return kUnknown;
 }
 
-string get_string_by_nodetype(NODETYPE tt) {
+string_view get_string_by_nodetype(IRTYPE tt) {
+  int node_type = (NODETYPE)tt;
 #define DECLARE_CASE(datatypename) \
-  if (tt == k##datatypename) return string(#datatypename);
+  if (tt == k##datatypename) return #datatypename;
 
   ALLCLASS(DECLARE_CASE);
 
 #undef DECLARE_CASE
-  return string("");
+  return "";
 }
 
 string get_string_by_datatype(DATATYPE tt) {

@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <unistd.h>
 
+#include <memory>
 #include <string_view>
 #include <unordered_set>
 
@@ -28,22 +29,16 @@ class ParserTest : public ::testing::TestWithParam<std::string_view> {};
 TEST_P(ParserTest, ParseValidTestCaseReturnNotNull) {
   std::string_view test_case = GetParam();
 
-  auto program_root = parser(test_case.data());
-  ASSERT_TRUE(program_root != nullptr);
+  auto frontend = std::make_shared<BisonFrontend>();
+  ASSERT_TRUE(frontend->Parsable(test_case.data()));
   // program_root->deep_delete();
 }
 
 TEST_P(ParserTest, ValidTestCaseCanTranslate) {
   std::string_view test_case = GetParam();
 
-  auto program_root = parser(test_case.data());
-  ASSERT_TRUE(program_root != nullptr);
-
-  std::vector<IRPtr> ir_set;
-  auto root = program_root->translate(ir_set);
-  // program_root->deep_delete();
-
-  ASSERT_FALSE(ir_set.empty());
+  auto frontend = std::make_shared<BisonFrontend>();
+  ASSERT_TRUE(frontend->TranslateToIR(test_case.data()) != nullptr);
 }
 
 INSTANTIATE_TEST_SUITE_P(ValidTestCase, ParserTest,
@@ -93,6 +88,8 @@ TEST(MutatorTest, MutateInitGoodTestCasesOnly) {
 class MutatorTestF : public testing::Test {
  protected:
   void SetUp() override {
+    frontend = std::make_shared<BisonFrontend>();
+    mutator = mutation::Mutator(frontend);
     std::string init_file_path =
         gen::Configuration::GetInstance().GetInitDirPath();
     vector<string> file_list = get_all_files_in_dir(init_file_path.c_str());
@@ -102,6 +99,7 @@ class MutatorTestF : public testing::Test {
   }
 
   mutation::Mutator mutator;
+  std::shared_ptr<BisonFrontend> frontend;
 };
 
 TEST_F(MutatorTestF, MutateGenerateDifferentTestCases) {
@@ -111,10 +109,9 @@ TEST_F(MutatorTestF, MutateGenerateDifferentTestCases) {
 
   for (size_t i = 0; i < 200; ++i) {
     // Avoid mutated_times_ too large, so we make it clean every time.
-    vector<IRPtr> ir_set;
-    auto program_root = parser(test_case.data());
-    auto root = program_root->translate(ir_set);
+    auto root = frontend->TranslateToIR(test_case.data());
     // program_root->deep_delete();
+    vector<IRPtr> ir_set = collect_all_ir(root);
 
     auto mutated_irs = mutator.mutate_all(ir_set);
     for (auto& ir : mutated_irs) {
@@ -165,15 +162,12 @@ TEST_F(MutatorTestF, MutateGenerateParsableTestCases) {
   std::string_view test_case = "INT a = 1;";
 
   for (size_t i = 0; i < 1000; ++i) {
-    vector<IRPtr> ir_set;
-    auto program_root = parser(test_case.data());
-    auto root = program_root->translate(ir_set);
-    // program_root->deep_delete();
+    auto root = frontend->TranslateToIR(test_case.data());
+    std::vector<IRPtr> ir_set = collect_all_ir(root);
 
     auto mutated_irs = mutator.mutate_all(ir_set);
     for (auto& ir : mutated_irs) {
-      auto new_root = parser(ir->to_string());
-      ASSERT_TRUE(new_root != nullptr) << ir->to_string();
+      ASSERT_TRUE(frontend->Parsable(ir->to_string()));
     }
   }
 }

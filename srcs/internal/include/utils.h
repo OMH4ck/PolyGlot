@@ -11,7 +11,6 @@
 #include <vector>
 
 // To Fix
-#include "gen_ir.h"
 
 #define get_rand_int(range) rand() % (range)
 #define vector_rand_ele_safe(a) \
@@ -44,6 +43,4 @@ typename T::iterator random_pick(T &cc) {
   return iter;
 }
 // template<typename T> typename T::iterator random_pick(T &cc);
-
-std::shared_ptr<TopASTNode> parser(std::string sql);
 #endif

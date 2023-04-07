@@ -1,6 +1,7 @@
 #ifndef __IR_H__
 #define __IR_H__
 
+#include <concepts>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -17,7 +18,8 @@ using namespace std;
 #define DONTGENNAME 1
 
 enum NODETYPE : unsigned int;
-typedef NODETYPE IRTYPE;
+using IRTYPE = unsigned int;
+// typedef NODETYPE IRTYPE;
 
 class IROperator {
  public:

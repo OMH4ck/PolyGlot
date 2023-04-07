@@ -39,6 +39,7 @@ class Mutator {
   IRPtr deep_copy_with_record(const IRPtr root, const IRPtr record);
   unsigned long hash(IRPtr);
   unsigned long hash(string &);
+  bool not_unknown(IRPtr r);
 
   // Delete and insert seems useless.
   // IRPtr strategy_delete(IRPtr cur);   // Done

@@ -32,7 +32,9 @@ namespace mutation {
 
 #define MUTATE_DBG 0
 
-static inline bool not_unknown(IRPtr r) { return r->type_ != kUnknown; }
+bool Mutator::not_unknown(IRPtr r) {
+  return r->type_ != frontend_->GetUnknownType();
+}
 
 static inline bool is_leaf(IRPtr r) {
   return r->left_ == nullptr && r->right_ == nullptr;
@@ -40,15 +42,15 @@ static inline bool is_leaf(IRPtr r) {
 
 Mutator::Mutator(std::shared_ptr<Frontend> frontend) {
   srand(time(nullptr));
-  float_types_.insert(kFloatLiteral);
-  int_types_.insert(kIntLiteral);
-  string_types_.insert(kStringLiteral);
-  init_convertable_ir_type_map();
   if (frontend_ == nullptr) {
     frontend_ = std::make_shared<BisonFrontend>();
   } else {
     frontend_ = frontend;
   }
+  float_types_.insert(frontend_->GetFloatLiteralType());
+  int_types_.insert(frontend_->GetIntLiteralType());
+  string_types_.insert(frontend_->GetStringLiteralType());
+  init_convertable_ir_type_map();
 }
 // Need No fix
 IRPtr Mutator::deep_copy_with_record(const IRPtr root, const IRPtr record) {
@@ -82,7 +84,7 @@ IRPtr Mutator::deep_copy_with_record(const IRPtr root, const IRPtr record) {
 }
 
 bool Mutator::should_mutate(IRPtr cur) {
-  if (cur->type_ == kUnknown) return false;
+  if (cur->type_ == frontend_->GetUnknownType()) return false;
   if (not_mutatable_types_.find(cur->type_) != not_mutatable_types_.end())
     return false;
   if (is_leaf(cur)) return false;
@@ -100,12 +102,12 @@ vector<IRPtr> Mutator::mutate_all(vector<IRPtr> &irs_to_mutate) {
   for (IRPtr ir : irs_to_mutate) {
     if (ir == root || !should_mutate(ir)) continue;
 
-    spdlog::debug("Mutating type: {}", get_string_by_nodetype(ir->type_));
+    spdlog::debug("Mutating type: {}", frontend_->GetIRTypeStr(ir->type_));
     vector<IRPtr> new_variants = mutate(ir);
 
     for (IRPtr i : new_variants) {
       IRPtr new_ir_tree = deep_copy_with_record(root, ir);
-      spdlog::debug("NEW type: {}", get_string_by_nodetype(i->type_));
+      spdlog::debug("NEW type: {}", frontend_->GetIRTypeStr(i->type_));
 
       replace(new_ir_tree, this->record_, i);
 
@@ -168,8 +170,8 @@ void Mutator::add_ir_to_library_limited(IRPtr cur) {
 
 void Mutator::init_convertable_ir_type_map() {
   for (auto &p : gen::Configuration::GetInstance().GetConvertableTypes()) {
-    m_convertable_map_[get_nodetype_by_string(p.first)].insert(
-        get_nodetype_by_string(p.second));
+    m_convertable_map_[frontend_->GetIRTypeByStr(p.first)].insert(
+        frontend_->GetIRTypeByStr(p.second));
   }
 }
 
@@ -367,7 +369,8 @@ bool Mutator::lucky_enough_to_be_mutated(unsigned int mutated_times) {
 
 // Fix, if no item, generate from scratch
 IRPtr Mutator::get_ir_from_library(IRTYPE type) {
-  static IRPtr empty_ir = std::make_shared<IR>(kStringLiteral, "");
+  static IRPtr empty_ir =
+      std::make_shared<IR>(frontend_->GetStringLiteralType(), "");
   if (ir_library_[type].empty()) return empty_ir;
   return vector_rand_ele(ir_library_[type]);
 }
@@ -386,7 +389,7 @@ void Mutator::debug(IRPtr root) {
   // cout << get_string_by_type(root->type_) << endl;
   cout << ir_library_.size() << endl;
   for (auto &i : ir_library_) {
-    cout << get_string_by_nodetype(i.first) << ": " << i.second.size() << endl;
+    cout << frontend_->GetIRTypeStr(i.first) << ": " << i.second.size() << endl;
   }
 }
 
@@ -398,7 +401,8 @@ void Mutator::extract_struct(IRPtr root) {
   if (root->left_) {
     if (root->left_->data_type_ == kDataFixUnit) {
       ;
-      root->left_ = std::make_shared<IR>(kStringLiteral, "FIXME");
+      root->left_ =
+          std::make_shared<IR>(frontend_->GetStringLiteralType(), "FIXME");
     } else {
       extract_struct(root->left_);
     }
@@ -406,7 +410,8 @@ void Mutator::extract_struct(IRPtr root) {
   if (root->right_) {
     if (root->right_->data_type_ == kDataFixUnit) {
       ;
-      root->right_ = std::make_shared<IR>(kStringLiteral, "FIXME");
+      root->right_ =
+          std::make_shared<IR>(frontend_->GetStringLiteralType(), "FIXME");
     } else {
       extract_struct(root->right_);
     }

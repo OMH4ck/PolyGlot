@@ -6,7 +6,6 @@
 
 #include "config_misc.h"
 #include "define.h"
-#include "gen_ir.h"
 #include "spdlog/spdlog.h"
 #include "utils.h"
 #include "var_definition.h"
@@ -549,7 +548,7 @@ void TypeSystem::collect_structure_definition(IRPtr cur, IRPtr root) {
                           kDataStructBody);
       if (DBG) cout << strucutre_variable_unit.size() << endl;
       if (DBG) cout << root->to_string() << endl;
-      if (DBG) cout << get_string_by_nodetype(root->type_) << endl;
+      if (DBG) cout << frontend_->GetIRTypeStr(root->type_) << endl;
 
       // for each class variable define unit, collect all kDataPointer.
       // it will be the reference level, if empty, it is not a pointer
@@ -600,7 +599,7 @@ void TypeSystem::collect_structure_definition(IRPtr cur, IRPtr root) {
                           kDataStructBody);
       if (DBG) cout << strucutre_variable_unit.size() << endl;
       if (DBG) cout << root->to_string() << endl;
-      if (DBG) cout << get_string_by_nodetype(root->type_) << endl;
+      if (DBG) cout << frontend_->GetIRTypeStr(root->type_) << endl;
 
       // for each class variable define unit, collect all kDataPointer.
       // it will be the reference level, if empty, it is not a pointer
@@ -676,7 +675,7 @@ void TypeSystem::collect_function_definition(IRPtr cur) {
   if (function_arg_ir) {
     queue<IRPtr> q;
     map<IRPtr *, IRPtr> m_save;
-    set<NODETYPE> ss;
+    set<IRTYPE> ss;
     // ss.insert(kParameterDeclaration);
     if (!gen::Configuration::GetInstance().IsWeakType()) {
       ss = gen::Configuration::GetInstance().GetFunctionArgNodeType();
@@ -852,7 +851,7 @@ bool TypeSystem::TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
     return true;
   }
 
-  if (cur->type_ == kIdentifier) {
+  if (cur->type_ == frontend_->GetIdentifierType()) {
     // handle here
     if (cur->str_val_ == "FIXME") {
       spdlog::debug("See a fixme!");
@@ -871,11 +870,11 @@ bool TypeSystem::TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
       // match name in cur->scope_
 
       res_type = locate_defined_variable_by_name(cur->str_val_, cur->scope_id_);
-      spdlog::debug("Name: {}", cur->str_val_);
-      spdlog::debug("Type: {}", res_type);
-      if (!res_type) {
-        res_type = ANYTYPE;
-      }
+      if (DBG) cout << "Name: " << cur->str_val_ << endl;
+      if (DBG) cout << "Type: " << res_type << endl;
+      // auto cur_type = make_shared<map<TYPEID, vector<pair<TYPEID,
+      // TYPEID>>>>();
+      if (!res_type) res_type = ANYTYPE;  // should fix
       cur_type->AddCandidate(res_type, res_type, 0);
       cache_inference_map_[cur] = cur_type;
       return true;
@@ -942,7 +941,6 @@ bool TypeSystem::TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
       cache_inference_map_[cur] = cache_inference_map_[cur->left_];
     } else {
       if (DBG) cout << cur->to_string() << endl;
-      if (DBG) cout << get_string_by_nodetype(cur->type_) << endl;
       return false;
       assert(0);
     }
@@ -1998,7 +1996,7 @@ bool TypeSystem::simple_fix(IRPtr ir, int type, TypeInferer &inferer) {
 
   if (type == NOTEXIST) return false;
 
-  spdlog::debug("NodeType: {}", get_string_by_nodetype(ir->type_));
+  spdlog::debug("NodeType: {}", frontend_->GetIRTypeStr(ir->type_));
   spdlog::debug("Type: {}", type);
 
   // if (ir->type_ == kIdentifier && ir->str_val_ == "FIXME")
@@ -2023,7 +2021,7 @@ bool TypeSystem::simple_fix(IRPtr ir, int type, TypeInferer &inferer) {
 
       type = new_type;
       spdlog::debug("nothing in cache_inference_map_: {}", ir->to_string());
-      spdlog::debug("NodeType: {}", get_string_by_nodetype(ir->type_));
+      spdlog::debug("NodeType: {}", frontend_->GetIRTypeStr(ir->type_));
     }
     if (!inferer.GetCandidateTypes(ir)->HasCandidate(type)) return false;
     if (ir->left_) {
@@ -2050,7 +2048,7 @@ bool TypeSystem::top_fix(IRPtr root) {
 
   bool res = true;
 
-  TypeInferer inferer;
+  TypeInferer inferer(frontend_);
   while (res && !stk.empty()) {
     root = stk.top();
     stk.pop();
@@ -2087,10 +2085,7 @@ bool TypeSystem::top_fix(IRPtr root) {
 }
 
 bool TypeSystem::validate_syntax_only(IRPtr root) {
-  auto ast = parser(root->to_string());
-  if (ast == nullptr) {
-    return false;
-  }
+  if (frontend_->Parsable(root->to_string()) == false) return false;
   // ast->deep_delete();
   queue<IRPtr> q;
   map<IRPtr *, IRPtr> m_save;
@@ -2119,14 +2114,15 @@ bool TypeSystem::validate_syntax_only(IRPtr root) {
   return true;
 }
 
-void extract_struct_after_mutation(IRPtr root) {
+void TypeSystem::extract_struct_after_mutation(IRPtr root) {
   if (root->left_) {
     if (root->left_->data_type_ == kDataFixUnit) {
       if (contain_fixme(root->left_)) {
         auto save_ir_id = root->left_->id_;
         auto save_scope = root->left_->scope_id_;
         ;
-        root->left_ = std::make_shared<IR>(kStringLiteral, "FIXME");
+        root->left_ =
+            std::make_shared<IR>(frontend_->GetStringLiteralType(), "FIXME");
         root->left_->scope_id_ = save_scope;
         root->left_->id_ = save_ir_id;
       }
@@ -2140,7 +2136,8 @@ void extract_struct_after_mutation(IRPtr root) {
         auto save_ir_id = root->right_->id_;
         auto save_scope = root->right_->scope_id_;
         ;
-        root->right_ = std::make_shared<IR>(kStringLiteral, "FIXME");
+        root->right_ =
+            std::make_shared<IR>(frontend_->GetStringLiteralType(), "FIXME");
         root->right_->scope_id_ = save_scope;
         root->right_->id_ = save_ir_id;
       }

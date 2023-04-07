@@ -6,7 +6,7 @@
 #include "config_misc.h"
 #include "define.h"
 //#include "typesystem.h"
-#include "utils.h"
+//#include "utils.h"
 #include "var_definition.h"
 
 static bool scope_tranlation = false;
@@ -202,8 +202,6 @@ string IR::to_string() {
 }
 
 void IR::to_string_core(std::string &res) {
-  // cout << get_string_by_nodetype(this->type_) << endl;
-
   if (polyglot::gen::Configuration::GetInstance().IsFloatLiteral(type_)) {
     absl::StrAppend(&res, float_val_);
   } else if (polyglot::gen::Configuration::GetInstance().IsIntLiteral(type_)) {

@@ -1,6 +1,7 @@
 #ifndef __AST_H__
 #define __AST_H__
 
+#include <concepts>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -16,7 +17,7 @@ using namespace std;
 #define DONTGENNAME 1
 
 enum NODETYPE : unsigned int;
-typedef NODETYPE IRTYPE;
+using IRTYPE = unsigned int;
 
 #define ALLDATATYPE(V)       \
   V(DataWhatever)            \
@@ -99,7 +100,7 @@ DATATYPE get_datatype_by_string(string s);
 
 NODETYPE get_nodetype_by_string(string s);
 
-string get_string_by_nodetype(NODETYPE tt);
+string_view get_string_by_nodetype(IRTYPE tt);
 string get_string_by_datatype(DATATYPE tt);
 
 void set_scope_translation_flag(bool flag);

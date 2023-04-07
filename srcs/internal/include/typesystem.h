@@ -156,6 +156,8 @@ class TypeSystem {
 
   class TypeInferer {
    public:
+    TypeInferer(std::shared_ptr<Frontend> frontend = nullptr)
+        : frontend_(frontend) {}
     bool Infer(IRPtr &root, int scope_type = NOTEXIST);
     std::shared_ptr<CandidateTypes> GetCandidateTypes(IRPtr &root) {
       if (cache_inference_map_.find(root) == cache_inference_map_.end())
@@ -182,6 +184,7 @@ class TypeSystem {
         map<int, vector<string>> &compound_var_map);
 
    private:
+    std::shared_ptr<Frontend> frontend_;
     static map<string, map<string, map<string, int>>> op_id_map_;
     static map<int, vector<OPRule>> op_rules_;
     bool type_inference_new(IRPtr cur, int scope_type = NOTEXIST);
@@ -271,9 +274,9 @@ class TypeSystem {
   void init_internal_obj(string dir_name);
   void init_one_internal_obj(string filename);
   void debug();
+  void extract_struct_after_mutation(IRPtr);
 };
 
-void extract_struct_after_mutation(IRPtr);
 }  // namespace typesystem
 }  // namespace polyglot
 

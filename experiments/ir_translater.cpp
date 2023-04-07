@@ -6,12 +6,13 @@
 #include <iostream>
 #include <optional>
 #include <stack>
+#include <string_view>
 #include <variant>
+#include "absl/container/flat_hash_map.h"
 
 #include "ast.h"
 #include "custom_rule_context.h"
 #include "define.h"
-#include "gen_ir.h"
 #include "ir.h"
 #include "var_definition.h"
 
@@ -167,5 +168,29 @@ IRPtr TranslateToIR(std::string input_program) {
   IRPtr ir = TranslateNode(tree, &parser);
   // std::cout << ir->to_string() << std::endl;
   return ir;
+}
+
+std::string_view GetIRTypeStr(IRTYPE type){
+  static PolyGlotGrammarParser parser(nullptr);
+
+  assert(parser.getRuleNames().size() > type);
+  return parser.getRuleNames()[type];
+}
+
+IRTYPE GetIRTypeByStr(std::string_view type){
+  // TODO: Fix this ugly code.
+  static bool init = false;
+  static std::map<std::string, IRTYPE> type_map;
+  std::string type_str(type);
+  if(!init){
+    init = true;
+    PolyGlotGrammarParser parser(nullptr);
+    for(int i = 0; i < parser.getRuleNames().size(); ++i){
+      std::string rule_name = parser.getRuleNames()[i];
+      type_map[rule_name] = static_cast<IRTYPE>(i);
+    }
+  }
+  assert(type_map.find(type_str) != type_map.end());
+  return type_map[type_str];
 }
 }  // namespace antlr4
