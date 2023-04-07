@@ -14,7 +14,8 @@ extern "C" {
 void *afl_custom_init(afl_state_t *afl, unsigned int seed) {
   auto frontend = std::make_shared<polyglot::BisonFrontend>();
   auto result = new PolyGlotMutator(frontend);
-  result->do_libary_initialize();
+  assert(getenv("POLYGLOT_CONFIG"));
+  result->initialize(getenv("POLYGLOT_CONFIG"));
   return result;
 }
 

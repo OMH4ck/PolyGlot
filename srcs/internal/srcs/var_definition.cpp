@@ -80,7 +80,7 @@ void init_convert_chain() {
   }
   */
 
-  for (auto &rule : gen::GetConvertChain()) {
+  for (auto &rule : gen::Configuration::GetInstance().GetConvertChain()) {
     auto base_var =
         get_type_by_type_id(get_basic_type_id_by_string(rule.second));
     auto derived_var =
@@ -113,7 +113,7 @@ bool is_derived_type(TYPEID dtype, TYPEID btype) {
 }
 
 void init_basic_types() {
-  for (auto &line : gen::GetBasicTypeStr()) {
+  for (auto &line : gen::Configuration::GetInstance().GetBasicTypeStr()) {
     if (line.empty()) continue;
     auto new_id = gen_type_id();
     auto ptr = make_shared<VarType>();
@@ -476,7 +476,7 @@ void Scope::add_definition(int type, const string &var_name, unsigned long id,
                            ScopeType stype) {
   if (type == 0) return;
 
-  if (gen::IsWeakType()) {
+  if (gen::Configuration::GetInstance().IsWeakType()) {
     if (stype != kScopeStatement) {
       auto p = this;
       while (p != nullptr && p->scope_type_ != stype)

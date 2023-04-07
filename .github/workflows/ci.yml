@@ -14,6 +14,7 @@ jobs:
       AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: 1
       CC: clang
       CXX: clang++
+      POLYGLOT_ROOT: ${{ github.workspace }}
     steps:
       - uses: actions/checkout@v3
       - name: install packages

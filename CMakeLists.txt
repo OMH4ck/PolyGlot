@@ -30,6 +30,7 @@ conan_cmake_configure(
   gtest/1.12.1
   spdlog/1.11.0
   ms-gsl/4.0.0
+  yaml-cpp/0.7.0
   abseil/20230125.2
   antlr4-cppruntime/4.12.0
   GENERATORS
@@ -48,10 +49,11 @@ conan_cmake_install(
   SETTINGS
   ${settings})
 
-find_package(spdlog)
+find_package(spdlog REQUIRED)
 find_package(Microsoft.GSL REQUIRED)
 find_package(absl REQUIRED)
 find_package(antlr4-runtime REQUIRED)
+find_package(yaml-cpp REQUIRED)
 
 # TODO: Add more
 list(APPEND SUPPORTED_LANG lua php c simplelang)
@@ -69,7 +71,7 @@ endif()
 set(GENERATED_FILES
     ${CMAKE_SOURCE_DIR}/gen/parser/bison_parser.cpp
     ${CMAKE_SOURCE_DIR}/gen/parser/flex_lexer.cpp
-    ${CMAKE_SOURCE_DIR}/gen/config.cpp ${CMAKE_SOURCE_DIR}/gen/gen_ir.cpp)
+    ${CMAKE_SOURCE_DIR}/gen/gen_ir.cpp)
 # Code generation
 add_custom_command(
   OUTPUT ${GENERATED_FILES}
@@ -83,9 +85,10 @@ include_directories(${spdlog_INCLUDE_DIRS})
 set(AFLPP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/AFLplusplus/include)
 include_directories(${AFLPP_DIR})
 
-add_library(config_lib OBJECT ${GENERATED_FILES})
+add_library(config_lib OBJECT ${CMAKE_SOURCE_DIR}/srcs/internal/srcs/configuration.cpp ${GENERATED_FILES})
 target_include_directories(config_lib PUBLIC ${CMAKE_SOURCE_DIR}/srcs/internal/include ${CMAKE_SOURCE_DIR}/gen/parser ${CMAKE_SOURCE_DIR}/gen)
 target_compile_options(config_lib PRIVATE -fPIC)
+target_link_libraries(config_lib PRIVATE yaml-cpp absl::str_format)
 
 add_library(ir_lib STATIC srcs/internal/srcs/ir.cpp srcs/internal/srcs/ast.cpp srcs/internal/srcs/var_definition.cpp srcs/internal/srcs/utils.cpp)
 target_include_directories(ir_lib PUBLIC ${CMAKE_SOURCE_DIR}/srcs/internal/include)
