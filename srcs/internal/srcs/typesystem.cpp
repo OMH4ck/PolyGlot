@@ -314,7 +314,7 @@ void TypeSystem::collect_simple_variable_defintion_wt(IRPtr cur) {
       bool flag = type_inference_new(t);
       int type = ALLTYPES;
       if (flag == true) {
-        type = cache_inference_map_[t]->begin()->first;
+        type = cache_inference_map_[t]->GetARandomCandidateType();
       }
       // cout << "Infer type: " << type << endl;
       if (type == ALLTYPES || type == NOTEXIST) type = ANYTYPE;
@@ -840,7 +840,7 @@ bool TypeSystem::collect_definition(IRPtr cur) {
 // TypeSystem::cache_inference_map_;
 
 bool TypeSystem::type_inference_new(IRPtr cur, int scope_type) {
-  auto cur_type = make_shared<map<TYPEID, vector<pair<TYPEID, TYPEID>>>>();
+  auto cur_type = std::make_shared<CandidateTypes>();
   int res_type = NOTEXIST;
   bool flag;
   if (DBG) cout << "Infering: " << cur->to_string() << endl;
@@ -865,10 +865,10 @@ bool TypeSystem::type_inference_new(IRPtr cur, int scope_type) {
       for (auto t : v_usable_type) {
         if (DBG) cout << "Type: " << get_type_name_by_id(t) << endl;
         assert(t);
-        (*cur_type)[t].push_back(make_pair(t, 0));
+        cur_type->AddCandidate(t, t, 0);
       }
       cache_inference_map_[cur] = cur_type;
-      return !(cur_type->empty());
+      return cur_type->HasCandidate();
       // eturn cur->value_type_ = ALLTYPES;
     }
 
@@ -881,7 +881,7 @@ bool TypeSystem::type_inference_new(IRPtr cur, int scope_type) {
       // auto cur_type = make_shared<map<TYPEID, vector<pair<TYPEID,
       // TYPEID>>>>();
       if (!res_type) res_type = ANYTYPE;  // should fix
-      (*cur_type)[res_type].push_back(make_pair(res_type, 0));
+      cur_type->AddCandidate(res_type, res_type, 0);
       cache_inference_map_[cur] = cur_type;
       return true;
 
@@ -911,7 +911,7 @@ bool TypeSystem::type_inference_new(IRPtr cur, int scope_type) {
             // auto cur_type = make_shared<map<TYPEID, vector<pair<TYPEID,
             // TYPEID>>>>();
             assert(iter.first);
-            (*cur_type)[iter.first].push_back(make_pair(iter.first, 0));
+            cur_type->AddCandidate(iter.first, iter.first, 0);
             cache_inference_map_[cur] = cur_type;
             return true;
 
@@ -931,18 +931,19 @@ bool TypeSystem::type_inference_new(IRPtr cur, int scope_type) {
       if (!flag) return flag;
       flag = type_inference_new(cur->right_, scope_type);
       if (!flag) return flag;
-      for (auto &left : *(cache_inference_map_[cur->left_])) {
-        for (auto &right : *(cache_inference_map_[cur->right_])) {
+      for (auto &left : cache_inference_map_[cur->left_]->GetCandidates()) {
+        for (auto &right : cache_inference_map_[cur->right_]->GetCandidates()) {
           auto res_type = least_upper_common_type(left.first, right.first);
-          (*cur_type)[res_type].push_back(make_pair(left.first, right.first));
+          cur_type->AddCandidate(res_type, left.first, right.first);
         }
       }
       cache_inference_map_[cur] = cur_type;
     } else if (cur->left_) {
       flag = type_inference_new(cur->left_, scope_type);
-      if (!flag || cache_inference_map_[cur->left_]->empty()) return false;
+      if (!flag || !cache_inference_map_[cur->left_]->HasCandidate())
+        return false;
       if (DBG) cout << "Left: " << cur->left_->to_string() << endl;
-      assert(cache_inference_map_[cur->left_]->size());
+      assert(cache_inference_map_[cur->left_]->HasCandidate());
       cache_inference_map_[cur] = cache_inference_map_[cur->left_];
     } else {
       if (DBG) cout << cur->to_string() << endl;
@@ -974,7 +975,7 @@ bool TypeSystem::type_inference_new(IRPtr cur, int scope_type) {
     flag = type_inference_new(cur->left_, scope_type);
     if (!flag) return flag;
     // auto cur_type = make_shared<map<TYPEID, vector<pair<TYPEID, TYPEID>>>>();
-    for (auto &left : *(cache_inference_map_[cur->left_])) {
+    for (auto &left : cache_inference_map_[cur->left_]->GetCandidates()) {
       auto left_type = left.first;
       if (DBG) cout << "Reaching op1" << endl;
       if (DBG)
@@ -983,7 +984,7 @@ bool TypeSystem::type_inference_new(IRPtr cur, int scope_type) {
       res_type = query_result_type(cur_op, left_type);
       if (DBG) cout << "Result_type: " << res_type << endl;
       if (res_type != NOTEXIST) {
-        (*cur_type)[res_type].push_back(make_pair(left_type, 0));
+        cur_type->AddCandidate(res_type, left_type, 0);
       }
     }
     cache_inference_map_[cur] = cur_type;
@@ -996,8 +997,9 @@ bool TypeSystem::type_inference_new(IRPtr cur, int scope_type) {
         if (DBG) cout << "Left to right" << endl;
         flag = type_inference_new(cur->left_, scope_type);
         if (!flag) return flag;
-        if (cache_inference_map_[cur->left_]->empty()) return false;
-        auto left_type = cache_inference_map_[cur->left_]->begin()->first;
+        if (!cache_inference_map_[cur->left_]->HasCandidate()) return false;
+        auto left_type =
+            cache_inference_map_[cur->left_]->GetARandomCandidateType();
         auto new_left_type = left_type;
         // if(cur->op_->middle_ == "->"){
         if (get_op_property(cur_op) == OP_PROP_Dereference) {
@@ -1011,9 +1013,10 @@ bool TypeSystem::type_inference_new(IRPtr cur, int scope_type) {
         }
         flag = type_inference_new(cur->right_, new_left_type);
         if (!flag) return flag;
-        auto right_type = cache_inference_map_[cur->right_]->begin()->first;
+        auto right_type =
+            cache_inference_map_[cur->right_]->GetARandomCandidateType();
         res_type = right_type;
-        (*cur_type)[res_type].push_back(make_pair(left_type, right_type));
+        cur_type->AddCandidate(res_type, left_type, right_type);
         break;
       }
       // Rui Test
@@ -1031,19 +1034,21 @@ bool TypeSystem::type_inference_new(IRPtr cur, int scope_type) {
         auto right_type = cache_inference_map_[cur->right_];
         // handle function call case-by-case
 
-        if (left_type->size() == 1 &&
-            is_function_type(left_type->begin()->first)) {
-          res_type = get_function_type_by_type_id(left_type->begin()->first)
-                         ->return_type_;
+        if (left_type->GetCandidates().size() == 1 &&
+            is_function_type(left_type->GetARandomCandidateType())) {
+          res_type =
+              get_function_type_by_type_id(left_type->GetARandomCandidateType())
+                  ->return_type_;
           if (DBG) cout << "get_function_type_by_type_id: " << res_type << endl;
-          (*cur_type)[res_type].push_back(
-              make_pair(0, 0));  // just 0, 0 is ok now, we won't fix it.
+          cur_type->AddCandidate(res_type, 0, 0);
           break;
         }
 
         // res_type = query_type_dict(cur_op, left_type, right_type);
-        for (auto &left_cahce : *(cache_inference_map_[cur->left_])) {
-          for (auto &right_cache : *(cache_inference_map_[cur->right_])) {
+        for (auto &left_cahce :
+             cache_inference_map_[cur->left_]->GetCandidates()) {
+          for (auto &right_cache :
+               cache_inference_map_[cur->right_]->GetCandidates()) {
             auto a_left_type = left_cahce.first;
             auto a_right_type = right_cache.first;
             if (DBG)
@@ -1060,7 +1065,7 @@ bool TypeSystem::type_inference_new(IRPtr cur, int scope_type) {
             auto t = query_result_type(cur_op, a_left_type, a_right_type);
             if (t != NOTEXIST) {
               if (DBG) cout << "Adding" << endl;
-              (*cur_type)[t].push_back(make_pair(a_left_type, a_right_type));
+              cur_type->AddCandidate(t, a_left_type, a_right_type);
             }
           }
         }
@@ -1070,7 +1075,7 @@ bool TypeSystem::type_inference_new(IRPtr cur, int scope_type) {
     assert(0);
   }
   cache_inference_map_[cur] = cur_type;
-  return !cur_type->empty();
+  return cur_type->HasCandidate();
 }
 
 int TypeSystem::locate_defined_variable_by_name(const string &var_name,
@@ -2007,11 +2012,10 @@ bool TypeSystem::simple_fix(IRPtr ir, int type) {
   }
 
   if (!gen::Configuration::GetInstance().IsWeakType()) {
-    if ((*cache_inference_map_[ir]).find(type) ==
-        (*cache_inference_map_[ir]).end()) {
+    if (!cache_inference_map_[ir]->HasCandidate(type)) {
       auto new_type = NOTEXIST;
       int counter = 0;
-      for (auto &iter : (*cache_inference_map_[ir])) {
+      for (auto &iter : cache_inference_map_[ir]->GetCandidates()) {
         if (is_derived_type(type, iter.first)) {
           if (new_type == NOTEXIST || get_rand_int(counter) == 0) {
             new_type = iter.first;
@@ -2026,15 +2030,14 @@ bool TypeSystem::simple_fix(IRPtr ir, int type) {
       if (DBG)
         cout << "NodeType: " << get_string_by_nodetype(ir->type_) << endl;
     }
-    if ((*cache_inference_map_[ir])[type].size() == 0) return false;
-    assert((*cache_inference_map_[ir])[type].size());
+    if (cache_inference_map_[ir]->HasCandidate(type)) return false;
     if (ir->left_) {
-      auto iter = random_pick((*cache_inference_map_[ir])[type]);
+      auto iter = *random_pick(cache_inference_map_[ir]->GetCandidates(type));
       if (ir->right_) {
-        simple_fix(ir->left_, iter->first);
-        simple_fix(ir->right_, iter->second);
+        simple_fix(ir->left_, iter.left);
+        simple_fix(ir->right_, iter.right);
       } else {
-        simple_fix(ir->left_, iter->first);
+        simple_fix(ir->left_, iter.left);
       }
     }
   } else {
@@ -2078,7 +2081,7 @@ bool TypeSystem::top_fix(IRPtr root) {
           res = false;
           break;
         }
-        auto iter = random_pick(*(cache_inference_map_[root]));
+        auto iter = random_pick(cache_inference_map_[root]->GetCandidates());
         auto t = iter->first;
         res = simple_fix(root, t);
       } else {

@@ -5,6 +5,7 @@
 #include "absl/strings/str_join.h"
 #include "config_misc.h"
 #include "gen_ir.h"
+#include "typesystem.h"
 #include "var_definition.h"
 #include "yaml-cpp/yaml.h"
 
@@ -214,27 +215,26 @@ std::string Configuration::GetBuiltInObjectFilePath() const {
 
 std::vector<string> Configuration::GetOpRules() const { return op_rules_; }
 
-constexpr int NOTEXIST = 0;
+// constexpr int NOTEXIST = 0;
 // TOFIX: this is a hack, should be fixed
 bool Configuration::HandleBasicType(
     IRTYPE ir_type,
-    std::shared_ptr<std::map<TYPEID, std::vector<std::pair<TYPEID, TYPEID>>>>
-        &cur_type) const {
+    std::shared_ptr<typesystem::TypeSystem::CandidateTypes> &cur_type) const {
   int res_type = NOTEXIST;
   switch (ir_type) {
     case kStringLiteral:
       res_type = get_type_id_by_string("ANYTYPE");
-      (*cur_type)[res_type].push_back(make_pair(0, 0));
+      cur_type->AddCandidate(res_type, 0, 0);
       // cache_inference_map_[cur] = cur_type;
       return true;
     case kIntLiteral:
       res_type = get_type_id_by_string("ANYTYPE");
-      (*cur_type)[res_type].push_back(make_pair(0, 0));
+      cur_type->AddCandidate(res_type, 0, 0);
       // cache_inference_map_[cur] = cur_type;
       return true;
     case kFloatLiteral:
       res_type = get_type_id_by_string("ANYTYPE");
-      (*cur_type)[res_type].push_back(make_pair(0, 0));
+      cur_type->AddCandidate(res_type, 0, 0);
       // cache_inference_map_[cur] = cur_type;
       return true;
     default:

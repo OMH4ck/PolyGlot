@@ -4,6 +4,12 @@
 #include "ir.h"
 
 namespace polyglot {
+
+enum class FrontendType {
+  kANTLR,
+  kBISON,
+};
+
 class Frontend {
  public:
   virtual bool Parsable(std::string input) = 0;

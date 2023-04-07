@@ -8,8 +8,13 @@
 #include <vector>
 
 #include "ast.h"
+#include "typesystem.h"
 
 namespace polyglot {
+
+namespace typesystem {
+class TypeSystem;
+}
 
 namespace gen {
 
@@ -32,8 +37,7 @@ class Configuration {
   typedef int TYPEID;
   bool HandleBasicType(
       IRTYPE ir_type,
-      std::shared_ptr<std::map<TYPEID, std::vector<std::pair<TYPEID, TYPEID>>>>&
-          cur_type) const;
+      std::shared_ptr<typesystem::TypeSystem::CandidateTypes>& cur_type) const;
 
   std::vector<std::pair<std::string, std::string>> GetConvertableTypes() const;
 

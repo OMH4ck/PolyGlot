@@ -12,6 +12,7 @@
 #include <set>
 #include <stack>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "ast.h"
@@ -100,14 +101,61 @@ class TypeSystem {
   bool validate(IRPtr &root);
   void init();
 
+  struct InferenceType {
+    TYPEID result;
+    TYPEID left;
+    TYPEID right;
+  };
+
+  class CandidateTypes {
+   public:
+    std::unordered_map<TYPEID, std::vector<InferenceType>> &GetCandidates() {
+      return candidates_;
+    }
+
+    void AddCandidate(TYPEID result, TYPEID left, TYPEID right) {
+      candidates_[result].push_back({result, left, right});
+    }
+
+    void AddCandidate(InferenceType inference_type) {
+      candidates_[inference_type.result].push_back(inference_type);
+    }
+
+    bool HasCandidate() {
+      for (auto &c : candidates_) {
+        if (c.second.size() > 0) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    bool HasCandidate(TYPEID result) {
+      return candidates_.find(result) != candidates_.end();
+    }
+
+    std::vector<InferenceType> &GetCandidates(TYPEID result) {
+      return candidates_[result];
+    }
+
+    TYPEID GetARandomCandidateType() {
+      for (auto &c : candidates_) {
+        if (c.second.size() > 0) {
+          return c.first;
+        }
+      }
+      return NOTEXIST;
+    }
+
+   private:
+    std::unordered_map<TYPEID /* result type*/, std::vector<InferenceType>>
+        candidates_;
+  };
+
  private:
   // map<IR*, map<int, vector<pair<int,int>>>> cache_inference_map_;
   // TODO: Make type explicit
-  map<IRPtr,
-      shared_ptr<map<
-          int /*result type*/,
-          vector<pair<int /*left operand type*/, int /*right operand type*/>>>>>
-      cache_inference_map_;
+  map<IRPtr, std::shared_ptr<CandidateTypes>> cache_inference_map_;
   // void init_basic_types();
 
   int gen_id();

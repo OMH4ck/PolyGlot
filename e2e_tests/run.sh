@@ -34,7 +34,7 @@ export AFL_DISABLE_TRIM=1
 export AFL_CUSTOM_MUTATOR_LIBRARY=$ROOT/release/libpolyglot_mutator.so
 export AFL_NO_UI=1
 export POLYGLOT_CONFIG=$ROOT/grammars/lua_grammar/semantic.yml
-sed -i 's|grammars/lua_grammar/input/|${ROOT}/grammars/lua_grammar/input/|g' $POLYGLOT_CONFIG
+sed -i "s|grammars/lua_grammar/input/|${ROOT}/grammars/lua_grammar/input/|g" $POLYGLOT_CONFIG
 
 cat $POLYGLOT_CONFIG
 

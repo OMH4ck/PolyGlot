@@ -1,8 +1,11 @@
 #include "polyglot.h"
 
+#include <memory>
+
 #include "ast.h"
 #include "config_misc.h"
 #include "define.h"
+#include "frontend.h"
 #include "utils.h"
 #include "var_definition.h"
 
@@ -39,11 +42,28 @@ size_t PolyGlotMutator::generate(const char *test_case) {
   return save_test_cases_.size();
 }
 
+PolyGlotMutator *PolyGlotMutator::CreateInstance(
+    std::string_view config, polyglot::FrontendType frontend_type) {
+  std::shared_ptr<polyglot::Frontend> frontend = nullptr;
+  if (frontend_type == polyglot::FrontendType::kANTLR) {
+    frontend = std::make_shared<polyglot::AntlrFrontend>();
+  } else if (frontend_type == polyglot::FrontendType::kBISON) {
+    frontend = std::make_shared<polyglot::BisonFrontend>();
+  } else {
+    assert(false && "unknown frontend type");
+  }
+
+  assert(polyglot::gen::Configuration::Initialize(config) &&
+         "config file contains some errors!");
+
+  PolyGlotMutator *mutator = new PolyGlotMutator(frontend);
+  mutator->initialize(config);
+  return mutator;
+}
+
 void PolyGlotMutator::initialize(std::string_view config_path) {
   vector<IRPtr> ir_set;
 
-  assert(polyglot::gen::Configuration::Initialize(config_path) &&
-         "config file contains some errors!");
   std::string init_file_path =
       polyglot::gen::Configuration::GetInstance().GetInitDirPath();
   vector<string> file_list = get_all_files_in_dir(init_file_path.c_str());
