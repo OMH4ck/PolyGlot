@@ -14,6 +14,7 @@
 #include <string>
 #include <vector>
 
+#include "ast.h"
 #include "frontend.h"
 #include "ir.h"
 
@@ -87,7 +88,18 @@ class TypeSystem {
   set<IRTYPE> s_basic_unit_;
 
  public:
+  enum class ValidationError {
+    kSuccess,
+    kUnparseable,
+    kNoSymbolToUse,
+  };
+
   TypeSystem(std::shared_ptr<Frontend> frontend = nullptr);
+  // TODO: Return ValidationError instead of bool
+  bool validate(IRPtr &root);
+  void init();
+
+ private:
   // map<IR*, map<int, vector<pair<int,int>>>> cache_inference_map_;
   map<IRPtr, shared_ptr<map<int, vector<pair<int, int>>>>> cache_inference_map_;
   // void init_basic_types();
@@ -142,7 +154,6 @@ class TypeSystem {
       IRPtr cur);
 
   bool simple_fix(IRPtr ir, int type);
-  bool validate(IRPtr &root);
   bool validate_syntax_only(IRPtr root);
   bool top_fix(IRPtr root);
   IRPtr locate_mutated_ir(IRPtr root);
@@ -189,7 +200,6 @@ class TypeSystem {
   // set up internal object
   void init_internal_obj(string dir_name);
   void init_one_internal_obj(string filename);
-  void init();
   void debug();
 };
 

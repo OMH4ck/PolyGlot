@@ -30,6 +30,32 @@ bool is_builtin_type(TYPEID type_id) {
   return internal_type_map.count(type_id) > 0;
 }
 
+void SymbolTable::AddDefinition(Definition def) {
+  // TODO: Check if the definition is already in the table
+  m_table_[def.type].push_back(def);
+}
+
+void SymbolTable::AddDefinition(TYPEID type, const string &name,
+                                ORDERID order) {
+  Definition def;
+  def.type = type;
+  def.name = name;
+  def.order_id = order;
+  AddDefinition(def);
+}
+
+std::optional<Definition> SymbolTable::GetDefinition(
+    std::string_view name) const {
+  for (auto &def : m_table_) {
+    for (auto &d : def.second) {
+      if (d.name == name) {
+        return d;
+      }
+    }
+  }
+  return std::nullopt;
+}
+
 map<TYPEID, vector<string>> &get_all_builtin_simple_var_types() {
   static map<TYPEID, vector<string>> res;
   if (res.size() > 0) return res;
@@ -368,11 +394,6 @@ shared_ptr<CompoundType> make_compound_type_by_scope(shared_ptr<Scope> scope,
         cout << "add definition: " << pfunc->type_id_ << ", " << structure_name
              << " to scope " << g_scope_root->scope_id_ << endl;
       g_scope_root->add_definition(pfunc->type_id_, structure_name, 0);
-      if (DBG) {
-        for (auto i : g_scope_root->m_defined_variables_) {
-          for (auto j : i.second) cout << "member: " << j.name << endl;
-        }
-      }
     }
   }
 
@@ -381,7 +402,7 @@ shared_ptr<CompoundType> make_compound_type_by_scope(shared_ptr<Scope> scope,
     cout << "FUCK me in make compound typeid:" << res->type_id_
          << " Scope id:" << scope->scope_id_ << endl;
 
-  for (auto &defined_var : scope->m_defined_variables_) {
+  for (auto &defined_var : scope->definitions_.GetTable()) {
     auto &var_type = defined_var.first;
     auto &var_names = defined_var.second;
     for (auto &var : var_names) {
@@ -466,7 +487,7 @@ void Scope::add_definition(int type, IRPtr ir) {
 
 void Scope::add_definition(int type, const string &var_name, unsigned long id) {
   if (type == 0) return;
-  m_defined_variables_[type].push_back({var_name, type, id});
+  definitions_.AddDefinition({var_name, type, id});
 }
 
 void Scope::add_definition(int type, const string &var_name, unsigned long id,
@@ -484,16 +505,16 @@ void Scope::add_definition(int type, const string &var_name, unsigned long id,
         return;
 
       p->s_defined_variable_names_.insert(var_name);
-      p->m_defined_variables_[type].push_back({var_name, type, id});
+      p->definitions_.AddDefinition({var_name, type, id});
 
       return;
     } else {
-      m_defined_variables_[type].push_back({var_name, type, id});
+      definitions_.AddDefinition({var_name, type, id});
       return;
     }
   }
 
-  m_defined_variables_[type].push_back({var_name, type, id});
+  definitions_.AddDefinition({var_name, type, id});
 }
 
 void duck_debug() {
@@ -607,7 +628,7 @@ void debug_scope_tree(shared_ptr<Scope> cur) {
   }
   */
   if (DBG) cout << "Definition set: " << endl;
-  for (auto &iter : cur->m_defined_variables_) {
+  for (auto &iter : cur->definitions_.GetTable()) {
     if (DBG) cout << "Type id:" << iter.first << endl;
     auto tt = get_type_by_type_id(iter.first);
     if (tt == nullptr) continue;

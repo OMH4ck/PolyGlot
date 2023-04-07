@@ -254,7 +254,6 @@ void search_by_data_type(IRPtr cur, DATATYPE type, vector<IRPtr> &result,
       search_by_data_type(cur->right_, type, result, forbit_type, go_inside);
     }
   }
-  return;
 }
 
 IRPtr search_by_data_type(IRPtr cur, DATATYPE type,
@@ -1075,14 +1074,9 @@ int TypeSystem::locate_defined_variable_by_name(const string &var_name,
   auto current_scope = get_scope_by_id(scope_id);
   while (current_scope) {
     // if(DBG) cout <<"Searching scope "<< current_scope->scope_id_ << endl;
-    if (current_scope->m_defined_variables_.size()) {
-      for (auto &iter : current_scope->m_defined_variables_) {
-        for (auto &var : iter.second) {
-          if (var.name == var_name) {
-            return iter.first;
-          }
-        }
-      }
+    auto def = current_scope->definitions_.GetDefinition(var_name);
+    if (def.has_value()) {
+      return def->type;
     }
     current_scope = current_scope->parent_.lock();
   }
@@ -1097,8 +1091,8 @@ set<int> TypeSystem::collect_usable_type(IRPtr cur) {
   while (current_scope) {
     if (DBG)
       cout << "Collecting scope id: " << current_scope->scope_id_ << endl;
-    if (current_scope->m_defined_variables_.size()) {
-      for (auto &iter : current_scope->m_defined_variables_) {
+    if (current_scope->definitions_.GetTable().size()) {
+      for (auto &iter : current_scope->definitions_.GetTable()) {
         auto tmp_type = iter.first;
         bool flag = false;
         /*
@@ -1154,8 +1148,8 @@ vector<map<int, vector<string>>> TypeSystem::collect_all_var_definition_by_type(
   auto current_scope = get_scope_by_id(cur_scope_id);
   while (current_scope) {
     // if(DBG) cout <<"Searching scope "<< current_scope->scope_id_ << endl;
-    if (current_scope->m_defined_variables_.size()) {
-      for (auto &iter : current_scope->m_defined_variables_) {
+    if (current_scope->definitions_.GetTable().size()) {
+      for (auto &iter : current_scope->definitions_.GetTable()) {
         auto tmp_type = iter.first;
         auto type_ptr = get_type_by_type_id(tmp_type);
         if (type_ptr == nullptr) continue;
@@ -2194,7 +2188,6 @@ bool TypeSystem::validate(IRPtr &root) {
   res = create_symbol_table(root);
   if (res == false) {
     type_fix_framework_fail_counter++;
-    ;
     root = nullptr;
   } else {
     res = top_fix(root);

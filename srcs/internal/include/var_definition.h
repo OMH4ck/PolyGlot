@@ -4,6 +4,7 @@
 #include <cassert>
 #include <map>
 #include <memory>
+#include <optional>
 #include <set>
 #include <vector>
 
@@ -34,6 +35,22 @@ struct Definition {
   ORDERID order_id;
 };
 
+// Inside one scope.
+class SymbolTable {
+ public:
+  void AddDefinition(int type, const string &var_name, ORDERID id);
+  void AddDefinition(Definition def);
+
+  std::optional<Definition> GetDefinition(std::string_view var_name) const;
+  const std::map<TYPEID, std::vector<Definition>> &GetTable() const {
+    return m_table_;
+  }
+
+ private:
+  int scope_id_;
+  std::map<TYPEID, std::vector<Definition>> m_table_;
+};
+
 class Scope {
  public:
   Scope(int scope_id, ScopeType scope_type)
@@ -47,9 +64,9 @@ class Scope {
   weak_ptr<Scope> parent_;
   ScopeType scope_type_;  // for what type of scope
 
-  map<TYPEID, vector<Definition>> m_defined_variables_;
+  // map<TYPEID, vector<Definition>> definitions_;
+  SymbolTable definitions_;
   set<string> s_defined_variable_names_;
-
   void add_definition(int type, const string &var_name, unsigned long id,
                       ScopeType stype);
   void add_definition(int type, const string &var_name, unsigned long id);
