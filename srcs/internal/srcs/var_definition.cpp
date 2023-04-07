@@ -27,10 +27,7 @@ bool is_internal_obj_setup = false;
 bool is_in_class = false;
 
 bool is_builtin_type(TYPEID type_id) {
-  for (auto i : internal_type_map) {
-    if (i.first == type_id) return true;
-  }
-  return false;
+  return internal_type_map.count(type_id) > 0;
 }
 
 map<TYPEID, vector<string>> &get_all_builtin_simple_var_types() {
@@ -373,7 +370,7 @@ shared_ptr<CompoundType> make_compound_type_by_scope(shared_ptr<Scope> scope,
       g_scope_root->add_definition(pfunc->type_id_, structure_name, 0);
       if (DBG) {
         for (auto i : g_scope_root->m_defined_variables_) {
-          for (auto j : i.second) cout << "member: " << j.first << endl;
+          for (auto j : i.second) cout << "member: " << j.name << endl;
         }
       }
     }
@@ -388,7 +385,7 @@ shared_ptr<CompoundType> make_compound_type_by_scope(shared_ptr<Scope> scope,
     auto &var_type = defined_var.first;
     auto &var_names = defined_var.second;
     for (auto &var : var_names) {
-      auto &var_name = var.first;
+      auto &var_name = var.name;
       res->v_members_[var_type].push_back(var_name);
       if (DBG)
         cout << "[struct member] add member: " << var_name
@@ -469,7 +466,7 @@ void Scope::add_definition(int type, IRPtr ir) {
 
 void Scope::add_definition(int type, const string &var_name, unsigned long id) {
   if (type == 0) return;
-  m_defined_variables_[type].push_back(make_pair(var_name, id));
+  m_defined_variables_[type].push_back({var_name, type, id});
 }
 
 void Scope::add_definition(int type, const string &var_name, unsigned long id,
@@ -487,16 +484,16 @@ void Scope::add_definition(int type, const string &var_name, unsigned long id,
         return;
 
       p->s_defined_variable_names_.insert(var_name);
-      p->m_defined_variables_[type].push_back(make_pair(var_name, id));
+      p->m_defined_variables_[type].push_back({var_name, type, id});
 
       return;
     } else {
-      m_defined_variables_[type].push_back(make_pair(var_name, id));
+      m_defined_variables_[type].push_back({var_name, type, id});
       return;
     }
   }
 
-  m_defined_variables_[type].push_back(make_pair(var_name, id));
+  m_defined_variables_[type].push_back({var_name, type, id});
 }
 
 void duck_debug() {
@@ -616,7 +613,7 @@ void debug_scope_tree(shared_ptr<Scope> cur) {
     if (tt == nullptr) continue;
     if (DBG) cout << "Type name: " << tt->type_name_ << endl;
     for (auto &name : iter.second) {
-      if (DBG) cout << "\t" << name.first << endl;
+      if (DBG) cout << "\t" << name.name << endl;
     }
   }
   if (DBG) cout << "------------------------" << endl;

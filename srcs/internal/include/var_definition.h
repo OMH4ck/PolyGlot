@@ -10,7 +10,8 @@
 #include "define.h"
 #include "utils.h"
 
-typedef int TYPEID;
+using TYPEID = int;
+using ORDERID = unsigned long;
 
 #define ALLTYPES 1
 #define ALLCOMPOUNDTYPE 2
@@ -27,6 +28,12 @@ enum ScopeType {
   kScopeClass,
 };
 
+struct Definition {
+  std::string name;
+  TYPEID type;
+  ORDERID order_id;
+};
+
 class Scope {
  public:
   Scope(int scope_id, ScopeType scope_type)
@@ -40,7 +47,7 @@ class Scope {
   weak_ptr<Scope> parent_;
   ScopeType scope_type_;  // for what type of scope
 
-  map<int, vector<pair<string, unsigned long>>> m_defined_variables_;
+  map<TYPEID, vector<Definition>> m_defined_variables_;
   set<string> s_defined_variable_names_;
 
   void add_definition(int type, const string &var_name, unsigned long id,

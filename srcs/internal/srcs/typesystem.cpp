@@ -87,7 +87,7 @@ void TypeSystem::init_one_internal_obj(string filename) {
   }
 
   is_internal_obj_setup = true;
-  if (type_fix_framework(res) == false)
+  if (create_symbol_table(res) == false)
     spdlog::error("[init_internal_obj] setup {} failed", filename);
   is_internal_obj_setup = false;
 }
@@ -157,7 +157,7 @@ void TypeSystem::connect_back(map<IRPtr *, IRPtr> &m_save) {
   }
 }
 
-bool TypeSystem::type_fix_framework(IRPtr root) {
+bool TypeSystem::create_symbol_table(IRPtr root) {
   static unsigned recursive_counter = 0;
   queue<IRPtr> q;
   map<IRPtr *, IRPtr> m_save;
@@ -393,7 +393,7 @@ void TypeSystem::collect_function_definition_wt(IRPtr cur) {
     if (DBG)
       spdlog::info("Recursive on function body: {}",
                    function_body_ir->to_string());
-    type_fix_framework(function_body_ir);
+    create_symbol_table(function_body_ir);
   }
 }
 
@@ -425,7 +425,7 @@ void TypeSystem::collect_structure_definition_wt(IRPtr cur, IRPtr root) {
     }
     spdlog::info("{}", struct_body->to_string());
     is_in_class = true;
-    type_fix_framework(struct_body);
+    create_symbol_table(struct_body);
     is_in_class = false;
     auto compound_id = new_compound->type_id_;
     new_compound = make_compound_type_by_scope(
@@ -531,7 +531,7 @@ void TypeSystem::collect_structure_definition(IRPtr cur, IRPtr root) {
             get_scope_by_id(struct_body->scope_id_), compound_name);
         current_compound_name = compound_name;
       }
-      type_fix_framework(struct_body);
+      create_symbol_table(struct_body);
       auto compound_id = new_compound->type_id_;
       new_compound = make_compound_type_by_scope(
           get_scope_by_id(struct_body->scope_id_), current_compound_name);
@@ -759,7 +759,7 @@ void TypeSystem::collect_function_definition(IRPtr cur) {
     for (auto i = 0; i < arg_types.size(); i++) {
       cur_scope->add_definition(arg_types[i], arg_names[i], arg_ids[i]);
     }
-    type_fix_framework(function_body);
+    create_symbol_table(function_body);
   }
 }
 
@@ -849,7 +849,6 @@ bool TypeSystem::type_inference_new(IRPtr cur, int scope_type) {
 
   if (cur->type_ == kIdentifier) {
     // handle here
-    if (DBG) cout << "Reach here" << endl;
     if (cur->str_val_ == "FIXME") {
       if (DBG) cout << "See a fixme!" << endl;
       auto v_usable_type = collect_usable_type(cur);
@@ -1079,7 +1078,7 @@ int TypeSystem::locate_defined_variable_by_name(const string &var_name,
     if (current_scope->m_defined_variables_.size()) {
       for (auto &iter : current_scope->m_defined_variables_) {
         for (auto &var : iter.second) {
-          if (var.first == var_name) {
+          if (var.name == var_name) {
             return iter.first;
           }
         }
@@ -1111,7 +1110,7 @@ set<int> TypeSystem::collect_usable_type(IRPtr cur) {
         auto type_ptr = get_type_by_type_id(tmp_type);
         if (type_ptr == nullptr) continue;
         for (auto &kk : iter.second) {
-          if (ir_id > kk.second) {
+          if (ir_id > kk.order_id) {
             flag = true;
             break;
           }
@@ -1162,32 +1161,32 @@ vector<map<int, vector<string>>> TypeSystem::collect_all_var_definition_by_type(
         if (type_ptr == nullptr) continue;
         if (type_ptr->is_function_type()) {
           for (auto &var : iter.second) {
-            if (var.second < ir_id) {
+            if (var.order_id < ir_id) {
               // if(DBG) cout << "Collectingi func: " << var.first << endl;
-              functions[tmp_type].push_back(var.first);
+              functions[tmp_type].push_back(var.name);
             }
           }
         } else if (type_ptr->is_compound_type()) {
           for (auto &var : iter.second) {
-            if (var.second < ir_id) {
-              if (DBG) cout << "Collecting compound: " << var.first << endl;
-              compound_types[tmp_type].push_back(var.first);
+            if (var.order_id < ir_id) {
+              if (DBG) cout << "Collecting compound: " << var.name << endl;
+              compound_types[tmp_type].push_back(var.name);
             }
           }
         } else {
           if (type_ptr->is_pointer_type()) {
             for (auto &var : iter.second) {
-              if (var.second < ir_id) {
-                pointer_types[tmp_type].push_back(var.first);
+              if (var.order_id < ir_id) {
+                pointer_types[tmp_type].push_back(var.name);
               }
             }
           }
           for (auto &var : iter.second) {
-            if (var.second < ir_id) {
-              cout << "Collecting simple var: " << var.first << endl;
-              simple_var[tmp_type].push_back(var.first);
+            if (var.order_id < ir_id) {
+              cout << "Collecting simple var: " << var.name << endl;
+              simple_var[tmp_type].push_back(var.name);
             } else {
-              cout << "Not collecting simple var: " << var.first << endl;
+              cout << "Not collecting simple var: " << var.name << endl;
             }
           }
         }
@@ -2192,7 +2191,7 @@ bool TypeSystem::validate(IRPtr &root) {
   }
   // init_internal_type();
   std::cerr << "Generate IR: " << root->to_string() << "" << std::endl;
-  res = type_fix_framework(root);
+  res = create_symbol_table(root);
   if (res == false) {
     type_fix_framework_fail_counter++;
     ;

@@ -105,7 +105,7 @@ class TypeSystem {
 
   FIXORDER get_fix_order(int type);  // need to finish
 
-  bool type_fix_framework(IRPtr root);
+  bool create_symbol_table(IRPtr root);
 
   int get_op_value(std::shared_ptr<IROperator> op);
 
