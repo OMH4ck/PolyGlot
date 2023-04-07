@@ -8,13 +8,13 @@
 #include <stack>
 #include <string_view>
 #include <variant>
-#include "absl/container/flat_hash_map.h"
+//#include "absl/container/flat_hash_map.h"
 
-#include "ast.h"
+//#include "ast.h"
 #include "custom_rule_context.h"
 #include "define.h"
 #include "ir.h"
-#include "var_definition.h"
+//#include "var_definition.h"
 
 using namespace antlrcpptest;
 
@@ -69,7 +69,7 @@ IRPtr TranslateNode(tree::ParseTree* node, PolyGlotGrammarParser* parser) {
   std::stack<IM> stk;
   CustomRuleContext* ctx = dynamic_cast<CustomRuleContext*>(node);
   if (ctx->GetScopeType() != kScopeDefault) {
-    enter_scope(ctx->GetScopeType());
+    //enter_scope(ctx->GetScopeType());
   }
   if (ctx->isStringLiteral) {
     //std::cout << "literal: " << ctx->getText() << "\n";
@@ -148,7 +148,7 @@ IRPtr TranslateNode(tree::ParseTree* node, PolyGlotGrammarParser* parser) {
     new_ir->data_type_ = kDataDefault;
   }
   if (ctx->GetScopeType() != kScopeDefault) {
-    exit_scope();
+    //exit_scope();
   }
   return new_ir;
 }

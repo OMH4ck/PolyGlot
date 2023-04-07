@@ -675,7 +675,7 @@ shared_ptr<Scope> gen_scope(ScopeType scope_type) {
 
 void CompoundType::remove_unfix(IRPtr ir) {
   can_be_fixed_ir_.erase(ir);
-  v_members_[ir->value_type_].push_back(ir->str_val_);
+  v_members_[ir->value_type_].push_back(ir->str_val_.value());
 }
 
 string get_type_name_by_id(TYPEID type_id) {

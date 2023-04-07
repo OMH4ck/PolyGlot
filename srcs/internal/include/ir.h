@@ -6,6 +6,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -57,18 +58,21 @@ class IR {
      int scope = -1, DATAFLAG flag = kUse);
 
   IR(IRTYPE type, std::shared_ptr<IROperator> op, IRPtr left, IRPtr right,
-     double f_val, string str_val, string name, unsigned int mutated_times,
-     int scope, DATAFLAG flag);
+     std::optional<double> f_val, std::optional<string> str_val, string name,
+     unsigned int mutated_times, int scope, DATAFLAG flag);
 
   IR(const IRPtr ir, IRPtr left, IRPtr right);
 
   std::vector<IRPtr> collect_children();
   union {
-    int int_val_;
+    // int int_val_;
     unsigned long long_val_ = 0;
-    double float_val_;
+    // double float_val_;
     bool bool_val_;
   };
+
+  std::optional<double> float_val_;
+  std::optional<int> int_val_;
 
   int scope_;
   unsigned long scope_id_;
@@ -78,7 +82,7 @@ class IR {
   IRTYPE type_;
   string name_;
 
-  string str_val_;
+  std::optional<string> str_val_;
 
   std::shared_ptr<IROperator> op_ = nullptr;
   IRPtr left_ = nullptr;

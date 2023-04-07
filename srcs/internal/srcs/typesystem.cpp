@@ -414,11 +414,12 @@ void TypeSystem::collect_structure_definition_wt(IRPtr cur, IRPtr root) {
     shared_ptr<CompoundType> new_compound;
     string current_compound_name;
     if (structure_name.size() > 0) {
-      spdlog::info("not anonymous {}", structure_name[0]->str_val_);
+      spdlog::info("not anonymous {}", structure_name[0]->str_val_.value());
       // not anonymous
-      new_compound = make_compound_type_by_scope(
-          get_scope_by_id(struct_body->scope_id_), structure_name[0]->str_val_);
-      current_compound_name = structure_name[0]->str_val_;
+      new_compound =
+          make_compound_type_by_scope(get_scope_by_id(struct_body->scope_id_),
+                                      structure_name[0]->str_val_.value());
+      current_compound_name = structure_name[0]->str_val_.value();
     } else {
       spdlog::info("anonymous");
       // anonymous structure
@@ -497,8 +498,9 @@ std::optional<SymbolTable> collect_simple_variable_defintion(IRPtr cur) {
       // handle other
     }
     if (name_ir == nullptr || cur_scope == nullptr) return res;
-    cur_scope->add_definition(new_type, name_ir->str_val_, name_ir->id_);
-    res.AddDefinition(new_type, name_ir->str_val_, name_ir->id_);
+    cur_scope->add_definition(new_type, name_ir->str_val_.value(),
+                              name_ir->id_);
+    res.AddDefinition(new_type, name_ir->str_val_.value(), name_ir->id_);
   }
   return res;
 }
@@ -525,8 +527,8 @@ void TypeSystem::collect_structure_definition(IRPtr cur, IRPtr root) {
         // not anonymous
         new_compound =
             make_compound_type_by_scope(get_scope_by_id(struct_body->scope_id_),
-                                        structure_name[0]->str_val_);
-        current_compound_name = structure_name[0]->str_val_;
+                                        structure_name[0]->str_val_.value());
+        current_compound_name = structure_name[0]->str_val_.value();
       } else {
         if (DBG) cout << "anonymous" << endl;
         // anonymous structure
@@ -558,20 +560,20 @@ void TypeSystem::collect_structure_definition(IRPtr cur, IRPtr root) {
         auto var_name = search_by_data_type(var_define_unit, kDataVarName);
         assert(var_name);
         if (structure_pointer_var.size() == 0) {  // not a pointer
-          cur_scope->add_definition(compound_id, var_name->str_val_,
+          cur_scope->add_definition(compound_id, var_name->str_val_.value(),
                                     var_name->id_);
           if (DBG)
-            cout << "[struct]not a pointer, name: " << var_name->str_val_
-                 << endl;
+            cout << "[struct]not a pointer, name: "
+                 << var_name->str_val_.value() << endl;
         } else {
           auto new_type =
               generate_pointer_type(compound_id, structure_pointer_var.size());
-          cur_scope->add_definition(new_type, var_name->str_val_,
+          cur_scope->add_definition(new_type, var_name->str_val_.value(),
                                     var_name->id_);
           if (DBG)
             cout << "[struct]a pointer in level "
                  << structure_pointer_var.size()
-                 << ", name: " << var_name->str_val_ << endl;
+                 << ", name: " << var_name->str_val_.value() << endl;
         }
         structure_pointer_var.clear();
       }
@@ -583,9 +585,10 @@ void TypeSystem::collect_structure_definition(IRPtr cur, IRPtr root) {
       // kDataStructBody);
 
       assert(structure_name.size());
-      auto compound_id = get_type_id_by_string(structure_name[0]->str_val_);
+      auto compound_id =
+          get_type_id_by_string(structure_name[0]->str_val_.value());
       if (DBG) {
-        cout << structure_name[0]->str_val_ << endl;
+        cout << structure_name[0]->str_val_.value() << endl;
         cout << "TYpe id: " << compound_id << endl;
       }
       if (compound_id == 0) return;
@@ -609,16 +612,18 @@ void TypeSystem::collect_structure_definition(IRPtr cur, IRPtr root) {
         auto var_name = search_by_data_type(var_define_unit, kDataVarName);
         assert(var_name);
         if (structure_pointer_var.size() == 0) {  // not a pointer
-          cur_scope->add_definition(compound_id, var_name->str_val_,
+          cur_scope->add_definition(compound_id, var_name->str_val_.value(),
                                     var_name->id_);
-          spdlog::debug("[struct]not a pointer, name: {}", var_name->str_val_);
+          spdlog::debug("[struct]not a pointer, name: {}",
+                        var_name->str_val_.value());
         } else {
           auto new_type =
               generate_pointer_type(compound_id, structure_pointer_var.size());
-          cur_scope->add_definition(new_type, var_name->str_val_,
+          cur_scope->add_definition(new_type, var_name->str_val_.value(),
                                     var_name->id_);
           spdlog::debug("[struct]a pointer in level {}, name: {}",
-                        structure_pointer_var.size(), var_name->str_val_);
+                        structure_pointer_var.size(),
+                        var_name->str_val_.value());
         }
       }
       structure_pointer_var.clear();
@@ -869,8 +874,9 @@ bool TypeSystem::TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
     if (scope_type == NOTEXIST) {
       // match name in cur->scope_
 
-      res_type = locate_defined_variable_by_name(cur->str_val_, cur->scope_id_);
-      if (DBG) cout << "Name: " << cur->str_val_ << endl;
+      res_type = locate_defined_variable_by_name(cur->str_val_.value(),
+                                                 cur->scope_id_);
+      if (DBG) cout << "Name: " << cur->str_val_.value() << endl;
       if (DBG) cout << "Type: " << res_type << endl;
       // auto cur_type = make_shared<map<TYPEID, vector<pair<TYPEID,
       // TYPEID>>>>();
@@ -913,8 +919,6 @@ bool TypeSystem::TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
           }
         }
       }
-      if (DBG) cout << get_type_name_by_id(scope_type) << endl;
-      if (DBG) cout << cur->str_val_ << endl;
       return false;  // cannot find member
     }
   }
@@ -2000,7 +2004,7 @@ bool TypeSystem::simple_fix(IRPtr ir, int type, TypeInferer &inferer) {
   spdlog::debug("Type: {}", type);
 
   // if (ir->type_ == kIdentifier && ir->str_val_ == "FIXME")
-  if (ir->str_val_.empty() == false && ir->str_val_ == "FIXME") {
+  if (ir->str_val_.has_value() && ir->str_val_.value() == "FIXME") {
     spdlog::debug("Reach here");
     ir->str_val_ = generate_expression_by_type(type, ir);
     return true;

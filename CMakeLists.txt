@@ -85,22 +85,26 @@ include_directories(${spdlog_INCLUDE_DIRS})
 set(AFLPP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/AFLplusplus/include)
 include_directories(${AFLPP_DIR})
 
+add_library(util_lib STATIC srcs/internal/srcs/utils.cpp)
+target_include_directories(util_lib PUBLIC ${CMAKE_SOURCE_DIR}/srcs/internal/include)
+target_compile_options(util_lib PRIVATE -fPIC)
+
 add_library(frontend_lib STATIC srcs/internal/srcs/frontend.cpp srcs/internal/srcs/ast.cpp ${GENERATED_FILES})
 target_include_directories(frontend_lib PUBLIC ${CMAKE_SOURCE_DIR}/srcs/internal/include ${CMAKE_SOURCE_DIR}/gen/parser ${CMAKE_SOURCE_DIR}/gen)
 target_compile_options(frontend_lib PRIVATE -fPIC)
 target_link_libraries(frontend_lib PUBLIC ir_translator)
 
-add_library(config_lib OBJECT ${CMAKE_SOURCE_DIR}/srcs/internal/srcs/configuration.cpp)
+add_library(config_lib STATIC ${CMAKE_SOURCE_DIR}/srcs/internal/srcs/configuration.cpp)
 target_include_directories(config_lib PUBLIC ${CMAKE_SOURCE_DIR}/srcs/internal/include)
 target_compile_options(config_lib PRIVATE -fPIC)
 target_link_libraries(config_lib PRIVATE yaml-cpp absl::str_format)
 
-add_library(ir_lib OBJECT srcs/internal/srcs/ir.cpp srcs/internal/srcs/var_definition.cpp srcs/internal/srcs/utils.cpp)
+add_library(ir_lib STATIC srcs/internal/srcs/ir.cpp)
 target_include_directories(ir_lib PUBLIC ${CMAKE_SOURCE_DIR}/srcs/internal/include)
-target_link_libraries(ir_lib PUBLIC absl::str_format)
+target_link_libraries(ir_lib PUBLIC absl::str_format util_lib)
 target_compile_options(ir_lib PRIVATE -fPIC)
 
-add_library(polyglot_lib STATIC srcs/polyglot.cc srcs/internal/srcs/mutate.cpp srcs/internal/srcs/typesystem.cpp)
+add_library(polyglot_lib STATIC srcs/polyglot.cc srcs/internal/srcs/mutate.cpp srcs/internal/srcs/typesystem.cpp srcs/internal/srcs/var_definition.cpp)
 target_include_directories(polyglot_lib
                            PUBLIC ${CMAKE_SOURCE_DIR}/srcs/internal/include)
 target_include_directories(polyglot_lib PUBLIC ${CMAKE_SOURCE_DIR}/srcs)

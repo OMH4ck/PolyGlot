@@ -1,13 +1,15 @@
 #include "ir.h"
 
 #include <cassert>
+#include <set>
 
 #include "absl/strings/str_cat.h"
-#include "config_misc.h"
+//#include "config_misc.h"
 #include "define.h"
+#include "utils.h"
 //#include "typesystem.h"
 //#include "utils.h"
-#include "var_definition.h"
+//#include "var_definition.h"
 
 static bool scope_tranlation = false;
 
@@ -15,14 +17,16 @@ static unsigned long id_counter;
 // name_ = gen_id_name();
 #define GEN_NAME() id_ = id_counter++;
 
-// TODO: Put this back to STORE_IR_SCOPE()
-// g_scope_current->v_ir_set_.push_back(this);   \
-
+// TODO: FIX THE SCOPE ID.
+/*
 #define STORE_IR_SCOPE()                          \
   if (scope_tranlation) {                         \
     if (g_scope_current == nullptr) return;       \
     this->scope_id_ = g_scope_current->scope_id_; \
   }
+*/
+
+#define STORE_IR_SCOPE() this->scope_id_ = 1;
 
 IR::IR(IRTYPE type, std::shared_ptr<IROperator> op, IRPtr left, IRPtr right,
        DATATYPE data_type)
@@ -124,8 +128,8 @@ IR::IR(IRTYPE type, double f_val, DATATYPE data_type, int scope, DATAFLAG flag)
 }
 
 IR::IR(IRTYPE type, std::shared_ptr<IROperator> op, IRPtr left, IRPtr right,
-       double f_val, string str_val, string name, unsigned int mutated_times,
-       int scope, DATAFLAG flag)
+       std::optional<double> f_val, std::optional<string> str_val, string name,
+       unsigned int mutated_times, int scope, DATAFLAG flag)
     : type_(type),
       op_(op),
       left_(left),
@@ -178,11 +182,11 @@ IRPtr deep_copy(const IRPtr root) {
 string IR::print() {
   string res;
   res = this->name_ + " = ";
-  if (!this->str_val_.empty()) {
-    res += "str(" + this->str_val_ + ")";
+  if (this->str_val_.has_value()) {
+    res += "str(" + *(this->str_val_) + ")";
     return res;
-  } else if (this->int_val_) {
-    res += "int(" + std::to_string(this->int_val_) + ")";
+  } else if (this->int_val_.has_value()) {
+    res += "int(" + std::to_string(this->int_val_.value()) + ")";
     return res;
   }
   if (this->op_) res += this->op_->prefix_;
@@ -202,13 +206,12 @@ string IR::to_string() {
 }
 
 void IR::to_string_core(std::string &res) {
-  if (polyglot::gen::Configuration::GetInstance().IsFloatLiteral(type_)) {
-    absl::StrAppend(&res, float_val_);
-  } else if (polyglot::gen::Configuration::GetInstance().IsIntLiteral(type_)) {
-    absl::StrAppend(&res, int_val_);
-  } else if (polyglot::gen::Configuration::GetInstance().IsStringLiteral(
-                 type_)) {
-    absl::StrAppend(&res, str_val_);
+  if (float_val_.has_value()) {
+    absl::StrAppend(&res, float_val_.value());
+  } else if (int_val_.has_value()) {
+    absl::StrAppend(&res, int_val_.value());
+  } else if (str_val_.has_value()) {
+    absl::StrAppend(&res, str_val_.value());
   } else {
     if (op_ != nullptr) {
       absl::StrAppend(&res, op_->prefix_, " ");
@@ -280,7 +283,7 @@ IRPtr locate_parent(IRPtr root, IRPtr old_ir) {
 }
 
 IRPtr locate_define_top_ir(IRPtr root, IRPtr ir) {
-  static set<IRTYPE> define_top_set;
+  static std::set<IRTYPE> define_top_set;
   static bool is_init = false;
 
   /* FIXME
@@ -328,7 +331,7 @@ bool contain_fixme(IRPtr ir) {
     return res;
   }
 
-  if (!ir->str_val_.empty() && ir->str_val_ == "FIXME") {
+  if (ir->str_val_.has_value() && ir->str_val_ == "FIXME") {
     return true;
   }
 
