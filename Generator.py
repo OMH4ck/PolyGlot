@@ -1634,5 +1634,5 @@ EMPTY
     with open(configuration["gen_ir_src_output_path"], "w") as gen_ir_src_file:
         gen_ir_src_file.write(genGenIRSrc(allClass))
 
-    with open(configuration["config_src_output_path"], "w") as f:
-        f.write(genTestSrc())
+    # with open(configuration["config_src_output_path"], "w") as f:
+    #    f.write(genTestSrc())

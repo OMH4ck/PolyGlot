@@ -33,7 +33,12 @@ export AFL_CUSTOM_MUTATOR_ONLY=1
 export AFL_DISABLE_TRIM=1
 export AFL_CUSTOM_MUTATOR_LIBRARY=$ROOT/release/libpolyglot_mutator.so
 export AFL_NO_UI=1
+export PPOLYGLOT_CONFIG=$ROOT/grammars/lua_grammar/semantic.yml
+sed -i 's|grammars/lua_grammar/input/|${ROOT}/grammars/lua_grammar/input/|g' $POLYGLOT_CONFIG
 
+cat $POLYGLOT_CONFIG
+
+cd $ROOT
 $AFLPATH/afl-fuzz -i $ROOT/grammars/lua_grammar/input -V 100 -o $OUT/lua_out -- $OUT/fuzz_lua @@
 
 # check the number of files in the output directory is larger than 1000

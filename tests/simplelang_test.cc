@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <unistd.h>
 
 #include <string_view>
 #include <unordered_set>
@@ -11,6 +12,17 @@
 #include "utils.h"
 
 using namespace polyglot;
+
+std::string GetRootPath() {
+  char* p = getenv("POLYGLOT_ROOT");
+  if (p != nullptr) {
+    return std::string(p);
+  } else {
+    std::cerr << "POLYGLOT_ROOT is not set" << std::endl;
+    exit(-1);
+  }
+}
+
 class ParserTest : public ::testing::TestWithParam<std::string_view> {};
 
 TEST_P(ParserTest, ParseValidTestCaseReturnNotNull) {
@@ -62,7 +74,8 @@ TEST(MutatorTest, MutateInitGoodTestCasesOnly) {
 
   mutation::Mutator mutator;
 
-  std::string init_file_path = gen::GetInitDirPath();
+  std::string init_file_path =
+      gen::Configuration::GetInstance().GetInitDirPath();
   vector<string> file_list = get_all_files_in_dir(init_file_path.c_str());
 
   size_t valid_test_case_count = 0;
@@ -80,7 +93,8 @@ TEST(MutatorTest, MutateInitGoodTestCasesOnly) {
 class MutatorTestF : public testing::Test {
  protected:
   void SetUp() override {
-    std::string init_file_path = gen::GetInitDirPath();
+    std::string init_file_path =
+        gen::Configuration::GetInstance().GetInitDirPath();
     vector<string> file_list = get_all_files_in_dir(init_file_path.c_str());
     for (auto& f : file_list) {
       mutator.init_ir_library_from_a_file(f);
@@ -116,7 +130,8 @@ class AntlrMutatorTestF : public testing::Test {
   void SetUp() override {
     std::shared_ptr<Frontend> frontend = std::make_shared<AntlrFrontend>();
     mutator = std::make_unique<mutation::Mutator>(frontend);
-    std::string init_file_path = gen::GetInitDirPath();
+    std::string init_file_path =
+        gen::Configuration::GetInstance().GetInitDirPath();
     vector<string> file_list = get_all_files_in_dir(init_file_path.c_str());
     for (auto& f : file_list) {
       mutator->init_ir_library_from_a_file(f);
@@ -191,5 +206,10 @@ TEST(TypeSystemTest, ValidateFixDefineUse) {
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
+  if (!gen::Configuration::Initialize(
+          GetRootPath() + "/grammars/simplelang_grammar/semantic.yml")) {
+    std::cerr << "Failed to initialize configuration.\n";
+    exit(-1);
+  }
   return RUN_ALL_TESTS();
 }

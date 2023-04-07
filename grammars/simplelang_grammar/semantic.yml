@@ -1,0 +1,336 @@
+---
+__comments: ""
+InitFileDir: /workspaces/fuzzerfactory_refactor/grammars/simplelang_grammar/init/
+BuiltinObjFile: "/home/yongheng/FuzzerFactory_php/php_grammar/php_internal_object/"
+IsWeakType: true
+BasicUnits:
+  - kStmt
+ConvertChain:
+  - from: ANYTYPE
+    to: ALLTYPES
+  - from: ALLCOMPOUNDTYPE
+    to: ALLTYPES
+  - from: ALLFUNCTION
+    to: ALLTYPES
+BasicTypes:
+  - ANYTYPE
+OPRules:
+  - OperandNum: 2
+    OperandRightType: ALLTYPES
+    OperandLeftType: ALLTYPES
+    ResultType: ALLTYPES
+    Operator:
+      - ""
+      - "<<"
+      - ""
+    Property: []
+    InferDirection: NORMAL
+  - OperandNum: 2
+    OperandRightType: ALLTYPES
+    OperandLeftType: ALLTYPES
+    ResultType: ALLTYPES
+    Operator:
+      - ""
+      - "<"
+      - ""
+    Property: []
+    InferDirection: NORMAL
+  - OperandNum: 2
+    OperandRightType: ALLTYPES
+    OperandLeftType: ALLTYPES
+    ResultType: ALLTYPES
+    Operator:
+      - ""
+      - ">"
+      - ""
+    Property: []
+    InferDirection: NORMAL
+  - OperandNum: 2
+    OperandRightType: ALLTYPES
+    OperandLeftType: ALLTYPES
+    ResultType: ALLTYPES
+    Operator:
+      - ""
+      - "<="
+      - ""
+    Property: []
+    InferDirection: NORMAL
+  - OperandNum: 2
+    OperandRightType: ALLTYPES
+    OperandLeftType: ALLTYPES
+    ResultType: ALLTYPES
+    Operator:
+      - ""
+      - ">="
+      - ""
+    Property: []
+    InferDirection: NORMAL
+  - OperandNum: 2
+    OperandRightType: ALLTYPES
+    OperandLeftType: ALLTYPES
+    ResultType: ALLTYPES
+    Operator:
+      - ""
+      - "=="
+      - ""
+    Property: []
+    InferDirection: NORMAL
+  - OperandNum: 2
+    OperandRightType: ALLTYPES
+    OperandLeftType: ALLTYPES
+    ResultType: ALLTYPES
+    Operator:
+      - ""
+      - "!="
+      - ""
+    Property: []
+    InferDirection: NORMAL
+  - OperandNum: 2
+    OperandRightType: ALLTYPES
+    OperandLeftType: ALLTYPES
+    ResultType: ALLTYPES
+    Operator:
+      - ""
+      - "&&"
+      - ""
+    Property: []
+    InferDirection: NORMAL
+  - OperandNum: 2
+    OperandRightType: ALLTYPES
+    OperandLeftType: ALLTYPES
+    ResultType: ALLTYPES
+    Operator:
+      - ""
+      - "||"
+      - ""
+    Property: []
+    InferDirection: NORMAL
+  - OperandNum: 2
+    OperandRightType: ALLTYPES
+    OperandLeftType: ALLTYPES
+    ResultType: ALLTYPES
+    Operator:
+      - ""
+      - "|"
+      - ""
+    Property: []
+    InferDirection: NORMAL
+  - OperandNum: 2
+    OperandRightType: ALLTYPES
+    OperandLeftType: ALLTYPES
+    ResultType: ALLTYPES
+    Operator:
+      - ""
+      - "&"
+      - ""
+    Property: []
+    InferDirection: NORMAL
+  - OperandNum: 2
+    OperandRightType: ALLTYPES
+    OperandLeftType: ALLTYPES
+    ResultType: ALLTYPES
+    Operator:
+      - ""
+      - "+="
+      - ""
+    Property: []
+    InferDirection: NORMAL
+  - OperandNum: 2
+    OperandRightType: ALLTYPES
+    OperandLeftType: ALLTYPES
+    ResultType: ALLTYPES
+    Operator:
+      - ""
+      - "-="
+      - ""
+    Property: []
+    InferDirection: NORMAL
+  - OperandNum: 2
+    OperandRightType: ALLTYPES
+    OperandLeftType: ALLTYPES
+    ResultType: ALLTYPES
+    Operator:
+      - ""
+      - "/="
+      - ""
+    Property: []
+    InferDirection: NORMAL
+  - OperandNum: 2
+    OperandRightType: ALLTYPES
+    OperandLeftType: ALLTYPES
+    ResultType: ALLTYPES
+    Operator:
+      - ""
+      - "*="
+      - ""
+    Property: []
+    InferDirection: NORMAL
+  - OperandNum: 2
+    OperandRightType: ALLTYPES
+    OperandLeftType: ALLTYPES
+    ResultType: ALLTYPES
+    Operator:
+      - ""
+      - "%="
+      - ""
+    Property: []
+    InferDirection: NORMAL
+  - OperandNum: 2
+    OperandRightType: ALLTYPES
+    OperandLeftType: ALLTYPES
+    ResultType: ALLTYPES
+    Operator:
+      - ""
+      - "<<="
+      - ""
+    Property: []
+    InferDirection: NORMAL
+  - OperandNum: 2
+    OperandRightType: ALLTYPES
+    OperandLeftType: ALLTYPES
+    ResultType: ALLTYPES
+    Operator:
+      - ""
+      - ">>="
+      - ""
+    Property: []
+    InferDirection: NORMAL
+  - OperandNum: 2
+    OperandRightType: ALLTYPES
+    OperandLeftType: ALLTYPES
+    ResultType: ALLTYPES
+    Operator:
+      - ""
+      - "&="
+      - ""
+    Property: []
+    InferDirection: NORMAL
+  - OperandNum: 2
+    OperandRightType: ALLTYPES
+    OperandLeftType: ALLTYPES
+    ResultType: ALLTYPES
+    Operator:
+      - ""
+      - "|="
+      - ""
+    Property: []
+    InferDirection: NORMAL
+  - OperandNum: 2
+    OperandRightType: ALLTYPES
+    OperandLeftType: ALLTYPES
+    ResultType: ALLTYPES
+    Operator:
+      - ""
+      - "^"
+      - ""
+    Property: []
+    InferDirection: NORMAL
+  - OperandNum: 2
+    OperandRightType: ALLTYPES
+    OperandLeftType: ALLTYPES
+    ResultType: ALLTYPES
+    Operator:
+      - ""
+      - "^="
+      - ""
+    Property: []
+    InferDirection: NORMAL
+  - OperandNum: 1
+    OperandRightType: ""
+    OperandLeftType: ALLTYPES
+    ResultType: ALLTYPES
+    Operator:
+      - "+"
+      - ""
+      - ""
+    Property: []
+    InferDirection: NORMAL
+  - OperandNum: 1
+    OperandRightType: ""
+    OperandLeftType: ALLTYPES
+    ResultType: ALLTYPES
+    Operator:
+      - "!"
+      - ""
+      - ""
+    Property: []
+    InferDirection: NORMAL
+  - OperandNum: 1
+    OperandRightType: ""
+    OperandLeftType: ALLTYPES
+    ResultType: ALLTYPES
+    Operator:
+      - "-"
+      - ""
+      - ""
+    Property: []
+    InferDirection: NORMAL
+  - OperandNum: 1
+    OperandRightType: ""
+    OperandLeftType: ALLTYPES
+    ResultType: ALLTYPES
+    Operator:
+      - "~"
+      - ""
+      - ""
+    Property: []
+    InferDirection: NORMAL
+  - OperandNum: 2
+    OperandRightType: ALLTYPES
+    OperandLeftType: ALLTYPES
+    ResultType: ALLTYPES
+    Operator:
+      - ""
+      - ","
+      - ""
+    Property: []
+    InferDirection: NORMAL
+  - OperandNum: 2
+    OperandRightType: ALLTYPES
+    OperandLeftType: ALLTYPES
+    ResultType: ALLTYPES
+    Operator:
+      - ""
+      - "["
+      - "]"
+    Property: []
+    InferDirection: NORMAL
+  - OperandNum: 1
+    OperandRightType: ""
+    OperandLeftType: ALLTYPES
+    ResultType: ALLTYPES
+    Operator:
+      - "["
+      - "]"
+      - ""
+    Property: []
+    InferDirection: NORMAL
+  - OperandNum: 2
+    OperandRightType: ALLTYPES
+    OperandLeftType: ALLTYPES
+    ResultType: ALLTYPES
+    Operator:
+      - ""
+      - ":"
+      - ""
+    Property: []
+    InferDirection: NORMAL
+  - OperandNum: 2
+    OperandRightType: ALLTYPES
+    OperandLeftType: ALLTYPES
+    ResultType: ALLTYPES
+    Operator:
+      - ""
+      - "?"
+      - ""
+    Property: []
+    InferDirection: NORMAL
+  - OperandNum: 1
+    OperandLeftType: ALLCOMPOUNDTYPE
+    ResultType: ALLCOMPOUNDTYPE
+    Operator:
+      - new
+      - ""
+      - ""
+    Property: []
+    InferDirection: NORMAL

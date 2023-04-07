@@ -13,7 +13,7 @@ class PolyGlotMutator {
  public:
   PolyGlotMutator(std::shared_ptr<polyglot::Frontend> frontend)
       : g_frontend(frontend), g_mutator(frontend){};
-  void do_libary_initialize();
+  void initialize(std::string_view);
   void add_to_library(const char *mem);
   size_t generate(const char *test_case);
   std::string_view get_next_test_case();

@@ -93,18 +93,19 @@ void TypeSystem::init_one_internal_obj(string filename) {
 }
 
 void TypeSystem::init() {
-  s_basic_unit_ = gen::GetBasicUnits();
+  s_basic_unit_ = gen::Configuration::GetInstance().GetBasicUnits();
   init_basic_types();
   init_convert_chain();
   init_type_dict();
-  init_internal_obj(gen::GetBuiltInObjectFilePath());
+  init_internal_obj(
+      gen::Configuration::GetInstance().GetBuiltInObjectFilePath());
 }
 
 void TypeSystem::init_type_dict() {
   // string line;
   // ifstream input_file("./js_grammar/type_dict");
 
-  vector<string> type_dict = gen::GetOpRules();
+  vector<string> type_dict = gen::Configuration::GetInstance().GetOpRules();
   for (auto &line : type_dict) {
     if (line.empty()) continue;
 
@@ -675,8 +676,8 @@ void TypeSystem::collect_function_definition(IRPtr cur) {
     map<IRPtr *, IRPtr> m_save;
     set<NODETYPE> ss;
     // ss.insert(kParameterDeclaration);
-    if (!gen::IsWeakType()) {
-      ss = gen::GetFunctionArgNodeType();
+    if (!gen::Configuration::GetInstance().IsWeakType()) {
+      ss = gen::Configuration::GetInstance().GetFunctionArgNodeType();
     }
 
     // q.push(function_arg_ir);
@@ -788,7 +789,7 @@ bool TypeSystem::collect_definition(IRPtr cur) {
     switch (define_type) {
       case kDataVarType:
         if (DBG) cout << "kDataVarType" << endl;
-        if (gen::IsWeakType()) {
+        if (gen::Configuration::GetInstance().IsWeakType()) {
           collect_simple_variable_defintion_wt(cur);
         } else {
           collect_simple_variable_defintion(cur);
@@ -797,7 +798,7 @@ bool TypeSystem::collect_definition(IRPtr cur) {
 
       case kDataClassType:
         if (DBG) cout << "kDataClassType" << endl;
-        if (gen::IsWeakType()) {
+        if (gen::Configuration::GetInstance().IsWeakType()) {
           collect_structure_definition_wt(cur, cur);
         } else {
           collect_structure_definition(cur, cur);
@@ -806,7 +807,7 @@ bool TypeSystem::collect_definition(IRPtr cur) {
 
       case kDataFunctionType:
         if (DBG) cout << "kDataFunctionType" << endl;
-        if (gen::IsWeakType()) {
+        if (gen::Configuration::GetInstance().IsWeakType()) {
           collect_function_definition_wt(cur);
         } else {
           collect_function_definition(cur);
@@ -815,7 +816,7 @@ bool TypeSystem::collect_definition(IRPtr cur) {
       default:
 
         // handle structure and function ,array ,etc..
-        if (gen::IsWeakType()) {
+        if (gen::Configuration::GetInstance().IsWeakType()) {
           collect_simple_variable_defintion_wt(cur);
         } else {
           collect_simple_variable_defintion(cur);
@@ -841,7 +842,7 @@ bool TypeSystem::type_inference_new(IRPtr cur, int scope_type) {
   if (DBG) cout << "Infering: " << cur->to_string() << endl;
   if (DBG) cout << "Scope type: " << scope_type << endl;
 
-  if (gen::HandleBasicType(cur->type_, cur_type)) {
+  if (gen::Configuration::GetInstance().HandleBasicType(cur->type_, cur_type)) {
     cache_inference_map_[cur] = cur_type;
     return true;
   }
@@ -1433,7 +1434,7 @@ set<int> get_all_types_from_compound_type(int compound_type, set<int> &visit) {
       res.insert(member_type);
     } else if (is_function_type(member_type)) {
       // assert(0);
-      if (gen::IsWeakType()) {
+      if (gen::Configuration::GetInstance().IsWeakType()) {
         auto pfunc = get_function_type_by_type_id(member_type);
         res.insert(pfunc->return_type_);
         res.insert(member_type);
@@ -1441,7 +1442,7 @@ set<int> get_all_types_from_compound_type(int compound_type, set<int> &visit) {
     } else if (is_basic_type(member_type)) {
       res.insert(member_type);
     } else {
-      if (gen::IsWeakType()) {
+      if (gen::Configuration::GetInstance().IsWeakType()) {
         res.insert(member_type);
       }
     }
@@ -1678,7 +1679,7 @@ string TypeSystem::structure_member_gen_handler(
   res = get_class_member_by_type(compound_type, member_type);
   if (res.empty()) {
     assert(member_type == compound_type);
-    if (gen::IsWeakType()) {
+    if (gen::Configuration::GetInstance().IsWeakType()) {
       if (is_builtin_type(compound_type) && get_rand_int(4)) {
         auto compound_ptr = get_type_by_type_id(compound_type);
         if (compound_ptr != nullptr && compound_var == compound_ptr->type_name_)
@@ -1819,7 +1820,7 @@ string TypeSystem::generate_expression_by_type_core(int type, IRPtr ir) {
   auto compound_var_size = compound_var_map.size();
   auto function_size = function_map.size();
 
-  if (!gen::IsWeakType()) {
+  if (!gen::Configuration::GetInstance().IsWeakType()) {
     // add pointer into *_var_map
     update_pointer_var(pointer_var_map, simple_var_map, compound_var_map);
   }
@@ -2007,7 +2008,7 @@ bool TypeSystem::simple_fix(IRPtr ir, int type) {
     return true;
   }
 
-  if (!gen::IsWeakType()) {
+  if (!gen::Configuration::GetInstance().IsWeakType()) {
     if ((*cache_inference_map_[ir]).find(type) ==
         (*cache_inference_map_[ir]).end()) {
       auto new_type = NOTEXIST;
@@ -2055,7 +2056,7 @@ bool TypeSystem::top_fix(IRPtr root) {
   while (res && !stk.empty()) {
     root = stk.top();
     stk.pop();
-    if (gen::IsWeakType()) {
+    if (gen::Configuration::GetInstance().IsWeakType()) {
       // if(root->type_ == kSingleExpression){
       if (root->str_val_ == "FIXME") {
         int type = ALLTYPES;
@@ -2070,7 +2071,8 @@ bool TypeSystem::top_fix(IRPtr root) {
       }
     } else {
       // if (root->type_ == kAssignmentExpression)
-      if (root->type_ == gen::GetFixIRType() || root->str_val_ == "FIXME") {
+      if (root->type_ == gen::Configuration::GetInstance().GetFixIRType() ||
+          root->str_val_ == "FIXME") {
         if (contain_fixme(root) == false) continue;
 
         bool flag = type_inference_new(root, 0);
@@ -2173,7 +2175,7 @@ bool TypeSystem::validate(IRPtr &root) {
     return false;
   }
 
-  if (!gen::IsWeakType()) {
+  if (!gen::Configuration::GetInstance().IsWeakType()) {
     root = new_root;
     extract_struct_after_mutation(root);
 

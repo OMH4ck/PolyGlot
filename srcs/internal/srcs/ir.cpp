@@ -204,11 +204,12 @@ string IR::to_string() {
 void IR::to_string_core(std::string &res) {
   // cout << get_string_by_nodetype(this->type_) << endl;
 
-  if (polyglot::gen::IsFloatLiteral(type_)) {
+  if (polyglot::gen::Configuration::GetInstance().IsFloatLiteral(type_)) {
     absl::StrAppend(&res, float_val_);
-  } else if (polyglot::gen::IsIntLiteral(type_)) {
+  } else if (polyglot::gen::Configuration::GetInstance().IsIntLiteral(type_)) {
     absl::StrAppend(&res, int_val_);
-  } else if (polyglot::gen::IsStringLiteral(type_)) {
+  } else if (polyglot::gen::Configuration::GetInstance().IsStringLiteral(
+                 type_)) {
     absl::StrAppend(&res, str_val_);
   } else {
     if (op_ != nullptr) {

@@ -39,10 +39,13 @@ size_t PolyGlotMutator::generate(const char *test_case) {
   return save_test_cases_.size();
 }
 
-void PolyGlotMutator::do_libary_initialize() {
+void PolyGlotMutator::initialize(std::string_view config_path) {
   vector<IRPtr> ir_set;
 
-  std::string init_file_path = polyglot::gen::GetInitDirPath();
+  assert(polyglot::gen::Configuration::Initialize(config_path) &&
+         "config file contains some errors!");
+  std::string init_file_path =
+      polyglot::gen::Configuration::GetInstance().GetInitDirPath();
   vector<string> file_list = get_all_files_in_dir(init_file_path.c_str());
 
   for (auto &f : file_list) {

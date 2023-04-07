@@ -167,7 +167,7 @@ void Mutator::add_ir_to_library_limited(IRPtr cur) {
 }
 
 void Mutator::init_convertable_ir_type_map() {
-  for (auto &p : gen::GetConvertableTypes()) {
+  for (auto &p : gen::Configuration::GetInstance().GetConvertableTypes()) {
     m_convertable_map_[get_nodetype_by_string(p.first)].insert(
         get_nodetype_by_string(p.second));
   }
