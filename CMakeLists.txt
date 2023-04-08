@@ -13,6 +13,13 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -g -O2 -fsanitize=address")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3")
 add_link_options("-Wl,--no-undefined")
 
+# Check whether CC is clang
+if(CMAKE_C_COMPILER_ID MATCHES "Clang")
+  set(ASAN_SHARED "-fsanitize=address -shared-libasan")
+else()
+  set(ASAN_SHARED "-fsanitize=address")
+endif()
+
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
   message(
     STATUS
@@ -112,13 +119,12 @@ target_compile_options(polyglot_lib PRIVATE -fPIC -Werror)
 target_link_libraries(polyglot_lib PRIVATE spdlog::spdlog Microsoft.GSL::GSL
                                            absl::str_format)
 target_link_libraries(polyglot_lib PUBLIC ir_lib frontend_lib config_lib)
-target_link_options(polyglot_lib PRIVATE $<$<CONFIG:DEBUG>: -fsanitize=address
-                    -shared-libasan>)
+target_link_options(polyglot_lib PRIVATE $<$<CONFIG:DEBUG>: ${ASAN_SHARED}>)
 
 add_library(polyglot_mutator SHARED srcs/custom_mutator.cc)
 target_link_libraries(polyglot_mutator PRIVATE polyglot_lib)
 target_link_options(polyglot_mutator PRIVATE $<$<CONFIG:DEBUG>:
-                    -fsanitize=address -shared-libasan>)
+                    ${ASAN_SHARED}>)
 
 add_subdirectory(experiments)
 include(lint.cmake)
