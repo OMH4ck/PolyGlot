@@ -15,9 +15,9 @@ add_link_options("-Wl,--no-undefined")
 
 # Check whether CC is clang
 if(CMAKE_C_COMPILER_ID MATCHES "Clang")
-  set(ASAN_SHARED "-fsanitize=address -shared-libasan")
+  set(ASAN_SHARED "-shared-libasan")
 else()
-  set(ASAN_SHARED "-fsanitize=address")
+  set(ASAN_SHARED "")
 endif()
 
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
@@ -118,9 +118,15 @@ target_include_directories(ir_lib
 target_link_libraries(ir_lib PUBLIC absl::str_format util_lib)
 target_compile_options(ir_lib PRIVATE -fPIC)
 
+add_library(mutate_lib STATIC srcs/internal/srcs/mutate.cpp)
+target_include_directories(mutate_lib
+                           PUBLIC ${CMAKE_SOURCE_DIR}/srcs/internal/include)
+target_link_libraries(mutate_lib PRIVATE ir_lib config_lib Microsoft.GSL::GSL spdlog::spdlog)
+target_compile_options(mutate_lib PRIVATE -fPIC)
+
 add_library(
   polyglot_lib STATIC
-  srcs/polyglot.cc srcs/internal/srcs/mutate.cpp
+  srcs/polyglot.cc
   srcs/internal/srcs/typesystem.cpp srcs/internal/srcs/var_definition.cpp)
 target_include_directories(polyglot_lib
                            PUBLIC ${CMAKE_SOURCE_DIR}/srcs/internal/include)
@@ -128,7 +134,7 @@ target_include_directories(polyglot_lib PUBLIC ${CMAKE_SOURCE_DIR}/srcs)
 target_compile_options(polyglot_lib PRIVATE -fPIC -Werror)
 target_link_libraries(polyglot_lib PRIVATE spdlog::spdlog Microsoft.GSL::GSL
                                            absl::str_format)
-target_link_libraries(polyglot_lib PUBLIC ir_lib frontend_lib config_lib)
+target_link_libraries(polyglot_lib PUBLIC ir_lib frontend_lib config_lib mutate_lib)
 target_link_options(polyglot_lib PRIVATE $<$<CONFIG:DEBUG>: ${ASAN_SHARED}>)
 
 add_library(polyglot_mutator SHARED srcs/custom_mutator.cc)
