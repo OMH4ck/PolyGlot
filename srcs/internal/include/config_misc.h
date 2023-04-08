@@ -8,14 +8,10 @@
 #include <vector>
 
 #include "ast.h"
-#include "typesystem.h"
 
 namespace polyglot {
 
 class Frontend;
-namespace typesystem {
-class TypeSystem;
-}
 
 namespace gen {
 
@@ -34,11 +30,6 @@ class Configuration {
   std::string GetBuiltInObjectFilePath() const;
 
   std::vector<string> GetOpRules() const;
-
-  typedef int TYPEID;
-  bool HandleBasicType(
-      IRTYPE ir_type,
-      std::shared_ptr<typesystem::TypeSystem::CandidateTypes>& cur_type) const;
 
   std::vector<std::pair<std::string, std::string>> GetConvertableTypes() const;
 

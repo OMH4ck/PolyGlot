@@ -230,29 +230,6 @@ std::string Configuration::GetBuiltInObjectFilePath() const {
 
 std::vector<string> Configuration::GetOpRules() const { return op_rules_; }
 
-// constexpr int NOTEXIST = 0;
-// TOFIX: this is a hack, should be fixed
-bool Configuration::HandleBasicType(
-    IRTYPE ir_type,
-    std::shared_ptr<typesystem::TypeSystem::CandidateTypes> &cur_type) const {
-  int res_type = NOTEXIST;
-  if (ir_type == frontend_->GetStringLiteralType()) {
-    res_type = get_type_id_by_string("ANYTYPE");
-    cur_type->AddCandidate(res_type, 0, 0);
-    return true;
-  } else if (ir_type == frontend_->GetIntLiteralType()) {
-    res_type = get_type_id_by_string("ANYTYPE");
-    cur_type->AddCandidate(res_type, 0, 0);
-    return true;
-  } else if (ir_type == frontend_->GetFloatLiteralType()) {
-    res_type = get_type_id_by_string("ANYTYPE");
-    cur_type->AddCandidate(res_type, 0, 0);
-    return true;
-  } else {
-    return false;
-  }
-}
-
 std::vector<std::pair<std::string, std::string>>
 Configuration::GetConvertableTypes() const {
   return convertable_type_map_;

@@ -851,7 +851,19 @@ bool TypeSystem::TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
   if (DBG) cout << "Infering: " << cur->to_string() << endl;
   if (DBG) cout << "Scope type: " << scope_type << endl;
 
-  if (gen::Configuration::GetInstance().HandleBasicType(cur->type_, cur_type)) {
+  if (cur->type_ == frontend_->GetStringLiteralType()) {
+    res_type = get_type_id_by_string("ANYTYPE");
+    cur_type->AddCandidate(res_type, 0, 0);
+    cache_inference_map_[cur] = cur_type;
+    return true;
+  } else if (cur->type_ == frontend_->GetIntLiteralType()) {
+    res_type = get_type_id_by_string("ANYTYPE");
+    cur_type->AddCandidate(res_type, 0, 0);
+    cache_inference_map_[cur] = cur_type;
+    return true;
+  } else if (cur->type_ == frontend_->GetFloatLiteralType()) {
+    res_type = get_type_id_by_string("ANYTYPE");
+    cur_type->AddCandidate(res_type, 0, 0);
     cache_inference_map_[cur] = cur_type;
     return true;
   }
