@@ -61,7 +61,8 @@ add_library(ir_translator STATIC ir_translater.cpp ${GENERATED_SRC_FILES})
 target_include_directories(
   ir_translator PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/generated
                        ${CMAKE_CURRENT_SOURCE_DIR}/)
-target_link_libraries(ir_translator PUBLIC antlr4_static ir_lib absl::flat_hash_map)
+target_link_libraries(ir_translator PUBLIC antlr4_static ir_lib
+                                           absl::flat_hash_map)
 target_compile_options(ir_translator PRIVATE -fPIC)
 
 add_executable(AntlrTest main.cpp)
