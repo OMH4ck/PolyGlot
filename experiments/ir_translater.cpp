@@ -68,9 +68,6 @@ IRPtr TranslateNode(tree::ParseTree* node, PolyGlotGrammarParser* parser) {
 
   std::stack<IM> stk;
   CustomRuleContext* ctx = dynamic_cast<CustomRuleContext*>(node);
-  if (ctx->GetScopeType() != kScopeDefault) {
-    //enter_scope(ctx->GetScopeType());
-  }
   if (ctx->isStringLiteral) {
     //std::cout << "literal: " << ctx->getText() << "\n";
     stk.push(std::make_shared<IR>((IRTYPE)ctx->getRuleIndex(), ctx->getText()));
@@ -148,7 +145,7 @@ IRPtr TranslateNode(tree::ParseTree* node, PolyGlotGrammarParser* parser) {
     new_ir->data_type_ = kDataDefault;
   }
   if (ctx->GetScopeType() != kScopeDefault) {
-    //exit_scope();
+    new_ir->scope_ = ctx->GetScopeType();
   }
   return new_ir;
 }

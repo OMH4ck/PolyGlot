@@ -40,7 +40,7 @@ IR::IR(IRTYPE type, std::shared_ptr<IROperator> op, IRPtr left, IRPtr right,
   STORE_IR_SCOPE();
 }
 
-IR::IR(IRTYPE type, string str_val, DATATYPE data_type, int scope,
+IR::IR(IRTYPE type, string str_val, DATATYPE data_type, ScopeType scope,
        DATAFLAG flag)
     : type_(type),
       str_val_(str_val),
@@ -55,7 +55,7 @@ IR::IR(IRTYPE type, string str_val, DATATYPE data_type, int scope,
   STORE_IR_SCOPE();
 }
 
-IR::IR(IRTYPE type, const char *str_val, DATATYPE data_type, int scope,
+IR::IR(IRTYPE type, const char *str_val, DATATYPE data_type, ScopeType scope,
        DATAFLAG flag)
     : type_(type),
       str_val_(str_val),
@@ -70,36 +70,8 @@ IR::IR(IRTYPE type, const char *str_val, DATATYPE data_type, int scope,
   STORE_IR_SCOPE();
 }
 
-IR::IR(IRTYPE type, bool b_val, DATATYPE data_type, int scope, DATAFLAG flag)
-    : type_(type),
-      bool_val_(b_val),
-      left_(nullptr),
-      op_(nullptr),
-      right_(nullptr),
-      operand_num_(0),
-      data_type_(kDataWhatever),
-      scope_(scope),
-      data_flag_(flag) {
-  GEN_NAME();
-  STORE_IR_SCOPE();
-}
-
-IR::IR(IRTYPE type, unsigned long long_val, DATATYPE data_type, int scope,
+IR::IR(IRTYPE type, int int_val, DATATYPE data_type, ScopeType scope,
        DATAFLAG flag)
-    : type_(type),
-      long_val_(long_val),
-      left_(nullptr),
-      op_(nullptr),
-      right_(nullptr),
-      operand_num_(0),
-      data_type_(kDataWhatever),
-      scope_(scope),
-      data_flag_(flag) {
-  GEN_NAME();
-  STORE_IR_SCOPE();
-}
-
-IR::IR(IRTYPE type, int int_val, DATATYPE data_type, int scope, DATAFLAG flag)
     : type_(type),
       int_val_(int_val),
       left_(nullptr),
@@ -113,7 +85,8 @@ IR::IR(IRTYPE type, int int_val, DATATYPE data_type, int scope, DATAFLAG flag)
   STORE_IR_SCOPE();
 }
 
-IR::IR(IRTYPE type, double f_val, DATATYPE data_type, int scope, DATAFLAG flag)
+IR::IR(IRTYPE type, double f_val, DATATYPE data_type, ScopeType scope,
+       DATAFLAG flag)
     : type_(type),
       float_val_(f_val),
       left_(nullptr),
@@ -129,7 +102,7 @@ IR::IR(IRTYPE type, double f_val, DATATYPE data_type, int scope, DATAFLAG flag)
 
 IR::IR(IRTYPE type, std::shared_ptr<IROperator> op, IRPtr left, IRPtr right,
        std::optional<double> f_val, std::optional<string> str_val, string name,
-       unsigned int mutated_times, int scope, DATAFLAG flag)
+       unsigned int mutated_times, ScopeType scope, DATAFLAG flag)
     : type_(type),
       op_(op),
       left_(left),
@@ -156,7 +129,8 @@ IR::IR(const IRPtr ir, IRPtr left, IRPtr right) {
   this->left_ = left;
   this->right_ = right;
   this->str_val_ = ir->str_val_;
-  this->long_val_ = ir->long_val_;
+  this->int_val_ = ir->int_val_;
+  this->float_val_ = ir->float_val_;
   this->data_type_ = ir->data_type_;
   this->scope_ = ir->scope_;
   this->data_flag_ = ir->data_flag_;

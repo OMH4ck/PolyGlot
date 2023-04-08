@@ -278,7 +278,7 @@ def handle_datatype(vvlist, data_type, scope, dataflag, gen_name, tnum=0):
 
         res = tab * tnum + "if(%s){\n" % vlist[0]
         res += tab * (tnum + 1) + "%s->data_type_ = %s; \n" % (vlist[0], data_type)
-        res += tab * (tnum + 1) + "%s->scope_ = %d; \n" % (vlist[0], scope)
+        res += tab * (tnum + 1) + "%s->scope_ = (ScopeType)%d; \n" % (vlist[0], scope)
         res += tab * (tnum + 1) + "%s->data_flag_ =(DATAFLAG)%d; \n" % (
             vlist[0],
             dataflag,
@@ -817,7 +817,7 @@ def genTranslate(current_class):
             + current_class.name
             + ", "
             + specific[1]
-            + "_val_, data_type_, scope_, data_flag_);\n"
+            + "_val_, data_type_, (ScopeType)scope_, data_flag_);\n"
         )
         res += genTranslateEnd(current_class.name)
         res += "\n\tTRANSLATEEND\n}\n\n"

@@ -18,9 +18,15 @@ using namespace std;
 
 #define DONTGENNAME 1
 
-enum NODETYPE : unsigned int;
+enum ScopeType {
+  kScopeDefault,
+  kScopeGlobal,
+  kScopeFunction,
+  kScopeStatement,
+  kScopeClass,
+};
+
 using IRTYPE = unsigned int;
-// typedef NODETYPE IRTYPE;
 
 class IROperator {
  public:
@@ -41,40 +47,34 @@ class IR {
      IRPtr right = nullptr, DATATYPE data_type = kDataWhatever);
 
   IR(IRTYPE type, string str_val, DATATYPE data_type = kDataWhatever,
-     int scope = -1, DATAFLAG flag = kUse);
+     ScopeType scope = kScopeDefault, DATAFLAG flag = kUse);
   IR(IRTYPE type, const char *str_val, DATATYPE data_type = kDataWhatever,
-     int scope = -1, DATAFLAG flag = kUse);
+     ScopeType scope = kScopeDefault, DATAFLAG flag = kUse);
 
   IR(IRTYPE type, bool b_val, DATATYPE data_type = kDataWhatever,
-     int scope = -1, DATAFLAG flag = kUse);
+     ScopeType scope = kScopeDefault, DATAFLAG flag = kUse);
 
   IR(IRTYPE type, unsigned long long_val, DATATYPE data_type = kDataWhatever,
-     int scope = -1, DATAFLAG flag = kUse);
+     ScopeType scope = kScopeDefault, DATAFLAG flag = kUse);
 
   IR(IRTYPE type, int int_val, DATATYPE data_type = kDataWhatever,
-     int scope = -1, DATAFLAG flag = kUse);
+     ScopeType scope = kScopeDefault, DATAFLAG flag = kUse);
 
   IR(IRTYPE type, double f_val, DATATYPE data_type = kDataWhatever,
-     int scope = -1, DATAFLAG flag = kUse);
+     ScopeType scope = kScopeDefault, DATAFLAG flag = kUse);
 
   IR(IRTYPE type, std::shared_ptr<IROperator> op, IRPtr left, IRPtr right,
      std::optional<double> f_val, std::optional<string> str_val, string name,
-     unsigned int mutated_times, int scope, DATAFLAG flag);
+     unsigned int mutated_times, ScopeType scope, DATAFLAG flag);
 
   IR(const IRPtr ir, IRPtr left, IRPtr right);
 
   std::vector<IRPtr> collect_children();
-  union {
-    // int int_val_;
-    unsigned long long_val_ = 0;
-    // double float_val_;
-    bool bool_val_;
-  };
 
   std::optional<double> float_val_;
   std::optional<int> int_val_;
 
-  int scope_;
+  ScopeType scope_;
   unsigned long scope_id_;
   DATAFLAG data_flag_ = kUse;
   DATATYPE data_type_ = kDataWhatever;

@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "define.h"
+#include "ir.h"
 #include "utils.h"
 
 using TYPEID = int;
@@ -22,15 +23,6 @@ using IRPtr = std::shared_ptr<IR>;
 #define ALLFUNCTION 3
 #define ALLUPPERBOUND 5
 #define ANYTYPE 6
-
-enum ScopeType {
-  // No scope.
-  kScopeDefault,
-  kScopeGlobal,
-  kScopeFunction,
-  kScopeStatement,
-  kScopeClass,
-};
 
 struct Definition {
   std::string name;
@@ -199,4 +191,6 @@ std::shared_ptr<PointerType> get_pointer_type_by_type_id(TYPEID type_id);
 void reset_scope();
 void clear_definition_all();
 void init_internal_type();
+
+void BuildScopeTree(IRPtr root);
 #endif

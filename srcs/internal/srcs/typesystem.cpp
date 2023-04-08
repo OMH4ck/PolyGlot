@@ -2177,11 +2177,13 @@ bool TypeSystem::validate(IRPtr &root) {
     set_scope_translation_flag(true);
     new_root = frontend_->TranslateToIR(root->to_string());
     if (new_root == nullptr) return false;
+    BuildScopeTree(new_root);
     root = new_root;
   } else {
     set_scope_translation_flag(true);
     new_root = frontend_->TranslateToIR(root->to_string());
     if (new_root == nullptr) return false;
+    BuildScopeTree(new_root);
     root = new_root;
     extract_struct_after_mutation(root);
   }

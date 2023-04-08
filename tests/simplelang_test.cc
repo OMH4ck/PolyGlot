@@ -192,11 +192,9 @@ TEST(TypeSystemTest, ValidateFixDefineUse) {
   std::cerr << "After extract: " << root->to_string() << std::endl;
   typesystem::TypeSystem ts(frontend);
   ts.init();
-  /*
   ASSERT_TRUE(ts.validate(root));
   ASSERT_TRUE(root != nullptr);
   EXPECT_EQ(root->to_string(), validated_test_case);
-  */
 }
 
 int main(int argc, char** argv) {

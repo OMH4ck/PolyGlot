@@ -673,6 +673,25 @@ shared_ptr<Scope> gen_scope(ScopeType scope_type) {
   return res;
 }
 
+void BuildScopeTree(IRPtr root) {
+  if (root == nullptr) return;
+  if (root->scope_ != kScopeDefault) {
+    enter_scope(root->scope_);
+  }
+  if (g_scope_current != nullptr) {
+    root->scope_id_ = g_scope_current->scope_id_;
+  }
+  if (root->left_) {
+    BuildScopeTree(root->left_);
+  }
+  if (root->right_) {
+    BuildScopeTree(root->right_);
+  }
+  if (root->scope_ != kScopeDefault) {
+    exit_scope();
+  }
+}
+
 void CompoundType::remove_unfix(IRPtr ir) {
   can_be_fixed_ir_.erase(ir);
   v_members_[ir->value_type_].push_back(ir->str_val_.value());
