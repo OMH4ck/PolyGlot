@@ -14,9 +14,12 @@
 
 using TYPEID = int;
 using ORDERID = unsigned long;
+using ScopeID = int;
 
 class IR;
+class Scope;
 using IRPtr = std::shared_ptr<IR>;
+using ScopePtr = std::shared_ptr<Scope>;
 
 #define ALLTYPES 1
 #define ALLCOMPOUNDTYPE 2
@@ -123,10 +126,28 @@ class PointerType : public VarType {
   virtual bool is_function_type() { return false; };
 };
 
+class ScopeTree {
+ public:
+  ScopePtr GetScopeById(ScopeID id);
+  ScopePtr GetScopeRoot();
+  void EnterScope(ScopeType scope_type);
+  void ExitScope();
+  ScopePtr GenScope(ScopeType scope_type);
+  ScopePtr GetCurrentScope() { return g_scope_current_; }
+  ScopeID GetCurrentScopeId() { return g_scope_current_->scope_id_; }
+
+ private:
+  int g_scope_id_counter_ = 0;
+  // TODO: I think this should be the static scope, where we save all the
+  // built-in types and definition.
+  ScopePtr g_scope_root_;
+  std::shared_ptr<Scope> g_scope_current_;
+  std::map<ScopeID, ScopePtr> scope_id_map_;
+};
+
 // extern std::shared_ptr<Scope> g_scope_root;
-std::shared_ptr<Scope> get_scope_root();
+// std::shared_ptr<Scope> get_scope_root();
 // extern map<int, std::shared_ptr<Scope>> scope_id_map;
-extern std::shared_ptr<Scope> g_scope_current;
 // extern map<TYPEID, std::shared_ptr<VarType>> type_map;
 // extern map<std::string, int> basic_types;
 extern std::set<int> all_compound_types;
@@ -148,7 +169,7 @@ bool is_derived_type(TYPEID dtype, TYPEID btype);
 
 void init_basic_types();
 void forward_add_compound_type(std::string &structure_name);
-std::shared_ptr<Scope> get_scope_by_id(int);
+// std::shared_ptr<Scope> get_scope_by_id(int);
 std::shared_ptr<CompoundType> make_compound_type_by_scope(
     std::shared_ptr<Scope> scope, std::string &structure_name);
 std::shared_ptr<FunctionType> make_function_type_by_scope(
@@ -170,16 +191,12 @@ bool is_basic_type(const std::string &s);
 TYPEID get_basic_type_id_by_string(const std::string &s);
 TYPEID get_type_id_by_string(const std::string &s);
 TYPEID get_compound_type_id_by_string(const std::string &s);
-void duck_debug();
 int gen_type_id();
 std::string get_type_name_by_id(TYPEID type_id);
 void debug_scope_tree(std::shared_ptr<Scope> cur);
-void enter_scope(ScopeType scope_type);
-void exit_scope();
 std::set<int> get_all_class();
 TYPEID convert_to_real_type_id(TYPEID, TYPEID);
 TYPEID least_upper_common_type(TYPEID, TYPEID);
-std::shared_ptr<Scope> gen_scope(ScopeType scope_type);
 
 // for pointer
 int generate_pointer_type(int original_type, int pointer_level);
@@ -192,5 +209,5 @@ void reset_scope();
 void clear_definition_all();
 void init_internal_type();
 
-void BuildScopeTree(IRPtr root);
+std::shared_ptr<ScopeTree> BuildScopeTree(IRPtr root);
 #endif

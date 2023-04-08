@@ -18,6 +18,7 @@
 #include "ast.h"
 #include "frontend.h"
 #include "ir.h"
+#include "var_definition.h"
 
 namespace polyglot {
 
@@ -86,6 +87,7 @@ class TypeSystem {
   shared_ptr<Scope> current_scope_ptr_;
   bool contain_used_;
   set<IRTYPE> s_basic_unit_;
+  std::shared_ptr<ScopeTree> scope_tree_;
 
  public:
   enum class ValidationError {
@@ -156,8 +158,9 @@ class TypeSystem {
 
   class TypeInferer {
    public:
-    TypeInferer(std::shared_ptr<Frontend> frontend = nullptr)
-        : frontend_(frontend) {}
+    TypeInferer(std::shared_ptr<Frontend> frontend = nullptr,
+                std::shared_ptr<ScopeTree> scope_tree = nullptr)
+        : frontend_(frontend), scope_tree_(scope_tree) {}
     bool Infer(IRPtr &root, int scope_type = NOTEXIST);
     std::shared_ptr<CandidateTypes> GetCandidateTypes(IRPtr &root) {
       if (cache_inference_map_.find(root) == cache_inference_map_.end())
@@ -185,6 +188,7 @@ class TypeSystem {
 
    private:
     std::shared_ptr<Frontend> frontend_;
+    std::shared_ptr<ScopeTree> scope_tree_;
     static map<string, map<string, map<string, int>>> op_id_map_;
     static map<int, vector<OPRule>> op_rules_;
     bool type_inference_new(IRPtr cur, int scope_type = NOTEXIST);
@@ -222,7 +226,7 @@ class TypeSystem {
   void collect_simple_variable_defintion_wt(IRPtr cur);
   void collect_function_definition_wt(IRPtr cur);
   void collect_structure_definition_wt(IRPtr cur, IRPtr root);
-
+  std::optional<SymbolTable> collect_simple_variable_defintion(IRPtr cur);
   bool is_contain_definition(IRPtr cur);
 
   // TODO: It should return the collected definitions instead of bool.

@@ -770,12 +770,12 @@ def genTranslateBegin(class_name):
     ir_handlers = semanticRule["IRHandlers"]
 
     res = []
-    for item in ir_handlers:
-        if item["IRType"] == class_name:
-            res.extend(
-                handler["Function"] + "(" + ", ".join(handler["Args"]) + ");"
-                for handler in item["PreHandler"]
-            )
+    # for item in ir_handlers:
+    #    if item["IRType"] == class_name:
+    #        res.extend(
+    #            handler["Function"] + "(" + ", ".join(handler["Args"]) + ");"
+    #            for handler in item["PreHandler"]
+    #        )
     return "\t" + "\n\t".join(res) + "\n"
 
 
@@ -786,12 +786,12 @@ def genTranslateEnd(class_name):
 
     res = []
     ir_handlers = semanticRule["IRHandlers"]
-    for item in ir_handlers:
-        if item["IRType"] == class_name:
-            res.extend(
-                handler["Function"] + "(" + ", ".join(handler["Args"]) + ");"
-                for handler in item["PostHandler"]
-            )
+    # for item in ir_handlers:
+    #    if item["IRType"] == class_name:
+    #        res.extend(
+    #            handler["Function"] + "(" + ", ".join(handler["Args"]) + ");"
+    #            for handler in item["PostHandler"]
+    #        )
     return "\t" + "\n\t".join(res) + "\n"
 
 

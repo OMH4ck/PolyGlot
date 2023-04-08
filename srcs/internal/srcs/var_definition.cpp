@@ -7,10 +7,8 @@ using namespace std;
 using namespace polyglot;
 #define NOTEXISTS 0
 #define DBG 0
-shared_ptr<Scope> g_scope_current;
-static shared_ptr<Scope> g_scope_root;
-static map<int, shared_ptr<Scope>> scope_id_map;
-static int g_scope;
+// shared_ptr<Scope> g_scope_current;
+// static shared_ptr<Scope> g_scope_root;
 static set<int> all_functions;
 set<int> all_compound_types;
 set<int> all_internal_compound_types;
@@ -88,7 +86,7 @@ map<TYPEID, vector<string>> &get_all_builtin_function_types() {
 
 TYPEID VarType::get_type_id() const { return type_id_; }
 
-shared_ptr<Scope> get_scope_root() { return g_scope_root; }
+// shared_ptr<Scope> get_scope_root() { return g_scope_root; }
 
 void init_convert_chain() {
   // init instance for ALLTYPES, ALLCLASS, ALLFUNCTION ...
@@ -174,7 +172,8 @@ int gen_type_id() {
 void init_internal_type() {
   for (auto i : all_internal_functions) {
     auto ptr = get_function_type_by_type_id(i);
-    g_scope_root->add_definition(ptr->type_id_, ptr->type_name_, 0);
+    // TODO: Fix this.
+    // g_scope_root->add_definition(ptr->type_id_, ptr->type_name_, 0);
   }
 
   /*
@@ -215,10 +214,12 @@ set<int> get_all_class() {
   return res;
 }
 
+/*
 shared_ptr<Scope> get_scope_by_id(int scope_id) {
   assert(scope_id_map.find(scope_id) != scope_id_map.end());
   return scope_id_map[scope_id];
 }
+*/
 
 shared_ptr<VarType> get_type_by_type_id(TYPEID type_id) {
   if (type_map.find(type_id) != type_map.end()) return type_map[type_id];
@@ -390,10 +391,13 @@ shared_ptr<CompoundType> make_compound_type_by_scope(shared_ptr<Scope> scope,
     if (structure_name.size()) {
       vector<TYPEID> tmp;
       auto pfunc = make_function_type(structure_name, res->type_id_, tmp);
+      // TODO: Fix this.
+      /*
       if (DBG)
         cout << "add definition: " << pfunc->type_id_ << ", " << structure_name
              << " to scope " << g_scope_root->scope_id_ << endl;
       g_scope_root->add_definition(pfunc->type_id_, structure_name, 0);
+      */
     }
   }
 
@@ -517,11 +521,6 @@ void Scope::add_definition(int type, const string &var_name, unsigned long id,
   definitions_.AddDefinition({var_name, type, id});
 }
 
-void duck_debug() {
-  if (DBG) cout << "g_scope_root: " << g_scope_root << endl;
-  debug_scope_tree(g_scope_root);
-}
-
 TYPEID least_upper_common_type(TYPEID type1, TYPEID type2) {
   if (type1 == type2) {
     return type1;
@@ -640,56 +639,69 @@ void debug_scope_tree(shared_ptr<Scope> cur) {
   if (DBG) cout << "------------------------" << endl;
 }
 
-void enter_scope(ScopeType scope_type) {
+void ScopeTree::EnterScope(ScopeType scope_type) {
   if (get_scope_translation_flag() == false) return;
-  auto new_scope = gen_scope(scope_type);
-  if (g_scope_root == nullptr) {
+  auto new_scope = GenScope(scope_type);
+  if (g_scope_root_ == nullptr) {
     if (DBG) cout << "set g_scope_root, g_scope_current: " << new_scope << endl;
-    g_scope_root = g_scope_current = new_scope;
+    g_scope_root_ = g_scope_current_ = new_scope;
     // return;
   } else {
-    new_scope->parent_ = g_scope_current;
-    if (DBG) cout << "use g_scope_current: " << g_scope_current << endl;
-    g_scope_current->children_[new_scope->scope_id_] = new_scope;
-    g_scope_current = new_scope;
+    new_scope->parent_ = g_scope_current_;
+    if (DBG) cout << "use g_scope_current: " << g_scope_current_ << endl;
+    g_scope_current_->children_[new_scope->scope_id_] = new_scope;
+    g_scope_current_ = new_scope;
     if (DBG)
-      cout << "[enter]change g_scope_current: " << g_scope_current << endl;
+      cout << "[enter]change g_scope_current: " << g_scope_current_ << endl;
   }
-  if (DBG) cout << "Entering new scope: " << g_scope << endl;
+  if (DBG) cout << "Entering new scope: " << g_scope_id_counter_ << endl;
 }
 
-void exit_scope() {
+void ScopeTree::ExitScope() {
   if (get_scope_translation_flag() == false) return;
-  if (DBG) cout << "Exit scope: " << g_scope_current->scope_id_ << endl;
-  g_scope_current = g_scope_current->parent_.lock();
-  if (DBG) cout << "[exit]change g_scope_current: " << g_scope_current << endl;
+  if (DBG) cout << "Exit scope: " << g_scope_current_->scope_id_ << endl;
+  g_scope_current_ = g_scope_current_->parent_.lock();
+  if (DBG) cout << "[exit]change g_scope_current: " << g_scope_current_ << endl;
   // g_scope_root = nullptr;
 }
 
-shared_ptr<Scope> gen_scope(ScopeType scope_type) {
-  g_scope++;
-  auto res = make_shared<Scope>(g_scope, scope_type);
-  scope_id_map[g_scope] = res;
+ScopePtr ScopeTree::GenScope(ScopeType scope_type) {
+  g_scope_id_counter_++;
+  auto res = make_shared<Scope>(g_scope_id_counter_, scope_type);
+  scope_id_map_[g_scope_id_counter_] = res;
   return res;
 }
 
-void BuildScopeTree(IRPtr root) {
+ScopePtr ScopeTree::GetScopeById(ScopeID id) {
+  if (scope_id_map_.find(id) == scope_id_map_.end()) {
+    return nullptr;
+  }
+  return scope_id_map_[id];
+}
+
+void BuildScopeTreeImpl(IRPtr root, ScopeTree &scope_tree) {
   if (root == nullptr) return;
   if (root->scope_ != kScopeDefault) {
-    enter_scope(root->scope_);
+    scope_tree.EnterScope(root->scope_);
   }
-  if (g_scope_current != nullptr) {
-    root->scope_id_ = g_scope_current->scope_id_;
+  if (scope_tree.GetCurrentScope() != nullptr) {
+    root->scope_id_ = scope_tree.GetCurrentScopeId();
   }
   if (root->left_) {
-    BuildScopeTree(root->left_);
+    BuildScopeTreeImpl(root->left_, scope_tree);
   }
   if (root->right_) {
-    BuildScopeTree(root->right_);
+    BuildScopeTreeImpl(root->right_, scope_tree);
   }
   if (root->scope_ != kScopeDefault) {
-    exit_scope();
+    scope_tree.ExitScope();
   }
+}
+
+std::shared_ptr<ScopeTree> BuildScopeTree(IRPtr root) {
+  auto scope_tree = std::make_shared<ScopeTree>();
+  BuildScopeTreeImpl(root, *scope_tree);
+  return scope_tree;
 }
 
 void CompoundType::remove_unfix(IRPtr ir) {
@@ -844,10 +856,9 @@ void debug_pointer_type(shared_ptr<PointerType> &p) {
 
 void reset_scope() {
   if (DBG) cout << "call reset_scope" << endl;
-  g_scope_current = nullptr;
-  g_scope_root = nullptr;
-  scope_id_map.clear();
-  g_scope = 0;
+  // g_scope_current = nullptr;
+  // g_scope_root = nullptr;
+  // scope_id_map.clear();
 }
 
 void clear_definition_all() {

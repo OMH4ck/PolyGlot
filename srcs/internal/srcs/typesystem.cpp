@@ -327,7 +327,7 @@ void TypeSystem::collect_simple_variable_defintion_wt(IRPtr cur) {
     }
   }
 
-  auto cur_scope = get_scope_by_id(cur->scope_id_);
+  auto cur_scope = scope_tree_->GetScopeById(cur->scope_id_);
   for (auto i = 0; i < name_vec.size(); i++) {
     auto name_ir = name_vec[i];
     spdlog::info("Adding name: {}", name_ir->to_string());
@@ -376,7 +376,7 @@ void TypeSystem::collect_function_definition_wt(IRPtr cur) {
     // assert(num_function_args == 3);
   }
 
-  auto cur_scope = get_scope_by_id(cur->scope_id_);
+  auto cur_scope = scope_tree_->GetScopeById(cur->scope_id_);
   if (function_name.empty()) function_name = "Anoynmous" + to_string(cur->id_);
   auto function_type = make_function_type(function_name, ANYTYPE, arg_types);
   if (DBG) {
@@ -391,7 +391,7 @@ void TypeSystem::collect_function_definition_wt(IRPtr cur) {
 
   auto function_body_ir = search_by_data_type(cur, kDataFunctionBody);
   if (function_body_ir) {
-    cur_scope = get_scope_by_id(function_body_ir->scope_id_);
+    cur_scope = scope_tree_->GetScopeById(function_body_ir->scope_id_);
     for (auto i = 0; i < num_function_args; i++) {
       cur_scope->add_definition(ANYTYPE, arg_names[i], args[i]->id_);
     }
@@ -403,7 +403,7 @@ void TypeSystem::collect_function_definition_wt(IRPtr cur) {
 }
 
 void TypeSystem::collect_structure_definition_wt(IRPtr cur, IRPtr root) {
-  auto cur_scope = get_scope_by_id(cur->scope_id_);
+  auto cur_scope = scope_tree_->GetScopeById(cur->scope_id_);
 
   if (isDefine(cur->data_flag_)) {
     vector<IRPtr> structure_name, strucutre_variable_name, structure_body;
@@ -416,9 +416,9 @@ void TypeSystem::collect_structure_definition_wt(IRPtr cur, IRPtr root) {
     if (structure_name.size() > 0) {
       spdlog::info("not anonymous {}", structure_name[0]->str_val_.value());
       // not anonymous
-      new_compound =
-          make_compound_type_by_scope(get_scope_by_id(struct_body->scope_id_),
-                                      structure_name[0]->str_val_.value());
+      new_compound = make_compound_type_by_scope(
+          scope_tree_->GetScopeById(struct_body->scope_id_),
+          structure_name[0]->str_val_.value());
       current_compound_name = structure_name[0]->str_val_.value();
     } else {
       spdlog::info("anonymous");
@@ -426,7 +426,7 @@ void TypeSystem::collect_structure_definition_wt(IRPtr cur, IRPtr root) {
       static int anonymous_idx = 1;
       string compound_name = string("ano") + std::to_string(anonymous_idx++);
       new_compound = make_compound_type_by_scope(
-          get_scope_by_id(struct_body->scope_id_), compound_name);
+          scope_tree_->GetScopeById(struct_body->scope_id_), compound_name);
       current_compound_name = compound_name;
     }
     spdlog::info("{}", struct_body->to_string());
@@ -435,14 +435,16 @@ void TypeSystem::collect_structure_definition_wt(IRPtr cur, IRPtr root) {
     is_in_class = false;
     auto compound_id = new_compound->type_id_;
     new_compound = make_compound_type_by_scope(
-        get_scope_by_id(struct_body->scope_id_), current_compound_name);
+        scope_tree_->GetScopeById(struct_body->scope_id_),
+        current_compound_name);
   } else {
     if (cur->left_) collect_structure_definition_wt(cur->left_, root);
     if (cur->right_) collect_structure_definition_wt(cur->right_, root);
   }
 }
 
-std::optional<SymbolTable> collect_simple_variable_defintion(IRPtr cur) {
+std::optional<SymbolTable> TypeSystem::collect_simple_variable_defintion(
+    IRPtr cur) {
   string var_type;
 
   vector<IRPtr> ir_vec;
@@ -473,7 +475,7 @@ std::optional<SymbolTable> collect_simple_variable_defintion(IRPtr cur) {
   }
 
   spdlog::debug("Variable type: {}, typeid: {}", var_type, type);
-  auto cur_scope = get_scope_by_id(cur->scope_id_);
+  auto cur_scope = scope_tree_->GetScopeById(cur->scope_id_);
 
   ir_vec.clear();
 
@@ -509,7 +511,7 @@ void TypeSystem::collect_structure_definition(IRPtr cur, IRPtr root) {
   if (cur->data_type_ == kDataClassType) {
     spdlog::debug("to_string: {}", cur->to_string());
     spdlog::debug("[collect_structure_definition] data_type_ = kDataClassType");
-    auto cur_scope = get_scope_by_id(cur->scope_id_);
+    auto cur_scope = scope_tree_->GetScopeById(cur->scope_id_);
 
     if (isDefine(cur->data_flag_)) {  // with structure define
       if (DBG) cout << "data_flag = Define" << endl;
@@ -525,9 +527,9 @@ void TypeSystem::collect_structure_definition(IRPtr cur, IRPtr root) {
       if (structure_name.size() > 0) {
         if (DBG) cout << "not anonymous" << endl;
         // not anonymous
-        new_compound =
-            make_compound_type_by_scope(get_scope_by_id(struct_body->scope_id_),
-                                        structure_name[0]->str_val_.value());
+        new_compound = make_compound_type_by_scope(
+            scope_tree_->GetScopeById(struct_body->scope_id_),
+            structure_name[0]->str_val_.value());
         current_compound_name = structure_name[0]->str_val_.value();
       } else {
         if (DBG) cout << "anonymous" << endl;
@@ -535,13 +537,14 @@ void TypeSystem::collect_structure_definition(IRPtr cur, IRPtr root) {
         static int anonymous_idx = 1;
         string compound_name = string("ano") + std::to_string(anonymous_idx++);
         new_compound = make_compound_type_by_scope(
-            get_scope_by_id(struct_body->scope_id_), compound_name);
+            scope_tree_->GetScopeById(struct_body->scope_id_), compound_name);
         current_compound_name = compound_name;
       }
       create_symbol_table(struct_body);
       auto compound_id = new_compound->type_id_;
       new_compound = make_compound_type_by_scope(
-          get_scope_by_id(struct_body->scope_id_), current_compound_name);
+          scope_tree_->GetScopeById(struct_body->scope_id_),
+          current_compound_name);
 
       // get all class variable define unit by finding kDataDeclarator.
       vector<IRPtr> strucutre_variable_unit;
@@ -749,7 +752,7 @@ void TypeSystem::collect_function_definition(IRPtr cur) {
     if (DBG) cout << get_type_by_type_id(i)->type_name_ << endl;
   }
 
-  auto cur_scope = get_scope_by_id(cur->scope_id_);
+  auto cur_scope = scope_tree_->GetScopeById(cur->scope_id_);
   if (return_type) {
     auto function_ptr =
         make_function_type(function_name_str, return_type, arg_types);
@@ -761,7 +764,7 @@ void TypeSystem::collect_function_definition(IRPtr cur) {
 
   auto function_body = search_by_data_type(cur, kDataFunctionBody);
   if (function_body) {
-    cur_scope = get_scope_by_id(function_body->scope_id_);
+    cur_scope = scope_tree_->GetScopeById(function_body->scope_id_);
     for (auto i = 0; i < arg_types.size(); i++) {
       cur_scope->add_definition(arg_types[i], arg_names[i], arg_ids[i]);
     }
@@ -1090,7 +1093,7 @@ bool TypeSystem::TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
 int TypeSystem::TypeInferer::locate_defined_variable_by_name(
     const string &var_name, int scope_id) {
   int result = NOTEXIST;
-  auto current_scope = get_scope_by_id(scope_id);
+  auto current_scope = scope_tree_->GetScopeById(scope_id);
   while (current_scope) {
     // if(DBG) cout <<"Searching scope "<< current_scope->scope_id_ << endl;
     auto def = current_scope->definitions_.GetDefinition(var_name);
@@ -1106,7 +1109,7 @@ int TypeSystem::TypeInferer::locate_defined_variable_by_name(
 set<int> TypeSystem::TypeInferer::collect_usable_type(IRPtr cur) {
   set<int> result;
   auto ir_id = cur->id_;
-  auto current_scope = get_scope_by_id(cur->scope_id_);
+  auto current_scope = scope_tree_->GetScopeById(cur->scope_id_);
   while (current_scope) {
     if (DBG)
       cout << "Collecting scope id: " << current_scope->scope_id_ << endl;
@@ -1164,7 +1167,7 @@ vector<map<int, vector<string>>> TypeSystem::collect_all_var_definition_by_type(
   map<int, vector<string>> pointer_types;
   auto cur_scope_id = cur->scope_id_;
   auto ir_id = cur->id_;
-  auto current_scope = get_scope_by_id(cur_scope_id);
+  auto current_scope = scope_tree_->GetScopeById(cur_scope_id);
   while (current_scope) {
     // if(DBG) cout <<"Searching scope "<< current_scope->scope_id_ << endl;
     if (current_scope->definitions_.GetTable().size()) {
@@ -2189,13 +2192,13 @@ bool TypeSystem::validate(IRPtr &root) {
     set_scope_translation_flag(true);
     new_root = frontend_->TranslateToIR(root->to_string());
     if (new_root == nullptr) return false;
-    BuildScopeTree(new_root);
+    scope_tree_ = BuildScopeTree(new_root);
     root = new_root;
   } else {
     set_scope_translation_flag(true);
     new_root = frontend_->TranslateToIR(root->to_string());
     if (new_root == nullptr) return false;
-    BuildScopeTree(new_root);
+    scope_tree_ = BuildScopeTree(new_root);
     root = new_root;
     extract_struct_after_mutation(root);
   }
@@ -2215,6 +2218,7 @@ bool TypeSystem::validate(IRPtr &root) {
   }
 
   // cache_inference_map_.clear();
+  scope_tree_ = nullptr;
   clear_definition_all();
   set_scope_translation_flag(false);
 
@@ -2410,7 +2414,7 @@ OPRule TypeSystem::TypeInferer::parse_op_rule(string s) {
 
 /*
 bool TypeSystem::insert_definition(int scope_id, int type_id, string var_name) {
-  auto scope_ptr = get_scope_by_id(scope_id);
+  auto scope_ptr = scope_tree_->GetScopeById(scope_id);
   auto type_ptr = get_type_by_type_id(type_id);
   IRPtr insert_target = nullptr;
 
