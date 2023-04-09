@@ -9,10 +9,11 @@ set(ANTLR4CPP_JAR_LOCATION
 message("Build command: ${CMAKE_MAKE_PROGRAM}")
 
 # Currently support only one grammar file. TODO: Support multiple grammar files.
+# set(GRAMMAR_FILE ${CMAKE_CURRENT_SOURCE_DIR}/Lua.g4)
 set(GRAMMAR_FILE ${CMAKE_CURRENT_SOURCE_DIR}/SimpleLang.g4)
 
 file(STRINGS ${GRAMMAR_FILE} file_contents)
-string(REGEX MATCH "^grammar ([A-Za-z0-9]+)" search_result "${file_contents}")
+string(REGEX MATCH "grammar ([A-Za-z0-9]+)" search_result "${file_contents}")
 
 if(search_result)
   message("Search result: ${CMAKE_MATCH_1}")

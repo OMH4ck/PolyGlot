@@ -40,7 +40,8 @@ OneIR ExtractOneIR(std::stack<IM>& stk) {
       if (std::holds_alternative<std::nullopt_t>(one_ir.left) &&
           std::holds_alternative<std::nullopt_t>(one_ir.op_prefix)) {
         one_ir.op_prefix = im;
-      } else if (std::holds_alternative<std::nullopt_t>(one_ir.op_middle)) {
+      } else if (std::holds_alternative<std::nullopt_t>(one_ir.op_middle) &&
+                 std::holds_alternative<std::nullopt_t>(one_ir.right)) {
         one_ir.op_middle = im;
       } else if (std::holds_alternative<std::nullopt_t>(one_ir.op_suffix)) {
         one_ir.op_suffix = im;
@@ -74,16 +75,25 @@ IRPtr TranslateNode(tree::ParseTree* node, PolyGlotGrammarParser* parser) {
   } else if(ctx->isIntLiteral) {
     stk.push(std::make_shared<IR>((IRTYPE)ctx->getRuleIndex(), std::stoi(ctx->getText())));
   } else {
+    if(node->children.size() == 0){
+      return nullptr;
+    }
     std::stack<IM> tmp_stk;
     for (auto iter = node->children.begin(); iter != node->children.end();
          ++iter) {
       if ((*iter)->getTreeType() == antlr4::tree::ParseTreeType::TERMINAL) {
-        //std::cout << "terminal: " << (*iter)->getText() << "\n";
-        tmp_stk.push((*iter)->getText());
+        if((*iter)->getText() != "<EOF>"){
+          std::cout << "terminal: " << (*iter)->getText() << "\n";
+          tmp_stk.push((*iter)->getText());
+        }
       } else {
-        tmp_stk.push(TranslateNode(*iter, parser));
+        auto child_ir = TranslateNode(*iter, parser);
+        if(child_ir){
+          tmp_stk.push(child_ir);
+        }
       }
     }
+    assert(!tmp_stk.empty());
     while(!tmp_stk.empty()){
       stk.push(tmp_stk.top());
       tmp_stk.pop();
@@ -111,16 +121,18 @@ IRPtr TranslateNode(tree::ParseTree* node, PolyGlotGrammarParser* parser) {
                         ? std::get<IRPtr>(one_ir.right)
                         : nullptr;
 
-
-      //std::cout << "op_prefix: " << op_prefix << "\n";
-      //std::cout << "op_middle: " << op_middle << "\n";
-      //std::cout << "op_suffix: " << op_suffix << "\n";
+      /*
+      std::cout << "Internal:" << std::endl;
+      std::cout << "op_prefix: " << op_prefix << "\n";
+      std::cout << "op_middle: " << op_middle << "\n";
+      std::cout << "op_suffix: " << op_suffix << "\n";
       if(left){
-      //std::cout << "left: " << left->to_string() << "\n";
+      std::cout << "left: " << left->to_string() << "\n";
       }
       if(right){
-      //cout << "right: " << right->to_string() << "\n";
+      cout << "right: " << right->to_string() << "\n";
       }
+      */
       assert(right == nullptr || left != nullptr);
       if (stk.empty()) {
         stk.push(
@@ -147,6 +159,24 @@ IRPtr TranslateNode(tree::ParseTree* node, PolyGlotGrammarParser* parser) {
   if (ctx->GetScopeType() != kScopeDefault) {
     new_ir->scope_ = ctx->GetScopeType();
   }
+  /*
+  std::cout << "visiting node: " << node->toStringTree(parser) << "\n";
+  if(new_ir->left_){
+    std::cout << "left: " << new_ir->left_->to_string() << "\n";
+  }else {
+    std::cout << "left: null\n";
+  }
+  if(new_ir->right_){
+    std::cout << "right: " << new_ir->right_->to_string() << "\n";
+  }else {
+    std::cout << "right: null\n";
+  }
+  if(new_ir->op_){
+    std::cout << "prefix" << new_ir->op_->prefix_ << "\n";
+    std::cout << "middle" << new_ir->op_->middle_ << "\n";
+    std::cout << "suffix" << new_ir->op_->suffix_ << "\n";
+  }
+  */
   return new_ir;
 }
 

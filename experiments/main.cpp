@@ -10,9 +10,7 @@
 //  Created by Mike Lischke on 13.03.16.
 //
 
-#include "SimpleLangBaseVisitor.h"
-#include "SimpleLangLexer.h"
-#include "SimpleLangParser.h"
+//#include "PolyGlotGrammarBaseVisitor.h"
 #include "antlr4-runtime.h"
 // #include "cus.h"
 #include <iostream>
@@ -21,16 +19,17 @@
 #include <variant>
 
 #include "custom_rule_context.h"
+#include "generated_header.h"
 #include "ir_translater.h"
 
-using namespace antlrcpptest;
 using namespace antlr4;
+using namespace antlrcpptest;
 
-class CustomExprVisitor : public SimpleLangBaseVisitor {
+class CustomExprVisitor : public PolyGlotGrammarBaseVisitor {
  public:
   virtual antlrcpp::Any visitChildren(antlr4::tree::ParseTree* node) override {
     std::cout << "Child number: " << node->children.size() << std::endl;
-    auto res = SimpleLangBaseVisitor::visitChildren(node);
+    auto res = PolyGlotGrammarBaseVisitor::visitChildren(node);
     std::cout << "Visiting node: " << node->getText() << std::endl;
     CustomRuleContext* ctx = (CustomRuleContext*)node;
     std::cout << "Atribute: " << ctx->customAttribute << std::endl;
@@ -45,10 +44,10 @@ class CustomExprVisitor : public SimpleLangBaseVisitor {
     return res;
   }
 
-  CustomExprVisitor(SimpleLangParser* parser) : parser_(parser) {}
+  CustomExprVisitor(PolyGlotGrammarParser* parser) : parser_(parser) {}
 
  private:
-  SimpleLangParser* parser_;
+  PolyGlotGrammarParser* parser_;
 };
 
 // DFS visit the parse tree
@@ -61,6 +60,11 @@ void visitParseTree(tree::ParseTree* node, antlr4::Parser* parser) {
     auto token = (antlr4::tree::TerminalNode*)node;
     std::cout << token->getSymbol()->getType() << std::endl;
     std::cout << " is a terminal node." << std::endl;
+    return;
+  }
+  if (node->getTreeType() != antlr4::tree::ParseTreeType::RULE) {
+    assert(node->getTreeType() == antlr4::tree::ParseTreeType::ERROR);
+    std::cout << "Error" << std::endl;
     return;
   }
 
@@ -79,6 +83,7 @@ void visitParseTree(tree::ParseTree* node, antlr4::Parser* parser) {
 }
 
 int main(int, const char**) {
+  /*
   std::string a = R"V0G0N(
   STRUCT c {
   INT a;
@@ -87,8 +92,15 @@ int main(int, const char**) {
   STRUCT d e = f;
   };
   )V0G0N";
+  */
+  std::string a = R"V0G0N(
+    f=load(function() end)
+    interesting={}
+    interesting[0]=string.rep("A",512)
+    debug.upvaluejoin(f,1,f,1)
+  )V0G0N";
   ANTLRInputStream input(a);
-  SimpleLangLexer lexer(&input);
+  PolyGlotGrammarLexer lexer(&input);
   CommonTokenStream tokens(&lexer);
 
   tokens.fill();
@@ -96,7 +108,7 @@ int main(int, const char**) {
     std::cout << token->toString() << std::endl;
   }
 
-  SimpleLangParser parser(&tokens);
+  PolyGlotGrammarParser parser(&tokens);
   tree::ParseTree* tree = parser.program();
 
   std::cout << tree->toStringTree(&parser) << std::endl << std::endl;
@@ -107,5 +119,8 @@ int main(int, const char**) {
 
   std::cout << "Test translation" << std::endl;
   IRPtr ir = TranslateToIR(a);
+  std::cout << ir->to_string() << std::endl;
+  ir = TranslateToIR(ir->to_string());
+  assert(ir);
   return 0;
 }
