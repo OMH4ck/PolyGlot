@@ -18,7 +18,7 @@ std::string_view PolyGlotMutator::get_next_test_case() {
 
 void PolyGlotMutator::add_to_library(const char *mem) {
   if (auto ir = g_frontend->TranslateToIR(mem)) {
-    g_mutator.add_ir_to_library(ir);
+    g_mutator.AddIRToLibrary(ir);
   }
 }
 
@@ -33,7 +33,7 @@ size_t PolyGlotMutator::generate(const char *test_case) {
     return 0;
   }
 
-  mutated_tree = g_mutator.mutate_all(ir_set);
+  mutated_tree = g_mutator.MutateIRs(ir_set);
   ;
 
   for (auto &ir : mutated_tree) {

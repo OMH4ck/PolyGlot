@@ -15,22 +15,20 @@ namespace mutation {
 using std::map;
 using std::set;
 
+// TODO: Define how we do the mutation.
+class MutationStrategy {};
+
 class Mutator {
  public:
   Mutator(std::shared_ptr<Frontend> frontend = nullptr);
-  ~Mutator() {
-    for (auto &k : ir_library_) {
-      for (auto ir : k.second) {
-        ;
-      }
-    }
-  }
+  vector<IRPtr> MutateIRs(vector<IRPtr> &v_ir_collector);
+  vector<IRPtr> MutateIR(IRPtr input);
+  void AddIRToLibrary(IRPtr);
 
-  vector<IRPtr> mutate_all(vector<IRPtr> &v_ir_collector);
-  vector<IRPtr> mutate(IRPtr input);
-  void add_ir_to_library(IRPtr);
-  bool init_ir_library_from_a_file(string filename);
-  void extract_struct(IRPtr);  // Done
+  // This should be long to IR?
+  void extract_struct(IRPtr);
+  [[deprecated("This seems redundant, will be removed soon")]] bool
+  init_ir_library_from_a_file(string filename);
 
  private:
   std::shared_ptr<Frontend> frontend_;

@@ -94,7 +94,7 @@ bool Mutator::should_mutate(IRPtr cur) {
   return true;
 }
 
-vector<IRPtr> Mutator::mutate_all(vector<IRPtr> &irs_to_mutate) {
+vector<IRPtr> Mutator::MutateIRs(vector<IRPtr> &irs_to_mutate) {
   vector<IRPtr> res;
   std::unordered_set<unsigned long> res_hash;
   IRPtr root = irs_to_mutate.back();
@@ -114,7 +114,7 @@ vector<IRPtr> Mutator::mutate_all(vector<IRPtr> &irs_to_mutate) {
     // std::cout << "Mutating one, " << irs_to_mutate.size() << ", idx: " <<
     // counter << std::endl;
     spdlog::debug("Mutating type: {}", frontend_->GetIRTypeStr(ir->type_));
-    vector<IRPtr> new_variants = mutate(ir);
+    vector<IRPtr> new_variants = MutateIR(ir);
 
     for (IRPtr i : new_variants) {
       IRPtr new_ir_tree = deep_copy_with_record(root, ir);
@@ -142,7 +142,7 @@ vector<IRPtr> Mutator::mutate_all(vector<IRPtr> &irs_to_mutate) {
   return res;
 }
 
-void Mutator::add_ir_to_library(IRPtr cur) {
+void Mutator::AddIRToLibrary(IRPtr cur) {
   extract_struct(cur);
 
   add_ir_to_library_limited(cur);
@@ -199,12 +199,12 @@ bool Mutator::init_ir_library_from_a_file(string filename) {
     return false;
   }
 
-  add_ir_to_library(res);
+  AddIRToLibrary(res);
   cout << "init " << filename << " success" << endl;
   return true;
 }
 
-vector<IRPtr> Mutator::mutate(IRPtr input) {
+vector<IRPtr> Mutator::MutateIR(IRPtr input) {
   vector<IRPtr> res;
 
   if (!lucky_enough_to_be_mutated(input->mutated_times_)) {

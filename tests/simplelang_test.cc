@@ -113,7 +113,7 @@ TEST_F(MutatorTestF, MutateGenerateDifferentTestCases) {
     // program_root->deep_delete();
     vector<IRPtr> ir_set = collect_all_ir(root);
 
-    auto mutated_irs = mutator.mutate_all(ir_set);
+    auto mutated_irs = mutator.MutateIRs(ir_set);
     for (auto& ir : mutated_irs) {
       unique_test_cases.insert(ir->to_string());
     }
@@ -129,7 +129,7 @@ TEST_F(MutatorTestF, MutateGenerateParsableTestCases) {
     auto root = frontend->TranslateToIR(test_case.data());
     std::vector<IRPtr> ir_set = collect_all_ir(root);
 
-    auto mutated_irs = mutator.mutate_all(ir_set);
+    auto mutated_irs = mutator.MutateIRs(ir_set);
     for (auto& ir : mutated_irs) {
       ASSERT_TRUE(frontend->Parsable(ir->to_string()));
     }
