@@ -12,7 +12,7 @@
 
 //#include "ast.h"
 #include "custom_rule_context.h"
-#include "define.h"
+// #include "define.h"
 #include "ir.h"
 //#include "var_definition.h"
 
@@ -137,9 +137,9 @@ IRPtr TranslateNode(tree::ParseTree* node, PolyGlotGrammarParser* parser) {
       if (stk.empty()) {
         stk.push(
             IRPtr(new IR(static_cast<IRTYPE>(ctx->getRuleIndex()),
-                         OP3(op_prefix, op_middle, op_suffix), left, right)));
+                         std::make_shared<IROperator>(op_prefix, op_middle, op_suffix), left, right)));
       } else {
-        stk.push(IRPtr(new IR(kUnknown, OP3(op_prefix, op_middle, op_suffix),
+        stk.push(IRPtr(new IR(kUnknown, std::make_shared<IROperator>(op_prefix, op_middle, op_suffix),
                               left, right)));
       }
     } while (stk.size() > 1);

@@ -5,7 +5,7 @@
 #include <optional>
 
 #include "config_misc.h"
-#include "define.h"
+// #include "define.h"
 #include "frontend.h"
 #include "spdlog/spdlog.h"
 #include "utils.h"

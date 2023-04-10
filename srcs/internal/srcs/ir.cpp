@@ -5,7 +5,7 @@
 
 #include "absl/strings/str_cat.h"
 //#include "config_misc.h"
-#include "define.h"
+// #include "define.h"
 #include "utils.h"
 //#include "typesystem.h"
 //#include "utils.h"
@@ -70,9 +70,10 @@ IR::IR(const IRPtr ir, IRPtr left, IRPtr right) {
   // STORE_IR_SCOPE();
   this->type = ir->type;
   if (ir->op != nullptr)
-    this->op = OP3(ir->op->prefix, ir->op->middle, ir->op->suffix);
+    this->op = std::make_shared<IROperator>(ir->op->prefix, ir->op->middle,
+                                            ir->op->suffix);
   else {
-    this->op = OP0();
+    this->op = std::make_shared<IROperator>();
   }
   this->left_child = left;
   this->right_child = right;

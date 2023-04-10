@@ -8,7 +8,7 @@
 #include <set>
 #include <vector>
 
-#include "define.h"
+// #include "define.h"
 #include "ir.h"
 #include "utils.h"
 

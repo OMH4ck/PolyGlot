@@ -10,8 +10,6 @@
 #include <string>
 #include <vector>
 
-#include "define.h"
-
 using namespace std;
 // HEADER_BEGIN
 
