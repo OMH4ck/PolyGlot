@@ -171,7 +171,7 @@ void init_basic_types();
 void forward_add_compound_type(std::string &structure_name);
 // std::shared_ptr<Scope> get_scope_by_id(int);
 std::shared_ptr<CompoundType> make_compound_type_by_scope(
-    std::shared_ptr<Scope> scope, std::string &structure_name);
+    std::shared_ptr<Scope> scope, std::string structure_name);
 std::shared_ptr<FunctionType> make_function_type_by_scope(
     std::shared_ptr<Scope> scope);
 std::shared_ptr<FunctionType> make_function_type(std::string &function_name,

@@ -432,16 +432,16 @@ void Mutator::extract_struct(IRPtr root) {
 */
   // TODO: Verify whether this should be == or !=.
   if (root->data_type == kDataWhatever) {
-    root->str_val = "x";
+    root->data = "x";
     return;
   }
   // #endif
   if (string_types_.find(type) != string_types_.end()) {
-    root->str_val = "'x'";
+    root->data = "'x'";
   } else if (int_types_.find(type) != int_types_.end()) {
-    root->int_val = 1;
+    root->data = 1;
   } else if (float_types_.find(type) != float_types_.end()) {
-    root->float_val = 1.0;
+    root->data = 1.0;
   }
 }
 

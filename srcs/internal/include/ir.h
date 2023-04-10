@@ -8,6 +8,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <variant>
 #include <vector>
 
 using namespace std;
@@ -92,17 +93,8 @@ class IR {
   IR(IRTYPE type, std::shared_ptr<IROperator> op, IRPtr left, IRPtr right);
 
   IR(IRTYPE type, string str_val);
-
   IR(IRTYPE type, int int_val);
-
-  IR(IRTYPE type, double f_val, DataType data_type, ScopeType scope,
-     DataFlag flag);
-
-  /*
-  IR(IRTYPE type, std::shared_ptr<IROperator> op, IRPtr left, IRPtr right,
-     std::optional<double> f_val, std::optional<string> str_val,
-     ScopeType scope, DATAFLAG flag);
-  */
+  IR(IRTYPE type, double f_val);
 
   IR(const IR& ir) = default;
 
@@ -110,10 +102,20 @@ class IR {
 
   std::vector<IRPtr> collect_children();
 
-  // TODO: Use std::variant
-  std::optional<double> float_val;
-  std::optional<int> int_val;
-  std::optional<string> str_val;
+  std::variant<std::monostate, std::string, int, double> data;
+
+  bool ContainString() const {
+    return std::holds_alternative<std::string>(data);
+  }
+  bool ContainInt() const { return std::holds_alternative<int>(data); }
+  bool ContainFloat() const { return std::holds_alternative<double>(data); }
+  bool ContainData() const {
+    return !std::holds_alternative<std::monostate>(data);
+  }
+
+  std::string GetString() const { return std::get<std::string>(data); }
+  int GetInt() const { return std::get<int>(data); }
+  double GetFloat() const { return std::get<double>(data); }
 
   ScopeType scope_type = kScopeDefault;
   unsigned long scope_id;

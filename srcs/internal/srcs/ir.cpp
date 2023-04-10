@@ -21,7 +21,7 @@ IR::IR(IRTYPE type, std::shared_ptr<IROperator> op, IRPtr left, IRPtr right)
 
 IR::IR(IRTYPE type, string str_val)
     : type(type),
-      str_val(str_val),
+      data(str_val),
       op(nullptr),
       left_child(nullptr),
       right_child(nullptr) {
@@ -30,7 +30,7 @@ IR::IR(IRTYPE type, string str_val)
 
 IR::IR(IRTYPE type, int int_val)
     : type(type),
-      int_val(int_val),
+      data(int_val),
       left_child(nullptr),
       op(nullptr),
       right_child(nullptr),
@@ -38,16 +38,13 @@ IR::IR(IRTYPE type, int int_val)
   GEN_NAME();
 }
 
-IR::IR(IRTYPE type, double f_val, DataType data_type, ScopeType scope,
-       DataFlag flag)
+IR::IR(IRTYPE type, double f_val)
     : type(type),
-      float_val(f_val),
+      data(f_val),
       left_child(nullptr),
       op(nullptr),
       right_child(nullptr),
-      data_type(kDataWhatever),
-      scope_type(scope),
-      data_flag(flag) {
+      data_type(kDataWhatever) {
   GEN_NAME();
 }
 
@@ -77,9 +74,7 @@ IR::IR(const IRPtr ir, IRPtr left, IRPtr right) {
   }
   this->left_child = left;
   this->right_child = right;
-  this->str_val = ir->str_val;
-  this->int_val = ir->int_val;
-  this->float_val = ir->float_val;
+  this->data = ir->data;
   this->data_type = ir->data_type;
   this->scope_type = ir->scope_type;
   this->data_flag = ir->data_flag;
@@ -108,12 +103,14 @@ string IR::to_string() {
 }
 
 void IR::to_string_core(std::string &res) {
-  if (float_val.has_value()) {
-    absl::StrAppend(&res, float_val.value());
-  } else if (int_val.has_value()) {
-    absl::StrAppend(&res, int_val.value());
-  } else if (str_val.has_value()) {
-    absl::StrAppend(&res, str_val.value());
+  if (ContainData()) {
+    if (ContainFloat()) {
+      absl::StrAppend(&res, GetFloat());
+    } else if (ContainInt()) {
+      absl::StrAppend(&res, GetInt());
+    } else if (ContainString()) {
+      absl::StrAppend(&res, GetString());
+    }
   } else {
     if (op != nullptr) {
       absl::StrAppend(&res, op->prefix, " ");
@@ -225,7 +222,7 @@ bool contain_fixme(IRPtr ir) {
     return res;
   }
 
-  if (ir->str_val.has_value() && ir->str_val == "FIXME") {
+  if (ir->ContainString() && ir->GetString() == "FIXME") {
     return true;
   }
 

@@ -362,8 +362,8 @@ void forward_add_compound_type(string &structure_name) {
   res->base_type_.push_back(all_compound_type);
 }
 
-shared_ptr<CompoundType> make_compound_type_by_scope(shared_ptr<Scope> scope,
-                                                     string &structure_name) {
+shared_ptr<CompoundType> make_compound_type_by_scope(
+    shared_ptr<Scope> scope, std::string structure_name) {
   shared_ptr<CompoundType> res = nullptr;
 
   auto tid = get_compound_type_id_by_string(structure_name);
