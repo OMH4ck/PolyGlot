@@ -22,6 +22,45 @@
 
 namespace polyglot {
 
+namespace validation {
+
+enum class ValidationError {
+  kSuccess,
+  kUnparseable,
+  kNoSymbolToUse,
+  // And others.
+};
+
+class Scope;
+class ScopeTree;
+class InferenceResult;
+
+// Refactored interfaces
+class Validator {
+ public:
+  // Validate the IR. Return true if the IR is valid.
+  virtual ValidationError Validate(IRPtr &root) = 0;
+  virtual ~Validator() = default;
+};
+
+class SemanticValidator : public Validator {
+ public:
+  ValidationError Validate(IRPtr &root) override;
+
+  // This validation consists of three steps:
+  // 1. It builds the sysmbol table in each scope, which are stored in a
+  // `ScopeTree`.
+  // 2. It infers the types of the IRs that need fixing, which needs the help of
+  // the symbol table.
+  // 3. Fix the IRs.
+  std::shared_ptr<ScopeTree> BuildSymbolTable(IRCPtr &root);
+  std::shared_ptr<InferenceResult> InferType(
+      IRPtr &root, std::shared_ptr<ScopeTree> scope_tree);
+  bool Fix(IRPtr &root, std::shared_ptr<InferenceResult> inference_result,
+           std::shared_ptr<ScopeTree> scope_tree);
+};
+}  // namespace validation
+
 namespace typesystem {
 
 using std::map;
@@ -34,10 +73,6 @@ typedef int VALUETYPE;
 typedef int OPTYPE;
 using TYPEID = int;
 class Scope;
-
-// extern unsigned long type_fix_framework_fail_counter;
-// extern unsigned long top_fix_fail_counter;
-// extern unsigned long top_fix_success_counter;
 
 enum FIXORDER {
   LEFT_TO_RIGHT = 0,
@@ -90,12 +125,6 @@ class TypeSystem {
   std::shared_ptr<ScopeTree> scope_tree_;
 
  public:
-  enum class ValidationError {
-    kSuccess,
-    kUnparseable,
-    kNoSymbolToUse,
-  };
-
   TypeSystem(std::shared_ptr<Frontend> frontend = nullptr);
   // TODO: Return ValidationError instead of bool
   // The validation consists of three steps:

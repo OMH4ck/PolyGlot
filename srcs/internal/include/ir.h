@@ -40,6 +40,7 @@ class IROperator {
 
 class IR;
 typedef shared_ptr<IR> IRPtr;
+typedef shared_ptr<const IR> IRCPtr;
 
 class IR {
  public:
