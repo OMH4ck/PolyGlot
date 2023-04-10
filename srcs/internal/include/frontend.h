@@ -42,7 +42,8 @@ class AntlrFrontend : public Frontend {
  private:
 };
 
-class BisonFrontend : public Frontend {
+class [[deprecated("We should use Antlr frontend instead.")]] BisonFrontend
+    : public Frontend {
  public:
   bool Parsable(std::string input) override;
   IRPtr TranslateToIR(std::string input) override;
