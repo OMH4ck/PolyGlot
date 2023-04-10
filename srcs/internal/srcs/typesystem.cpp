@@ -2148,8 +2148,8 @@ void TypeSystem::extract_struct_after_mutation(IRPtr root) {
         auto save_ir_id = root->left_child->id;
         auto save_scope = root->left_child->scope_id;
         ;
-        root->left_child =
-            std::make_shared<IR>(frontend_->GetStringLiteralType(), "FIXME");
+        root->left_child = std::make_shared<IR>(
+            frontend_->GetStringLiteralType(), std::string("FIXME"));
         root->left_child->scope_id = save_scope;
         root->left_child->id = save_ir_id;
       }

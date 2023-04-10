@@ -26,52 +26,27 @@ static unsigned long id_counter;
   }
 */
 
-IR::IR(IRTYPE type, std::shared_ptr<IROperator> op, IRPtr left, IRPtr right,
-       DATATYPE data_type)
-    : type(type),
-      op(op),
-      left_child(left),
-      right_child(right),
-      data_type(data_type) {
+IR::IR(IRTYPE type, std::shared_ptr<IROperator> op, IRPtr left, IRPtr right)
+    : type(type), op(op), left_child(left), right_child(right) {
   GEN_NAME();
 }
 
-IR::IR(IRTYPE type, string str_val, DATATYPE data_type, ScopeType scope,
-       DATAFLAG flag)
+IR::IR(IRTYPE type, string str_val)
     : type(type),
       str_val(str_val),
       op(nullptr),
       left_child(nullptr),
-      right_child(nullptr),
-      data_type(data_type),
-      scope_type(scope),
-      data_flag(flag) {
+      right_child(nullptr) {
   GEN_NAME();
 }
 
-IR::IR(IRTYPE type, const char *str_val, DATATYPE data_type, ScopeType scope,
-       DATAFLAG flag)
-    : type(type),
-      str_val(str_val),
-      op(nullptr),
-      left_child(nullptr),
-      right_child(nullptr),
-      data_type(data_type),
-      scope_type(scope),
-      data_flag(flag) {
-  GEN_NAME();
-}
-
-IR::IR(IRTYPE type, int int_val, DATATYPE data_type, ScopeType scope,
-       DATAFLAG flag)
+IR::IR(IRTYPE type, int int_val)
     : type(type),
       int_val(int_val),
       left_child(nullptr),
       op(nullptr),
       right_child(nullptr),
-      data_type(kDataWhatever),
-      scope_type(scope),
-      data_flag(flag) {
+      data_type(kDataWhatever) {
   GEN_NAME();
 }
 

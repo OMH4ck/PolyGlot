@@ -44,25 +44,14 @@ typedef shared_ptr<const IR> IRCPtr;
 
 class IR {
  public:
-  IR(IRTYPE type, std::shared_ptr<IROperator> op, IRPtr left = nullptr,
-     IRPtr right = nullptr, DATATYPE data_type = kDataWhatever);
+  IR(IRTYPE type, std::shared_ptr<IROperator> op, IRPtr left, IRPtr right);
 
-  IR(IRTYPE type, string str_val, DATATYPE data_type = kDataWhatever,
-     ScopeType scope = kScopeDefault, DATAFLAG flag = kUse);
-  IR(IRTYPE type, const char* str_val, DATATYPE data_type = kDataWhatever,
-     ScopeType scope = kScopeDefault, DATAFLAG flag = kUse);
+  IR(IRTYPE type, string str_val);
 
-  IR(IRTYPE type, bool b_val, DATATYPE data_type = kDataWhatever,
-     ScopeType scope = kScopeDefault, DATAFLAG flag = kUse);
+  IR(IRTYPE type, int int_val);
 
-  IR(IRTYPE type, unsigned long long_val, DATATYPE data_type = kDataWhatever,
-     ScopeType scope = kScopeDefault, DATAFLAG flag = kUse);
-
-  IR(IRTYPE type, int int_val, DATATYPE data_type = kDataWhatever,
-     ScopeType scope = kScopeDefault, DATAFLAG flag = kUse);
-
-  IR(IRTYPE type, double f_val, DATATYPE data_type = kDataWhatever,
-     ScopeType scope = kScopeDefault, DATAFLAG flag = kUse);
+  IR(IRTYPE type, double f_val, DATATYPE data_type, ScopeType scope,
+     DATAFLAG flag);
 
   IR(IRTYPE type, std::shared_ptr<IROperator> op, IRPtr left, IRPtr right,
      std::optional<double> f_val, std::optional<string> str_val,
@@ -77,7 +66,7 @@ class IR {
   std::optional<int> int_val;
   std::optional<string> str_val;
 
-  ScopeType scope_type;
+  ScopeType scope_type = kScopeDefault;
   unsigned long scope_id;
   DATAFLAG data_flag = kUse;
   DATATYPE data_type = kDataWhatever;
