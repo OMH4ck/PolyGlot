@@ -131,7 +131,7 @@ add_library(
 target_include_directories(polyglot_lib
                            PUBLIC ${CMAKE_SOURCE_DIR}/srcs/internal/include)
 target_include_directories(polyglot_lib PUBLIC ${CMAKE_SOURCE_DIR}/srcs)
-target_compile_options(polyglot_lib PRIVATE -fPIC -Werror)
+target_compile_options(polyglot_lib PRIVATE -fPIC)
 target_link_libraries(polyglot_lib PRIVATE spdlog::spdlog Microsoft.GSL::GSL
                                            absl::str_format)
 target_link_libraries(polyglot_lib PUBLIC ir_lib frontend_lib config_lib mutate_lib)

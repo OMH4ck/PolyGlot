@@ -45,7 +45,7 @@ static inline bool is_leaf(IRPtr r) {
 Mutator::Mutator(std::shared_ptr<Frontend> frontend) {
   srand(time(nullptr));
   if (frontend == nullptr) {
-    frontend_ = std::make_shared<BisonFrontend>();
+    frontend_ = std::make_shared<AntlrFrontend>();
   } else {
     frontend_ = frontend;
   }

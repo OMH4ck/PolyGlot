@@ -61,8 +61,6 @@ PolyGlotMutator *PolyGlotMutator::CreateInstance(
   std::shared_ptr<polyglot::Frontend> frontend = nullptr;
   if (frontend_type == polyglot::FrontendType::kANTLR) {
     frontend = std::make_shared<polyglot::AntlrFrontend>();
-  } else if (frontend_type == polyglot::FrontendType::kBISON) {
-    frontend = std::make_shared<polyglot::BisonFrontend>();
   } else {
     assert(false && "unknown frontend type");
   }

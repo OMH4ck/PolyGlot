@@ -30,16 +30,15 @@ bool Configuration::Init(std::string_view config_file_path) {
     if (config["Frontend"]) {
       std::string frontend_name = config["Frontend"].as<std::string>();
       if (frontend_name == "bison") {
-        frontend_ = std::make_unique<BisonFrontend>();
+        assert(false && "Bison frontend has been deprecated");
       } else if (frontend_name == "antlr") {
         frontend_ = std::make_unique<AntlrFrontend>();
       } else {
-        assert(false);
+        assert(false && "Unknown frontend");
         return false;
       }
     } else {
-      // TODO: By default use bison. Should fix after migration.
-      frontend_ = std::make_unique<BisonFrontend>();
+      frontend_ = std::make_unique<AntlrFrontend>();
     }
     if (config["IsWeakType"]) {
       is_weak_type_ = config["IsWeakType"].as<bool>();

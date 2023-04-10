@@ -6,6 +6,7 @@
 
 #include "config_misc.h"
 #include "define.h"
+#include "frontend.h"
 #include "spdlog/spdlog.h"
 #include "utils.h"
 #include "var_definition.h"
@@ -123,7 +124,7 @@ int gen_id() {
 
 TypeSystem::TypeSystem(std::shared_ptr<Frontend> frontend) {
   if (frontend == nullptr) {
-    frontend_ = std::make_shared<BisonFrontend>();
+    frontend_ = std::make_shared<AntlrFrontend>();
   } else {
     frontend_ = frontend;
   }
