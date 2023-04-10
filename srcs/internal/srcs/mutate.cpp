@@ -16,10 +16,12 @@
 #include <map>
 #include <unordered_set>
 
+#include "absl/random/random.h"
 #include "config_misc.h"
 #include "define.h"
 #include "spdlog/spdlog.h"
 #include "utils.h"
+
 using namespace std;
 
 namespace polyglot {
@@ -42,7 +44,7 @@ static inline bool is_leaf(IRPtr r) {
 
 Mutator::Mutator(std::shared_ptr<Frontend> frontend) {
   srand(time(nullptr));
-  if (frontend_ == nullptr) {
+  if (frontend == nullptr) {
     frontend_ = std::make_shared<BisonFrontend>();
   } else {
     frontend_ = frontend;
@@ -99,9 +101,18 @@ vector<IRPtr> Mutator::mutate_all(vector<IRPtr> &irs_to_mutate) {
 
   auto tmp_str = root->to_string();
   res_hash.insert(hash(tmp_str));
-  for (IRPtr ir : irs_to_mutate) {
-    if (ir == root || !should_mutate(ir)) continue;
+  int counter = 0;
 
+  /*
+  if(irs_to_mutate.size() > 2000){
+    std::cout << "Large test case: " << root->to_string() << std::endl;
+  }
+  */
+  for (IRPtr ir : irs_to_mutate) {
+    counter++;
+    if (ir == root || !should_mutate(ir)) continue;
+    // std::cout << "Mutating one, " << irs_to_mutate.size() << ", idx: " <<
+    // counter << std::endl;
     spdlog::debug("Mutating type: {}", frontend_->GetIRTypeStr(ir->type_));
     vector<IRPtr> new_variants = mutate(ir);
 
@@ -184,6 +195,7 @@ bool Mutator::init_ir_library_from_a_file(string filename) {
 
   auto res = frontend_->TranslateToIR(content);
   if (res == nullptr) {
+    std::cout << "Failed to init " << filename << std::endl;
     return false;
   }
 

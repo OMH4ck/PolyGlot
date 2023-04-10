@@ -25,4 +25,4 @@ cd $SRC/lua
 make
 cp ../fuzz_lua.c .
 $CC $CFLAGS -c fuzz_lua.c -o fuzz_lua.o
-$CXX $CXXFLAGS $LIB_FUZZING_ENGINE fuzz_lua.o -o $OUT/fuzz_lua ./liblua.a
+$CXX $CXXFLAGS -fsanitize=fuzzer fuzz_lua.o -o $OUT/fuzz_lua ./liblua.a

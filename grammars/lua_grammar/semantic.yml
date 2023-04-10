@@ -3,6 +3,7 @@ __comments: ''
 InitFileDir: grammars/lua_grammar/input/
 BuiltinObjFile: ''
 IsWeakType: true
+SyntaxOnly: true
 IRHandlers:
 - IRType: Program
   PreHandler:

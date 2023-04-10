@@ -29,14 +29,28 @@ size_t PolyGlotMutator::generate(const char *test_case) {
     return 0;
   }
   std::vector<IRPtr> ir_set = collect_all_ir(root);
+  if (ir_set.size() > 1500) {
+    return 0;
+  }
 
   mutated_tree = g_mutator.mutate_all(ir_set);
   ;
 
   for (auto &ir : mutated_tree) {
-    if (g_typesystem.validate(ir)) {
-      save_test_cases_.push_back(ir->to_string());
-    };
+    if (polyglot::gen::Configuration::GetInstance().SyntaxOnly()) {
+      std::string ir_str = ir->to_string();
+      if (g_frontend->Parsable(ir_str)) {
+        save_test_cases_.push_back(ir_str);
+      } else {
+        std::cout << "not parsable: " << ir_str << std::endl;
+        std::cout << "Before: " << test_case << std::endl;
+        assert(0);
+      }
+    } else {
+      if (g_typesystem.validate(ir)) {
+        save_test_cases_.push_back(ir->to_string());
+      }
+    }
   }
 
   return save_test_cases_.size();

@@ -70,7 +70,7 @@ explist
 exp
     : 'nil' | 'false' | 'true'
     | number
-    | string
+    | string_literal
     | '...'
     | functiondef
     | prefixexp
@@ -111,7 +111,7 @@ nameAndArgs
     ;
 
 args
-    : '(' explist? ')' | tableconstructor | string
+    : '(' explist? ')' | tableconstructor | string_literal
     ;
 
 functiondef
@@ -170,10 +170,18 @@ operatorPower
     : '^';
 
 number
-    : INT | HEX | FLOAT | HEX_FLOAT
+    : int_literal | float_literal
     ;
 
-string
+int_literal
+    : INT | HEX
+    ;
+
+float_literal
+    : FLOAT | HEX_FLOAT
+    ;
+
+string_literal
     : NORMALSTRING | CHARSTRING | LONGSTRING
     ;
 

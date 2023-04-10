@@ -45,6 +45,7 @@ class Configuration {
   // bool IsIdentifier(IRTYPE type);
 
   std::string GetInitDirPath() const;
+  bool SyntaxOnly() const { return syntax_only_; }
 
  private:
   static Configuration& GetInstanceImpl() {
@@ -59,6 +60,7 @@ class Configuration {
   Configuration& operator=(const Configuration&) = delete;
 
   bool is_init_;
+  bool syntax_only_;
   bool is_weak_type_;
   IRTYPE fix_ir_type_;
   std::string init_dir_path_;

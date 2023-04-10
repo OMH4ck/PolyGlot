@@ -14,7 +14,7 @@ extern "C" {
 void *afl_custom_init(afl_state_t *afl, unsigned int seed) {
   assert(getenv("POLYGLOT_CONFIG"));
   auto result = PolyGlotMutator::CreateInstance(getenv("POLYGLOT_CONFIG"),
-                                                polyglot::FrontendType::kBISON);
+                                                polyglot::FrontendType::kANTLR);
   return result;
 }
 

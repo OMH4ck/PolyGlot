@@ -23,6 +23,7 @@ class Frontend {
   virtual IRTYPE GetFloatLiteralType() = 0;
   virtual IRTYPE GetIdentifierType() = 0;
   virtual IRTYPE GetUnknownType() = 0;
+  virtual FrontendType GetFrontendType() = 0;
 };
 
 class AntlrFrontend : public Frontend {
@@ -36,6 +37,7 @@ class AntlrFrontend : public Frontend {
   IRTYPE GetFloatLiteralType() override;
   IRTYPE GetIdentifierType() override;
   IRTYPE GetUnknownType() override;
+  FrontendType GetFrontendType() override { return FrontendType::kANTLR; }
 
  private:
 };
@@ -51,6 +53,7 @@ class BisonFrontend : public Frontend {
   IRTYPE GetFloatLiteralType() override;
   IRTYPE GetIdentifierType() override;
   IRTYPE GetUnknownType() override;
+  FrontendType GetFrontendType() override { return FrontendType::kBISON; }
 
  private:
 };

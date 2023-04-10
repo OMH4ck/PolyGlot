@@ -26,6 +26,7 @@ bool Configuration::Initialize(std::string_view config_file_path) {
 bool Configuration::Init(std::string_view config_file_path) {
   try {
     YAML::Node config = YAML::LoadFile(config_file_path.data());
+    // TODO: Fix this.
     if (config["Frontend"]) {
       std::string frontend_name = config["Frontend"].as<std::string>();
       if (frontend_name == "bison") {
@@ -129,6 +130,11 @@ bool Configuration::Init(std::string_view config_file_path) {
       built_in_object_file_path_ = config["BuiltinObjFile"].as<std::string>();
     } else {
       assert(false);
+    }
+    if (config["SyntaxOnly"]) {
+      syntax_only_ = config["SyntaxOnly"].as<bool>();
+    } else {
+      syntax_only_ = false;
     }
 
     if (config["BasicTypes"]) {

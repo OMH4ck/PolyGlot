@@ -83,7 +83,7 @@ IRPtr TranslateNode(tree::ParseTree* node, PolyGlotGrammarParser* parser) {
          ++iter) {
       if ((*iter)->getTreeType() == antlr4::tree::ParseTreeType::TERMINAL) {
         if((*iter)->getText() != "<EOF>"){
-          std::cout << "terminal: " << (*iter)->getText() << "\n";
+          // std::cout << "terminal: " << (*iter)->getText() << "\n";
           tmp_stk.push((*iter)->getText());
         }
       } else {
@@ -216,6 +216,9 @@ IRTYPE GetIRTypeByStr(std::string_view type){
       std::string rule_name = parser.getRuleNames()[i];
       type_map[rule_name] = static_cast<IRTYPE>(i);
     }
+  }
+  if(type_map.find(type_str) == type_map.end()){
+    std::cerr << "type_str: " << type_str << "\n";
   }
   assert(type_map.find(type_str) != type_map.end());
   return type_map[type_str];
