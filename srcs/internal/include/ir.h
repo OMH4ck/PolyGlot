@@ -66,31 +66,28 @@ class IR {
 
   IR(IRTYPE type, std::shared_ptr<IROperator> op, IRPtr left, IRPtr right,
      std::optional<double> f_val, std::optional<string> str_val,
-     unsigned int mutated_times, ScopeType scope, DATAFLAG flag);
+     ScopeType scope, DATAFLAG flag);
 
   IR(const IRPtr ir, IRPtr left, IRPtr right);
 
   std::vector<IRPtr> collect_children();
 
+  // TODO: Use std::variant
   std::optional<double> float_val;
   std::optional<int> int_val;
+  std::optional<string> str_val;
 
   ScopeType scope_type;
   unsigned long scope_id;
   DATAFLAG data_flag = kUse;
   DATATYPE data_type = kDataWhatever;
-  int value_type_ = 0;
-  IRTYPE type_;
-
-  std::optional<string> str_val_;
+  IRTYPE type;
 
   std::shared_ptr<IROperator> op = nullptr;
   IRPtr left_child = nullptr;
   IRPtr right_child = nullptr;
-  int operand_num_;
-  unsigned int mutated_times_ = 0;
 
-  unsigned long id_;
+  unsigned long id;
   string to_string();
   string print();
 
