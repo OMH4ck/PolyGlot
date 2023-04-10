@@ -67,17 +67,9 @@ IRPtr Mutator::deep_copy_with_record(const IRPtr root, const IRPtr record) {
     right = deep_copy_with_record(root->right_child,
                                   record);  // no I forget to update here
 
-  std::shared_ptr<IROperator> op = nullptr;
-  if (root->op != nullptr) {
-    op = std::make_shared<IROperator>(root->op->prefix, root->op->middle,
-                                      root->op->suffix);
-  }
-  copy_res =
-      std::make_shared<IR>(root->type, op, left, right, root->float_val,
-                           root->str_val, root->scope_type, root->data_flag);
-
-  copy_res->data_type = root->data_type;
-
+  copy_res = std::make_shared<IR>(*root);
+  copy_res->left_child = left;
+  copy_res->right_child = right;
   if (root == record) {
     this->record_ = copy_res;
   }

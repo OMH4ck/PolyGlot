@@ -53,9 +53,13 @@ class IR {
   IR(IRTYPE type, double f_val, DATATYPE data_type, ScopeType scope,
      DATAFLAG flag);
 
+  /*
   IR(IRTYPE type, std::shared_ptr<IROperator> op, IRPtr left, IRPtr right,
      std::optional<double> f_val, std::optional<string> str_val,
      ScopeType scope, DATAFLAG flag);
+  */
+
+  IR(const IR& ir) = default;
 
   IR(const IRPtr ir, IRPtr left, IRPtr right);
 
