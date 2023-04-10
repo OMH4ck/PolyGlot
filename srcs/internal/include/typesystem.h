@@ -15,7 +15,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include "ast.h"
 #include "frontend.h"
 #include "ir.h"
 #include "var_definition.h"

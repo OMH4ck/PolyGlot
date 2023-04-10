@@ -11,20 +11,8 @@
 //#include "utils.h"
 //#include "var_definition.h"
 
-static bool scope_tranlation = false;
-
 static unsigned long id_counter;
-// name_ = gen_id_name();
 #define GEN_NAME() id = id_counter++;
-
-// TODO: FIX THE SCOPE ID.
-/*
-#define STORE_IR_SCOPE()                          \
-  if (scope_tranlation) {                         \
-    if (g_scope_current == nullptr) return;       \
-    this->scope_id_ = g_scope_current->scope_id_; \
-  }
-*/
 
 IR::IR(IRTYPE type, std::shared_ptr<IROperator> op, IRPtr left, IRPtr right)
     : type(type), op(op), left_child(left), right_child(right) {
@@ -215,14 +203,6 @@ IRPtr locate_define_top_ir(IRPtr root, IRPtr ir) {
   assert(0);
   return nullptr;
 }
-
-void set_scope_translation_flag(bool flag) {
-  scope_tranlation = flag;
-  if (flag == false) {
-    id_counter = 0;
-  }
-}
-bool get_scope_translation_flag() { return scope_tranlation; }
 
 unsigned int calc_node_num(IRPtr root) {
   unsigned int res = 0;

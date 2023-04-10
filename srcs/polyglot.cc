@@ -2,7 +2,6 @@
 
 #include <memory>
 
-#include "ast.h"
 #include "config_misc.h"
 #include "define.h"
 #include "frontend.h"

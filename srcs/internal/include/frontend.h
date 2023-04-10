@@ -1,7 +1,6 @@
 #ifndef __FRONTEND_H__
 #define __FRONTEND_H__
 
-#include "ast.h"
 #include "ir.h"
 
 namespace polyglot {

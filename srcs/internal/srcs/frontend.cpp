@@ -1,39 +1,37 @@
 #include "frontend.h"
 
-#include "ast.h"
-#include "bison_parser.h"
-#include "flex_lexer.h"
-#include "gen_ir.h"
 #include "ir.h"
 #include "ir_translater.h"
 #include "utils.h"
 #include "var_definition.h"
 
 namespace {
+/*
 std::shared_ptr<TopASTNode> parser(string sql) {
-  yyscan_t scanner;
-  YY_BUFFER_STATE state;
-  TopASTNode *p = new TopASTNode();
-  reset_scope();
+yyscan_t scanner;
+YY_BUFFER_STATE state;
+TopASTNode *p = new TopASTNode();
+reset_scope();
 
-  if (ff_lex_init(&scanner)) {
-    return nullptr;
-  }
-  state = ff__scan_string(sql.c_str(), scanner);
-
-  int ret = ff_parse(p, scanner);
-
-  ff__delete_buffer(state, scanner);
-  ff_lex_destroy(scanner);
-
-  if (ret != 0) {
-    p->deep_delete();
-    return nullptr;
-  }
-
-  std::shared_ptr<TopASTNode> p1(p);
-  return p1;
+if (ff_lex_init(&scanner)) {
+  return nullptr;
 }
+state = ff__scan_string(sql.c_str(), scanner);
+
+int ret = ff_parse(p, scanner);
+
+ff__delete_buffer(state, scanner);
+ff_lex_destroy(scanner);
+
+if (ret != 0) {
+  p->deep_delete();
+  return nullptr;
+}
+
+std::shared_ptr<TopASTNode> p1(p);
+return p1;
+}
+*/
 }  // namespace
 namespace polyglot {
 bool AntlrFrontend::Parsable(std::string input) { return true; }

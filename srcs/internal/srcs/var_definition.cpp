@@ -1,6 +1,5 @@
 #include "var_definition.h"
 
-#include "ast.h"
 #include "config_misc.h"
 
 using namespace std;
@@ -640,7 +639,7 @@ void debug_scope_tree(shared_ptr<Scope> cur) {
 }
 
 void ScopeTree::EnterScope(ScopeType scope_type) {
-  if (get_scope_translation_flag() == false) return;
+  // if (get_scope_translation_flag() == false) return;
   auto new_scope = GenScope(scope_type);
   if (g_scope_root_ == nullptr) {
     if (DBG) cout << "set g_scope_root, g_scope_current: " << new_scope << endl;
@@ -658,7 +657,7 @@ void ScopeTree::EnterScope(ScopeType scope_type) {
 }
 
 void ScopeTree::ExitScope() {
-  if (get_scope_translation_flag() == false) return;
+  // if (get_scope_translation_flag() == false) return;
   if (DBG) cout << "Exit scope: " << g_scope_current_->scope_id_ << endl;
   g_scope_current_ = g_scope_current_->parent_.lock();
   if (DBG) cout << "[exit]change g_scope_current: " << g_scope_current_ << endl;

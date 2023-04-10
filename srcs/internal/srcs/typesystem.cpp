@@ -81,9 +81,9 @@ void TypeSystem::init_one_internal_obj(string filename) {
   assert(read(fd, content, 0x3fff) > 0);
   close(fd);
 
-  set_scope_translation_flag(true);
+  // set_scope_translation_flag(true);
   auto res = frontend_->TranslateToIR(content);
-  set_scope_translation_flag(false);
+  // set_scope_translation_flag(false);
   if (!res) {
     spdlog::error("[init_internal_obj] parse {} failed", filename);
     return;
@@ -2197,13 +2197,13 @@ bool TypeSystem::validate(IRPtr &root) {
     root = new_root;
     extract_struct_after_mutation(root);
 
-    set_scope_translation_flag(true);
+    // set_scope_translation_flag(true);
     new_root = frontend_->TranslateToIR(root->to_string());
     if (new_root == nullptr) return false;
     scope_tree_ = BuildScopeTree(new_root);
     root = new_root;
   } else {
-    set_scope_translation_flag(true);
+    // set_scope_translation_flag(true);
     new_root = frontend_->TranslateToIR(root->to_string());
     if (new_root == nullptr) return false;
     scope_tree_ = BuildScopeTree(new_root);
@@ -2228,7 +2228,7 @@ bool TypeSystem::validate(IRPtr &root) {
   // cache_inference_map_.clear();
   scope_tree_ = nullptr;
   clear_definition_all();
-  set_scope_translation_flag(false);
+  // set_scope_translation_flag(false);
 
   return res;
 #endif

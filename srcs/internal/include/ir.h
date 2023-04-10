@@ -10,13 +10,66 @@
 #include <string>
 #include <vector>
 
-#include "ast.h"
 #include "define.h"
 
 using namespace std;
 // HEADER_BEGIN
 
-#define DONTGENNAME 1
+using IRTYPE = unsigned int;
+
+#define ALLDATATYPE(V)       \
+  V(DataWhatever)            \
+  V(DataFunctionType)        \
+  V(DataClassType)           \
+  V(DataInitiator)           \
+  V(DataFunctionBody)        \
+  V(DataFunctionArg)         \
+  V(DataFunctionReturnValue) \
+  V(DataFunctionName)        \
+  V(DataVarDefine)           \
+  V(DataClassName)           \
+  V(DataPointer)             \
+  V(DataStructBody)          \
+  V(DataDeclarator)          \
+  V(DataVarType)             \
+  V(DataFixUnit)             \
+  V(DataVarName)             \
+  V(DataVarScope)            \
+  V(DataDefault)
+
+enum DATATYPE {
+#define DECLARE_TYPE(v) k##v,
+  ALLDATATYPE(DECLARE_TYPE)
+#undef DECLARE_TYPE
+};
+
+enum DATAFLAG {
+  kDefine = 0x1,
+  kUndefine = 0x2,
+  kGlobal = 0x4,
+  kUse = 0x8,
+  kMapToClosestOne = 0x10,
+  kMapToAll = 0x20,
+  kReplace = 0x40,
+  kAlias = 0x80,
+  kNoSplit = 0x100,
+  kClassDefine = 0x200,
+  kFunctionDefine = 0x400,
+  kInsertable = 0x800,
+};
+
+#define isDefine(a) ((a)&kDefine)
+#define isUndefine(a) ((a)&kUndefine)
+#define isGlobal(a) ((a)&kGlobal)
+#define isUse(a) ((a)&kUse)
+#define isMapToClosestOne(a) ((a)&kMapToClosestOne)
+#define isMapToAll(a) ((a)&kMapToAll)
+#define isReplace(a) ((a)&kReplace)
+#define isAlias(a) ((a)&kAlias)
+#define isNoSplit(a) ((a)&kNoSplit)
+#define isClassDefine(a) ((a)&kClassDefine)
+#define isFunctionDefine(a) ((a)&kFunctionDefine)
+#define isInsertable(a) ((a)&kInsertable)
 
 enum ScopeType {
   kScopeDefault,

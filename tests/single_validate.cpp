@@ -4,7 +4,6 @@
 #include <iostream>
 #include <string>
 
-#include "include/ast.h"
 #include "include/mutate.h"
 #include "include/typesystem.h"
 #include "include/utils.h"

@@ -2,7 +2,6 @@
 #define __CUS__H__
 #include "antlr4-runtime.h"
 
-#include "ast.h"
 #include "var_definition.h"
 #include <variant>
 

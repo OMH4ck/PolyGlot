@@ -7,7 +7,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include "ast.h"
+#include "ir.h"
 
 namespace polyglot {
 

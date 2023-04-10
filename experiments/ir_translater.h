@@ -2,7 +2,6 @@
 #define __IR_TRANSLATER_H__
 
 #include "antlr4-runtime.h"
-#include "ast.h"
 #include "ir.h"
 
 #include <string>
