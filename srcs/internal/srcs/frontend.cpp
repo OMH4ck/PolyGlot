@@ -36,27 +36,6 @@ std::shared_ptr<TopASTNode> parser(string sql) {
 }
 }  // namespace
 namespace polyglot {
-bool BisonFrontend::Parsable(std::string input) {
-  return parser(input) != nullptr;
-}
-
-IRPtr BisonFrontend::TranslateToIR(std::string input) {
-  auto ast = parser(input);
-  if (ast == nullptr) {
-    return nullptr;
-  }
-  std::vector<IRPtr> ir_set;
-  return ast->translate(ir_set);
-  ;
-}
-IRTYPE BisonFrontend::GetIRTypeByStr(std::string_view type) {
-  return get_nodetype_by_string(std::string(type));
-}
-
-std::string_view BisonFrontend::GetIRTypeStr(IRTYPE type) {
-  return get_string_by_nodetype(type);
-}
-
 bool AntlrFrontend::Parsable(std::string input) { return true; }
 
 IRPtr AntlrFrontend::TranslateToIR(std::string input) {
@@ -86,6 +65,7 @@ IRTYPE AntlrFrontend::GetIdentifierType() {
 
 IRTYPE AntlrFrontend::GetUnknownType() { return antlr4::kUnknown; }
 
+/*
 IRTYPE BisonFrontend::GetStringLiteralType() { return kStringLiteral; }
 IRTYPE BisonFrontend::GetIntLiteralType() { return kIntLiteral; }
 
@@ -94,4 +74,5 @@ IRTYPE BisonFrontend::GetFloatLiteralType() { return kFloatLiteral; }
 IRTYPE BisonFrontend::GetUnknownType() { return kUnknown; }
 
 IRTYPE BisonFrontend::GetIdentifierType() { return kIdentifier; }
+*/
 }  // namespace polyglot

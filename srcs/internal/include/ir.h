@@ -27,15 +27,15 @@ enum ScopeType {
 };
 
 using IRTYPE = unsigned int;
+struct IROperator {
+  std::string prefix;
+  std::string middle;
+  std::string suffix;
 
-class IROperator {
- public:
-  IROperator(string prefix = "", string middle = "", string suffix = "")
-      : prefix_(prefix), middle_(middle), suffix_(suffix) {}
-
-  string prefix_;
-  string middle_;
-  string suffix_;
+  IROperator(const std::string& prefix, const std::string& middle,
+             const std::string& suffix)
+      : prefix(prefix), middle(middle), suffix(suffix) {}
+  IROperator() = default;
 };
 
 class IR;
@@ -49,7 +49,7 @@ class IR {
 
   IR(IRTYPE type, string str_val, DATATYPE data_type = kDataWhatever,
      ScopeType scope = kScopeDefault, DATAFLAG flag = kUse);
-  IR(IRTYPE type, const char *str_val, DATATYPE data_type = kDataWhatever,
+  IR(IRTYPE type, const char* str_val, DATATYPE data_type = kDataWhatever,
      ScopeType scope = kScopeDefault, DATAFLAG flag = kUse);
 
   IR(IRTYPE type, bool b_val, DATATYPE data_type = kDataWhatever,
@@ -65,29 +65,28 @@ class IR {
      ScopeType scope = kScopeDefault, DATAFLAG flag = kUse);
 
   IR(IRTYPE type, std::shared_ptr<IROperator> op, IRPtr left, IRPtr right,
-     std::optional<double> f_val, std::optional<string> str_val, string name,
+     std::optional<double> f_val, std::optional<string> str_val,
      unsigned int mutated_times, ScopeType scope, DATAFLAG flag);
 
   IR(const IRPtr ir, IRPtr left, IRPtr right);
 
   std::vector<IRPtr> collect_children();
 
-  std::optional<double> float_val_;
-  std::optional<int> int_val_;
+  std::optional<double> float_val;
+  std::optional<int> int_val;
 
-  ScopeType scope_;
-  unsigned long scope_id_;
-  DATAFLAG data_flag_ = kUse;
-  DATATYPE data_type_ = kDataWhatever;
+  ScopeType scope_type;
+  unsigned long scope_id;
+  DATAFLAG data_flag = kUse;
+  DATATYPE data_type = kDataWhatever;
   int value_type_ = 0;
   IRTYPE type_;
-  string name_;
 
   std::optional<string> str_val_;
 
-  std::shared_ptr<IROperator> op_ = nullptr;
-  IRPtr left_ = nullptr;
-  IRPtr right_ = nullptr;
+  std::shared_ptr<IROperator> op = nullptr;
+  IRPtr left_child = nullptr;
+  IRPtr right_child = nullptr;
   int operand_num_;
   unsigned int mutated_times_ = 0;
 
@@ -96,8 +95,8 @@ class IR {
   string print();
 
  private:
-  void collect_children_impl(std::vector<IRPtr> &children);
-  void to_string_core(string &str);
+  void collect_children_impl(std::vector<IRPtr>& children);
+  void to_string_core(string& str);
 };
 
 IRPtr deep_copy(const IRPtr root);

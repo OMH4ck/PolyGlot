@@ -681,19 +681,19 @@ ScopePtr ScopeTree::GetScopeById(ScopeID id) {
 
 void BuildScopeTreeImpl(IRPtr root, ScopeTree &scope_tree) {
   if (root == nullptr) return;
-  if (root->scope_ != kScopeDefault) {
-    scope_tree.EnterScope(root->scope_);
+  if (root->scope_type != kScopeDefault) {
+    scope_tree.EnterScope(root->scope_type);
   }
   if (scope_tree.GetCurrentScope() != nullptr) {
-    root->scope_id_ = scope_tree.GetCurrentScopeId();
+    root->scope_id = scope_tree.GetCurrentScopeId();
   }
-  if (root->left_) {
-    BuildScopeTreeImpl(root->left_, scope_tree);
+  if (root->left_child) {
+    BuildScopeTreeImpl(root->left_child, scope_tree);
   }
-  if (root->right_) {
-    BuildScopeTreeImpl(root->right_, scope_tree);
+  if (root->right_child) {
+    BuildScopeTreeImpl(root->right_child, scope_tree);
   }
-  if (root->scope_ != kScopeDefault) {
+  if (root->scope_type != kScopeDefault) {
     scope_tree.ExitScope();
   }
 }
@@ -702,11 +702,6 @@ std::shared_ptr<ScopeTree> BuildScopeTree(IRPtr root) {
   auto scope_tree = std::make_shared<ScopeTree>();
   BuildScopeTreeImpl(root, *scope_tree);
   return scope_tree;
-}
-
-void CompoundType::remove_unfix(IRPtr ir) {
-  can_be_fixed_ir_.erase(ir);
-  v_members_[ir->value_type_].push_back(ir->str_val_.value());
 }
 
 string get_type_name_by_id(TYPEID type_id) {

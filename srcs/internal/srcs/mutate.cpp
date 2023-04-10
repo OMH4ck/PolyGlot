@@ -39,7 +39,7 @@ bool Mutator::not_unknown(IRPtr r) {
 }
 
 static inline bool is_leaf(IRPtr r) {
-  return r->left_ == nullptr && r->right_ == nullptr;
+  return r->left_child == nullptr && r->right_child == nullptr;
 }
 
 Mutator::Mutator(std::shared_ptr<Frontend> frontend) {
@@ -59,24 +59,24 @@ IRPtr Mutator::deep_copy_with_record(const IRPtr root, const IRPtr record) {
   Expects(record != nullptr);
   IRPtr left = nullptr, right = nullptr, copy_res;
 
-  if (root->left_)
+  if (root->left_child)
     left = deep_copy_with_record(
-        root->left_, record);  // do you have a second version for deep_copy
-                               // that accept only one argument?
-  if (root->right_)
-    right = deep_copy_with_record(root->right_,
+        root->left_child, record);  // do you have a second version for
+                                    // deep_copy that accept only one argument?
+  if (root->right_child)
+    right = deep_copy_with_record(root->right_child,
                                   record);  // no I forget to update here
 
   std::shared_ptr<IROperator> op = nullptr;
-  if (root->op_ != nullptr) {
-    op = std::make_shared<IROperator>(root->op_->prefix_, root->op_->middle_,
-                                      root->op_->suffix_);
+  if (root->op != nullptr) {
+    op = std::make_shared<IROperator>(root->op->prefix, root->op->middle,
+                                      root->op->suffix);
   }
-  copy_res = std::make_shared<IR>(
-      root->type_, op, left, right, root->float_val_, root->str_val_,
-      root->name_, root->mutated_times_, root->scope_, root->data_flag_);
+  copy_res = std::make_shared<IR>(root->type_, op, left, right, root->float_val,
+                                  root->str_val_, root->mutated_times_,
+                                  root->scope_type, root->data_flag);
 
-  copy_res->data_type_ = root->data_type_;
+  copy_res->data_type = root->data_type;
 
   if (root == record) {
     this->record_ = copy_res;
@@ -171,11 +171,11 @@ void Mutator::add_ir_to_library_limited(IRPtr cur) {
   ir_type_library.push_back(deep_copy(cur));
   ir_library_hash_[type].insert(h);
 
-  if (cur->left_) {
-    add_ir_to_library_limited(cur->left_);
+  if (cur->left_child) {
+    add_ir_to_library_limited(cur->left_child);
   }
-  if (cur->right_) {
-    add_ir_to_library_limited(cur->right_);
+  if (cur->right_child) {
+    add_ir_to_library_limited(cur->right_child);
   }
 }
 
@@ -244,13 +244,13 @@ bool Mutator::replace(IRPtr root, IRPtr old_ir, IRPtr new_ir) {
       return false;
   }
   */
-  if (parent_ir->left_ == old_ir) {
+  if (parent_ir->left_child == old_ir) {
     ;
-    parent_ir->left_ = new_ir;
+    parent_ir->left_child = new_ir;
     return true;
-  } else if (parent_ir->right_ == old_ir) {
+  } else if (parent_ir->right_child == old_ir) {
     ;
-    parent_ir->right_ = new_ir;
+    parent_ir->right_child = new_ir;
     return true;
   }
   assert(false && "should not reach here");
@@ -272,9 +272,9 @@ IRPtr Mutator::strategy_replace_with_constraint(IRPtr cur) {
   assert(cur);
   // if(!can_be_mutated(cur)) return nullptr;
 
-  if (cur->op_ == nullptr ||
-      (cur->op_->prefix_.empty() && cur->op_->middle_.empty() &&
-       cur->op_->suffix_.empty())) {
+  if (cur->op == nullptr ||
+      (cur->op->prefix.empty() && cur->op->middle.empty() &&
+       cur->op->suffix.empty())) {
     return nullptr;
   }
 
@@ -287,43 +287,45 @@ IRPtr Mutator::strategy_replace_with_constraint(IRPtr cur) {
 
   auto res = get_ir_from_library(replace_type);
 
-  if (res->left_ && !cur->left_ || cur->left_ && !res->left_ ||
-      res->right_ && !cur->right_ || cur->right_ && !res->right_) {
+  if (res->left_child && !cur->left_child ||
+      cur->left_child && !res->left_child ||
+      res->right_child && !cur->right_child ||
+      cur->right_child && !res->right_child) {
     // ;
     // if(cur->type_ == kIterationStatement) cout << "failed" << endl;
     return nullptr;
   }
 
-  if (res->left_ &&
-      !is_ir_type_connvertable(res->left_->type_, cur->left_->type_)) {
+  if (res->left_child && !is_ir_type_connvertable(res->left_child->type_,
+                                                  cur->left_child->type_)) {
     // ;
     // if(cur->type_ == kIterationStatement) cout << "failed" << endl;
     return nullptr;
   }
 
-  if (res->right_ &&
-      !is_ir_type_connvertable(res->right_->type_, cur->right_->type_)) {
+  if (res->right_child && !is_ir_type_connvertable(res->right_child->type_,
+                                                   cur->right_child->type_)) {
     // ;
     // if(cur->type_ == kIterationStatement) cout << "failed" << endl;
     return nullptr;
   }
 
-  auto save_res_left = res->left_;
-  auto save_res_right = res->right_;
+  auto save_res_left = res->left_child;
+  auto save_res_right = res->right_child;
   auto save_res = res;
-  res->left_ = nullptr;
-  res->right_ = nullptr;
+  res->left_child = nullptr;
+  res->right_child = nullptr;
 
   res = deep_copy(res);
 
-  save_res->left_ = save_res_left;
-  save_res->right_ = save_res_right;
+  save_res->left_child = save_res_left;
+  save_res->right_child = save_res_right;
 
-  if (cur->left_) {
-    res->left_ = deep_copy(cur->left_);
+  if (cur->left_child) {
+    res->left_child = deep_copy(cur->left_child);
   }
-  if (cur->right_) {
-    res->right_ = deep_copy(cur->right_);
+  if (cur->right_child) {
+    res->right_child = deep_copy(cur->right_child);
   }
 
   // if(cur->type_ == kIterationStatement) cout << "success, which becomes " <<
@@ -338,32 +340,32 @@ IRPtr Mutator::strategy_replace(IRPtr cur) {
   auto randint = get_rand_int(3);
   switch (randint) {
     case 0:
-      if (cur->left_ != nullptr && not_unknown(cur->left_)) {
+      if (cur->left_child != nullptr && not_unknown(cur->left_child)) {
         res = deep_copy(cur);
-        auto new_node = get_ir_from_library(res->left_->type_);
-        res->left_ = deep_copy(new_node);
+        auto new_node = get_ir_from_library(res->left_child->type_);
+        res->left_child = deep_copy(new_node);
       }
       break;
 
     case 1:
-      if (cur->right_ != nullptr && not_unknown(cur->right_)) {
+      if (cur->right_child != nullptr && not_unknown(cur->right_child)) {
         res = deep_copy(cur);
-        auto new_node = get_ir_from_library(res->right_->type_);
-        res->right_ = deep_copy(new_node);
+        auto new_node = get_ir_from_library(res->right_child->type_);
+        res->right_child = deep_copy(new_node);
       }
       break;
 
     case 2:
-      if (cur->left_ != nullptr && cur->right_ != nullptr &&
-          not_unknown(cur->left_) && not_unknown(cur->right_)) {
+      if (cur->left_child != nullptr && cur->right_child != nullptr &&
+          not_unknown(cur->left_child) && not_unknown(cur->right_child)) {
         res = deep_copy(cur);
 
-        auto new_left = get_ir_from_library(res->left_->type_);
-        auto new_right = get_ir_from_library(res->right_->type_);
+        auto new_left = get_ir_from_library(res->left_child->type_);
+        auto new_right = get_ir_from_library(res->right_child->type_);
         ;
-        res->right_ = deep_copy(new_right);
+        res->right_child = deep_copy(new_right);
 
-        res->left_ = deep_copy(new_left);
+        res->left_child = deep_copy(new_left);
       }
       break;
   }
@@ -410,22 +412,22 @@ void Mutator::extract_struct(IRPtr root) {
   auto type = root->type_;
 
 #ifndef SYNTAX_ONLY
-  if (root->left_) {
-    if (root->left_->data_type_ == kDataFixUnit) {
+  if (root->left_child) {
+    if (root->left_child->data_type == kDataFixUnit) {
       ;
-      root->left_ =
+      root->left_child =
           std::make_shared<IR>(frontend_->GetStringLiteralType(), "FIXME");
     } else {
-      extract_struct(root->left_);
+      extract_struct(root->left_child);
     }
   }
-  if (root->right_) {
-    if (root->right_->data_type_ == kDataFixUnit) {
+  if (root->right_child) {
+    if (root->right_child->data_type == kDataFixUnit) {
       ;
-      root->right_ =
+      root->right_child =
           std::make_shared<IR>(frontend_->GetStringLiteralType(), "FIXME");
     } else {
-      extract_struct(root->right_);
+      extract_struct(root->right_child);
     }
   }
 #else
@@ -437,7 +439,7 @@ void Mutator::extract_struct(IRPtr root) {
   }
 #endif
 
-  if (root->left_ || root->right_) return;
+  if (root->left_child || root->right_child) return;
 
   /*
 #ifdef SYNTAX_ONLY
@@ -448,7 +450,7 @@ void Mutator::extract_struct(IRPtr root) {
 #else
 */
   // TODO: Verify whether this should be == or !=.
-  if (root->data_type_ == kDataWhatever) {
+  if (root->data_type == kDataWhatever) {
     root->str_val_ = "x";
     return;
   }
@@ -456,9 +458,9 @@ void Mutator::extract_struct(IRPtr root) {
   if (string_types_.find(type) != string_types_.end()) {
     root->str_val_ = "'x'";
   } else if (int_types_.find(type) != int_types_.end()) {
-    root->int_val_ = 1;
+    root->int_val = 1;
   } else if (float_types_.find(type) != float_types_.end()) {
-    root->float_val_ = 1.0;
+    root->float_val = 1.0;
   }
 }
 
@@ -467,12 +469,12 @@ bool Mutator::can_be_mutated(IRPtr cur) {
   // return true;
   // #else
   bool res = true;
-  if (cur->data_type_ == kDataVarDefine || isDefine(cur->data_flag_) ||
-      cur->data_type_ == kDataVarType || cur->data_type_ == kDataClassType) {
+  if (cur->data_type == kDataVarDefine || isDefine(cur->data_flag) ||
+      cur->data_type == kDataVarType || cur->data_type == kDataClassType) {
     return false;
   }
-  if (cur->left_) res = res && can_be_mutated(cur->left_);
-  if (cur->right_) res = res && can_be_mutated(cur->right_);
+  if (cur->left_child) res = res && can_be_mutated(cur->left_child);
+  if (cur->right_child) res = res && can_be_mutated(cur->right_child);
   return res;
   // #endif
 }

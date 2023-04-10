@@ -4,7 +4,7 @@ InitFileDir: ../../grammars/simplelang_grammar/init/
 BuiltinObjFile: "/home/yongheng/FuzzerFactory_php/php_grammar/php_internal_object/"
 IsWeakType: true
 BasicUnits:
-  - kStmt
+  - stmt
 ConvertChain:
   - from: ANYTYPE
     to: ALLTYPES

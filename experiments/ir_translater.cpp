@@ -151,13 +151,13 @@ IRPtr TranslateNode(tree::ParseTree* node, PolyGlotGrammarParser* parser) {
   IRPtr new_ir = std::get<IRPtr>(stk.top());
   if (ctx && ctx->GetDataType() != kDataDefault) {
     // std::cout << "IR special: " << new_ir->to_string() << std::endl;
-    new_ir->data_flag_ = ctx->GetDataFlag();
-    new_ir->data_type_ = ctx->GetDataType();
+    new_ir->data_flag = ctx->GetDataFlag();
+    new_ir->data_type = ctx->GetDataType();
   }else{
-    new_ir->data_type_ = kDataDefault;
+    new_ir->data_type = kDataDefault;
   }
   if (ctx->GetScopeType() != kScopeDefault) {
-    new_ir->scope_ = ctx->GetScopeType();
+    new_ir->scope_type = ctx->GetScopeType();
   }
   /*
   std::cout << "visiting node: " << node->toStringTree(parser) << "\n";

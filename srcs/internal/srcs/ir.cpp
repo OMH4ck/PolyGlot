@@ -26,115 +26,104 @@ static unsigned long id_counter;
   }
 */
 
-#define STORE_IR_SCOPE() this->scope_id_ = 1;
-
 IR::IR(IRTYPE type, std::shared_ptr<IROperator> op, IRPtr left, IRPtr right,
        DATATYPE data_type)
     : type_(type),
-      op_(op),
-      left_(left),
-      right_(right),
+      op(op),
+      left_child(left),
+      right_child(right),
       operand_num_((!!right) + (!!left)),
-      data_type_(data_type) {
+      data_type(data_type) {
   GEN_NAME();
-  STORE_IR_SCOPE();
 }
 
 IR::IR(IRTYPE type, string str_val, DATATYPE data_type, ScopeType scope,
        DATAFLAG flag)
     : type_(type),
       str_val_(str_val),
-      op_(nullptr),
-      left_(nullptr),
-      right_(nullptr),
+      op(nullptr),
+      left_child(nullptr),
+      right_child(nullptr),
       operand_num_(0),
-      data_type_(data_type),
-      scope_(scope),
-      data_flag_(flag) {
+      data_type(data_type),
+      scope_type(scope),
+      data_flag(flag) {
   GEN_NAME();
-  STORE_IR_SCOPE();
 }
 
 IR::IR(IRTYPE type, const char *str_val, DATATYPE data_type, ScopeType scope,
        DATAFLAG flag)
     : type_(type),
       str_val_(str_val),
-      op_(nullptr),
-      left_(nullptr),
-      right_(nullptr),
+      op(nullptr),
+      left_child(nullptr),
+      right_child(nullptr),
       operand_num_(0),
-      data_type_(data_type),
-      scope_(scope),
-      data_flag_(flag) {
+      data_type(data_type),
+      scope_type(scope),
+      data_flag(flag) {
   GEN_NAME();
-  STORE_IR_SCOPE();
 }
 
 IR::IR(IRTYPE type, int int_val, DATATYPE data_type, ScopeType scope,
        DATAFLAG flag)
     : type_(type),
-      int_val_(int_val),
-      left_(nullptr),
-      op_(nullptr),
-      right_(nullptr),
+      int_val(int_val),
+      left_child(nullptr),
+      op(nullptr),
+      right_child(nullptr),
       operand_num_(0),
-      data_type_(kDataWhatever),
-      scope_(scope),
-      data_flag_(flag) {
+      data_type(kDataWhatever),
+      scope_type(scope),
+      data_flag(flag) {
   GEN_NAME();
-  STORE_IR_SCOPE();
 }
 
 IR::IR(IRTYPE type, double f_val, DATATYPE data_type, ScopeType scope,
        DATAFLAG flag)
     : type_(type),
-      float_val_(f_val),
-      left_(nullptr),
-      op_(nullptr),
-      right_(nullptr),
+      float_val(f_val),
+      left_child(nullptr),
+      op(nullptr),
+      right_child(nullptr),
       operand_num_(0),
-      data_type_(kDataWhatever),
-      scope_(scope),
-      data_flag_(flag) {
+      data_type(kDataWhatever),
+      scope_type(scope),
+      data_flag(flag) {
   GEN_NAME();
-  STORE_IR_SCOPE();
 }
 
 IR::IR(IRTYPE type, std::shared_ptr<IROperator> op, IRPtr left, IRPtr right,
-       std::optional<double> f_val, std::optional<string> str_val, string name,
+       std::optional<double> f_val, std::optional<string> str_val,
        unsigned int mutated_times, ScopeType scope, DATAFLAG flag)
     : type_(type),
-      op_(op),
-      left_(left),
-      right_(right),
+      op(op),
+      left_child(left),
+      right_child(right),
       operand_num_((!!right) + (!!left)),
-      name_(name),
       str_val_(str_val),
-      float_val_(f_val),
+      float_val(f_val),
       mutated_times_(mutated_times),
-      data_type_(kDataWhatever),
-      scope_(scope),
-      data_flag_(flag) {
-  STORE_IR_SCOPE();
-}
+      data_type(kDataWhatever),
+      scope_type(scope),
+      data_flag(flag) {}
 
 IR::IR(const IRPtr ir, IRPtr left, IRPtr right) {
   // STORE_IR_SCOPE();
   this->type_ = ir->type_;
-  if (ir->op_ != nullptr)
-    this->op_ = OP3(ir->op_->prefix_, ir->op_->middle_, ir->op_->suffix_);
+  if (ir->op != nullptr)
+    this->op = OP3(ir->op->prefix, ir->op->middle, ir->op->suffix);
   else {
-    this->op_ = OP0();
+    this->op = OP0();
   }
-  this->left_ = left;
-  this->right_ = right;
+  this->left_child = left;
+  this->right_child = right;
   this->str_val_ = ir->str_val_;
-  this->int_val_ = ir->int_val_;
-  this->float_val_ = ir->float_val_;
-  this->data_type_ = ir->data_type_;
-  this->scope_ = ir->scope_;
-  this->data_flag_ = ir->data_flag_;
-  this->name_ = ir->name_;
+  this->int_val = ir->int_val;
+  this->float_val = ir->float_val;
+  this->data_type = ir->data_type;
+  this->scope_type = ir->scope_type;
+  this->data_flag = ir->data_flag;
   this->operand_num_ = ir->operand_num_;
   this->mutated_times_ = ir->mutated_times_;
 }
@@ -142,34 +131,16 @@ IR::IR(const IRPtr ir, IRPtr left, IRPtr right) {
 IRPtr deep_copy(const IRPtr root) {
   IRPtr left = nullptr, right = nullptr, copy_res;
 
-  if (root->left_)
-    left = deep_copy(root->left_);  // do you have a second version for
-                                    // deep_copy that accept only one argument?
-  if (root->right_)
-    right = deep_copy(root->right_);  // no I forget to update here
+  if (root->left_child)
+    left = deep_copy(
+        root->left_child);  // do you have a second version for
+                            // deep_copy that accept only one argument?
+  if (root->right_child)
+    right = deep_copy(root->right_child);  // no I forget to update here
 
   copy_res = std::make_shared<IR>(root, left, right);
 
   return copy_res;
-}
-
-string IR::print() {
-  string res;
-  res = this->name_ + " = ";
-  if (this->str_val_.has_value()) {
-    res += "str(" + *(this->str_val_) + ")";
-    return res;
-  } else if (this->int_val_.has_value()) {
-    res += "int(" + std::to_string(this->int_val_.value()) + ")";
-    return res;
-  }
-  if (this->op_) res += this->op_->prefix_;
-  if (this->left_) res += this->left_->name_;
-  if (this->op_) res += this->op_->middle_;
-  if (this->right_) res += this->right_->name_;
-  if (this->op_) res += this->op_->suffix_;
-
-  return res;
 }
 
 string IR::to_string() {
@@ -180,41 +151,41 @@ string IR::to_string() {
 }
 
 void IR::to_string_core(std::string &res) {
-  if (float_val_.has_value()) {
-    absl::StrAppend(&res, float_val_.value());
-  } else if (int_val_.has_value()) {
-    absl::StrAppend(&res, int_val_.value());
+  if (float_val.has_value()) {
+    absl::StrAppend(&res, float_val.value());
+  } else if (int_val.has_value()) {
+    absl::StrAppend(&res, int_val.value());
   } else if (str_val_.has_value()) {
     absl::StrAppend(&res, str_val_.value());
   } else {
-    if (op_ != nullptr) {
-      absl::StrAppend(&res, op_->prefix_, " ");
+    if (op != nullptr) {
+      absl::StrAppend(&res, op->prefix, " ");
     }
-    if (left_ != nullptr) {
-      left_->to_string_core(res);
+    if (left_child != nullptr) {
+      left_child->to_string_core(res);
       absl::StrAppend(&res, " ");
     }
-    if (op_ != nullptr) {
-      absl::StrAppend(&res, op_->middle_, " ");
+    if (op != nullptr) {
+      absl::StrAppend(&res, op->middle, " ");
     }
-    if (right_ != nullptr) {
-      right_->to_string_core(res);
+    if (right_child != nullptr) {
+      right_child->to_string_core(res);
       absl::StrAppend(&res, " ");
     }
-    if (op_ != nullptr) {
-      absl::StrAppend(&res, op_->suffix_);
+    if (op != nullptr) {
+      absl::StrAppend(&res, op->suffix);
     }
   }
 }
 
 void IR::collect_children_impl(std::vector<IRPtr> &res) {
-  if (left_ != nullptr) {
-    left_->collect_children_impl(res);
-    res.push_back(left_);
+  if (left_child != nullptr) {
+    left_child->collect_children_impl(res);
+    res.push_back(left_child);
   }
-  if (right_ != nullptr) {
-    right_->collect_children_impl(res);
-    res.push_back(right_);
+  if (right_child != nullptr) {
+    right_child->collect_children_impl(res);
+    res.push_back(right_child);
   }
 }
 
@@ -235,8 +206,8 @@ static int cal_list_num_dfs(IRPtr ir, IRTYPE type) {
 
   if (ir->type_ == type) res++;
 
-  if (ir->left_) res += cal_list_num_dfs(ir->left_, type);
-  if (ir->right_) res += cal_list_num_dfs(ir->right_, type);
+  if (ir->left_child) res += cal_list_num_dfs(ir->left_child, type);
+  if (ir->right_child) res += cal_list_num_dfs(ir->right_child, type);
 
   return res;
 }
@@ -246,12 +217,12 @@ void trim_list_to_num(IRPtr ir, int num) { return; }
 int cal_list_num(IRPtr ir) { return cal_list_num_dfs(ir, ir->type_); }
 
 IRPtr locate_parent(IRPtr root, IRPtr old_ir) {
-  if (root->left_ == old_ir || root->right_ == old_ir) return root;
+  if (root->left_child == old_ir || root->right_child == old_ir) return root;
 
-  if (root->left_ != nullptr)
-    if (auto res = locate_parent(root->left_, old_ir)) return res;
-  if (root->right_ != nullptr)
-    if (auto res = locate_parent(root->right_, old_ir)) return res;
+  if (root->left_child != nullptr)
+    if (auto res = locate_parent(root->left_child, old_ir)) return res;
+  if (root->right_child != nullptr)
+    if (auto res = locate_parent(root->right_child, old_ir)) return res;
 
   return nullptr;
 }
@@ -287,20 +258,20 @@ bool get_scope_translation_flag() { return scope_tranlation; }
 
 unsigned int calc_node_num(IRPtr root) {
   unsigned int res = 0;
-  if (root->left_) res += calc_node_num(root->left_);
-  if (root->right_) res += calc_node_num(root->right_);
+  if (root->left_child) res += calc_node_num(root->left_child);
+  if (root->right_child) res += calc_node_num(root->right_child);
 
   return res + 1;
 }
 
 bool contain_fixme(IRPtr ir) {
   bool res = false;
-  if (ir->left_ || ir->right_) {
-    if (ir->left_) {
-      res = res || contain_fixme(ir->left_);
+  if (ir->left_child || ir->right_child) {
+    if (ir->left_child) {
+      res = res || contain_fixme(ir->left_child);
     }
-    if (ir->right_) {
-      res = res || contain_fixme(ir->right_);
+    if (ir->right_child) {
+      res = res || contain_fixme(ir->right_child);
     }
     return res;
   }

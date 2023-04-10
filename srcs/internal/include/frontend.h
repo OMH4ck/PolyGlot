@@ -42,21 +42,5 @@ class AntlrFrontend : public Frontend {
  private:
 };
 
-class [[deprecated("We should use Antlr frontend instead.")]] BisonFrontend
-    : public Frontend {
- public:
-  bool Parsable(std::string input) override;
-  IRPtr TranslateToIR(std::string input) override;
-  IRTYPE GetIRTypeByStr(std::string_view type) override;
-  std::string_view GetIRTypeStr(IRTYPE type) override;
-  IRTYPE GetStringLiteralType() override;
-  IRTYPE GetIntLiteralType() override;
-  IRTYPE GetFloatLiteralType() override;
-  IRTYPE GetIdentifierType() override;
-  IRTYPE GetUnknownType() override;
-  FrontendType GetFrontendType() override { return FrontendType::kBISON; }
-
- private:
-};
 }  // namespace polyglot
 #endif

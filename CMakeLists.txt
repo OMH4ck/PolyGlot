@@ -97,8 +97,7 @@ target_include_directories(util_lib
                            PUBLIC ${CMAKE_SOURCE_DIR}/srcs/internal/include)
 target_compile_options(util_lib PRIVATE -fPIC)
 
-add_library(frontend_lib STATIC srcs/internal/srcs/frontend.cpp
-                                srcs/internal/srcs/ast.cpp ${GENERATED_FILES})
+add_library(frontend_lib STATIC srcs/internal/srcs/frontend.cpp)
 target_include_directories(
   frontend_lib PUBLIC ${CMAKE_SOURCE_DIR}/srcs/internal/include
                       ${CMAKE_SOURCE_DIR}/gen/parser ${CMAKE_SOURCE_DIR}/gen)

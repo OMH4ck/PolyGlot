@@ -137,21 +137,23 @@ void TypeSystem::split_to_basic_unit(IRPtr root, queue<IRPtr> &q,
 void TypeSystem::split_to_basic_unit(IRPtr root, queue<IRPtr> &q,
                                      map<IRPtr *, IRPtr> &m_save,
                                      set<IRTYPE> &s_basic_unit) {
-  if (root->left_ &&
-      s_basic_unit.find(root->left_->type_) != s_basic_unit.end()) {
-    m_save[&root->left_] = root->left_;
-    q.push(root->left_);
-    root->left_ = nullptr;
+  if (root->left_child &&
+      s_basic_unit.find(root->left_child->type_) != s_basic_unit.end()) {
+    m_save[&root->left_child] = root->left_child;
+    q.push(root->left_child);
+    root->left_child = nullptr;
   }
-  if (root->left_) split_to_basic_unit(root->left_, q, m_save, s_basic_unit);
+  if (root->left_child)
+    split_to_basic_unit(root->left_child, q, m_save, s_basic_unit);
 
-  if (root->right_ &&
-      s_basic_unit.find(root->right_->type_) != s_basic_unit.end()) {
-    m_save[&root->right_] = root->right_;
-    q.push(root->right_);
-    root->right_ = nullptr;
+  if (root->right_child &&
+      s_basic_unit.find(root->right_child->type_) != s_basic_unit.end()) {
+    m_save[&root->right_child] = root->right_child;
+    q.push(root->right_child);
+    root->right_child = nullptr;
   }
-  if (root->right_) split_to_basic_unit(root->right_, q, m_save, s_basic_unit);
+  if (root->right_child)
+    split_to_basic_unit(root->right_child, q, m_save, s_basic_unit);
 }
 
 void TypeSystem::connect_back(map<IRPtr *, IRPtr> &m_save) {
@@ -215,12 +217,12 @@ FIXORDER TypeSystem::TypeInferer::get_fix_order(int op) {
 
 int TypeSystem::TypeInferer::get_op_value(std::shared_ptr<IROperator> op) {
   if (op == nullptr) return 0;
-  return op_id_map_[op->prefix_][op->middle_][op->suffix_];
+  return op_id_map_[op->prefix][op->middle][op->suffix];
 }
 
 bool TypeSystem::TypeInferer::is_op_null(std::shared_ptr<IROperator> op) {
   return (op == nullptr ||
-          (op->suffix_ == "" && op->middle_ == "" && op->prefix_ == ""));
+          (op->suffix == "" && op->middle == "" && op->prefix == ""));
 }
 
 bool TypeSystem::is_contain_definition(IRPtr cur) {
@@ -232,11 +234,11 @@ bool TypeSystem::is_contain_definition(IRPtr cur) {
   while (stk.empty() == false) {
     cur = stk.top();
     stk.pop();
-    if (cur->data_type_ == kDataVarDefine || isDefine(cur->data_flag_)) {
+    if (cur->data_type == kDataVarDefine || isDefine(cur->data_flag)) {
       return true;
     }
-    if (cur->right_) stk.push(cur->right_);
-    if (cur->left_) stk.push(cur->left_);
+    if (cur->right_child) stk.push(cur->right_child);
+    if (cur->left_child) stk.push(cur->left_child);
   }
   return res;
 }
@@ -244,34 +246,36 @@ bool TypeSystem::is_contain_definition(IRPtr cur) {
 void search_by_data_type(IRPtr cur, DATATYPE type, vector<IRPtr> &result,
                          DATATYPE forbit_type = kDataWhatever,
                          bool go_inside = false) {
-  if (cur->data_type_ == type) {
+  if (cur->data_type == type) {
     result.push_back(cur);
-  } else if (forbit_type != kDataWhatever && cur->data_type_ == forbit_type) {
+  } else if (forbit_type != kDataWhatever && cur->data_type == forbit_type) {
     return;
   }
-  if (cur->data_type_ != type || go_inside == true) {
-    if (cur->left_) {
-      search_by_data_type(cur->left_, type, result, forbit_type, go_inside);
+  if (cur->data_type != type || go_inside == true) {
+    if (cur->left_child) {
+      search_by_data_type(cur->left_child, type, result, forbit_type,
+                          go_inside);
     }
-    if (cur->right_) {
-      search_by_data_type(cur->right_, type, result, forbit_type, go_inside);
+    if (cur->right_child) {
+      search_by_data_type(cur->right_child, type, result, forbit_type,
+                          go_inside);
     }
   }
 }
 
 IRPtr search_by_data_type(IRPtr cur, DATATYPE type,
                           DATATYPE forbit_type = kDataWhatever) {
-  if (cur->data_type_ == type) {
+  if (cur->data_type == type) {
     return cur;
-  } else if (forbit_type != kDataWhatever && cur->data_type_ == forbit_type) {
+  } else if (forbit_type != kDataWhatever && cur->data_type == forbit_type) {
     return nullptr;
   } else {
-    if (cur->left_) {
-      auto res = search_by_data_type(cur->left_, type, forbit_type);
+    if (cur->left_child) {
+      auto res = search_by_data_type(cur->left_child, type, forbit_type);
       if (res != nullptr) return res;
     }
-    if (cur->right_) {
-      auto res = search_by_data_type(cur->right_, type, forbit_type);
+    if (cur->right_child) {
+      auto res = search_by_data_type(cur->right_child, type, forbit_type);
       if (res != nullptr) return res;
     }
   }
@@ -328,7 +332,7 @@ void TypeSystem::collect_simple_variable_defintion_wt(IRPtr cur) {
     }
   }
 
-  auto cur_scope = scope_tree_->GetScopeById(cur->scope_id_);
+  auto cur_scope = scope_tree_->GetScopeById(cur->scope_id);
   for (auto i = 0; i < name_vec.size(); i++) {
     auto name_ir = name_vec[i];
     spdlog::info("Adding name: {}", name_ir->to_string());
@@ -377,7 +381,7 @@ void TypeSystem::collect_function_definition_wt(IRPtr cur) {
     // assert(num_function_args == 3);
   }
 
-  auto cur_scope = scope_tree_->GetScopeById(cur->scope_id_);
+  auto cur_scope = scope_tree_->GetScopeById(cur->scope_id);
   if (function_name.empty()) function_name = "Anoynmous" + to_string(cur->id_);
   auto function_type = make_function_type(function_name, ANYTYPE, arg_types);
   if (DBG) {
@@ -392,7 +396,7 @@ void TypeSystem::collect_function_definition_wt(IRPtr cur) {
 
   auto function_body_ir = search_by_data_type(cur, kDataFunctionBody);
   if (function_body_ir) {
-    cur_scope = scope_tree_->GetScopeById(function_body_ir->scope_id_);
+    cur_scope = scope_tree_->GetScopeById(function_body_ir->scope_id);
     for (auto i = 0; i < num_function_args; i++) {
       cur_scope->add_definition(ANYTYPE, arg_names[i], args[i]->id_);
     }
@@ -404,9 +408,9 @@ void TypeSystem::collect_function_definition_wt(IRPtr cur) {
 }
 
 void TypeSystem::collect_structure_definition_wt(IRPtr cur, IRPtr root) {
-  auto cur_scope = scope_tree_->GetScopeById(cur->scope_id_);
+  auto cur_scope = scope_tree_->GetScopeById(cur->scope_id);
 
-  if (isDefine(cur->data_flag_)) {
+  if (isDefine(cur->data_flag)) {
     vector<IRPtr> structure_name, strucutre_variable_name, structure_body;
 
     search_by_data_type(cur, kDataClassName, structure_name);
@@ -418,7 +422,7 @@ void TypeSystem::collect_structure_definition_wt(IRPtr cur, IRPtr root) {
       spdlog::info("not anonymous {}", structure_name[0]->str_val_.value());
       // not anonymous
       new_compound = make_compound_type_by_scope(
-          scope_tree_->GetScopeById(struct_body->scope_id_),
+          scope_tree_->GetScopeById(struct_body->scope_id),
           structure_name[0]->str_val_.value());
       current_compound_name = structure_name[0]->str_val_.value();
     } else {
@@ -427,7 +431,7 @@ void TypeSystem::collect_structure_definition_wt(IRPtr cur, IRPtr root) {
       static int anonymous_idx = 1;
       string compound_name = string("ano") + std::to_string(anonymous_idx++);
       new_compound = make_compound_type_by_scope(
-          scope_tree_->GetScopeById(struct_body->scope_id_), compound_name);
+          scope_tree_->GetScopeById(struct_body->scope_id), compound_name);
       current_compound_name = compound_name;
     }
     spdlog::info("{}", struct_body->to_string());
@@ -436,11 +440,12 @@ void TypeSystem::collect_structure_definition_wt(IRPtr cur, IRPtr root) {
     is_in_class = false;
     auto compound_id = new_compound->type_id_;
     new_compound = make_compound_type_by_scope(
-        scope_tree_->GetScopeById(struct_body->scope_id_),
+        scope_tree_->GetScopeById(struct_body->scope_id),
         current_compound_name);
   } else {
-    if (cur->left_) collect_structure_definition_wt(cur->left_, root);
-    if (cur->right_) collect_structure_definition_wt(cur->right_, root);
+    if (cur->left_child) collect_structure_definition_wt(cur->left_child, root);
+    if (cur->right_child)
+      collect_structure_definition_wt(cur->right_child, root);
   }
 }
 
@@ -454,11 +459,11 @@ std::optional<SymbolTable> TypeSystem::collect_simple_variable_defintion(
 
   if (!ir_vec.empty()) {
     for (auto ir : ir_vec) {
-      if (ir->op_ == nullptr || ir->op_->prefix_.empty()) {
+      if (ir->op == nullptr || ir->op->prefix.empty()) {
         auto tmpp = ir->to_string();
         var_type += tmpp.substr(0, tmpp.size() - 1);
       } else {
-        var_type += ir->op_->prefix_;
+        var_type += ir->op->prefix;
       }
       var_type += " ";
     }
@@ -476,7 +481,7 @@ std::optional<SymbolTable> TypeSystem::collect_simple_variable_defintion(
   }
 
   spdlog::debug("Variable type: {}, typeid: {}", var_type, type);
-  auto cur_scope = scope_tree_->GetScopeById(cur->scope_id_);
+  auto cur_scope = scope_tree_->GetScopeById(cur->scope_id);
 
   ir_vec.clear();
 
@@ -484,7 +489,7 @@ std::optional<SymbolTable> TypeSystem::collect_simple_variable_defintion(
   if (ir_vec.empty()) return std::nullopt;
 
   SymbolTable res;
-  res.SetScopeId(cur->scope_id_);
+  res.SetScopeId(cur->scope_id);
   for (auto ir : ir_vec) {
     spdlog::debug("var: {}", ir->to_string());
     auto name_ir = search_by_data_type(ir, kDataVarName);
@@ -509,12 +514,12 @@ std::optional<SymbolTable> TypeSystem::collect_simple_variable_defintion(
 }
 
 void TypeSystem::collect_structure_definition(IRPtr cur, IRPtr root) {
-  if (cur->data_type_ == kDataClassType) {
+  if (cur->data_type == kDataClassType) {
     spdlog::debug("to_string: {}", cur->to_string());
     spdlog::debug("[collect_structure_definition] data_type_ = kDataClassType");
-    auto cur_scope = scope_tree_->GetScopeById(cur->scope_id_);
+    auto cur_scope = scope_tree_->GetScopeById(cur->scope_id);
 
-    if (isDefine(cur->data_flag_)) {  // with structure define
+    if (isDefine(cur->data_flag)) {  // with structure define
       if (DBG) cout << "data_flag = Define" << endl;
       vector<IRPtr> structure_name, strucutre_variable_name, structure_body;
       search_by_data_type(cur, kDataClassName, structure_name);
@@ -529,7 +534,7 @@ void TypeSystem::collect_structure_definition(IRPtr cur, IRPtr root) {
         if (DBG) cout << "not anonymous" << endl;
         // not anonymous
         new_compound = make_compound_type_by_scope(
-            scope_tree_->GetScopeById(struct_body->scope_id_),
+            scope_tree_->GetScopeById(struct_body->scope_id),
             structure_name[0]->str_val_.value());
         current_compound_name = structure_name[0]->str_val_.value();
       } else {
@@ -538,13 +543,13 @@ void TypeSystem::collect_structure_definition(IRPtr cur, IRPtr root) {
         static int anonymous_idx = 1;
         string compound_name = string("ano") + std::to_string(anonymous_idx++);
         new_compound = make_compound_type_by_scope(
-            scope_tree_->GetScopeById(struct_body->scope_id_), compound_name);
+            scope_tree_->GetScopeById(struct_body->scope_id), compound_name);
         current_compound_name = compound_name;
       }
       create_symbol_table(struct_body);
       auto compound_id = new_compound->type_id_;
       new_compound = make_compound_type_by_scope(
-          scope_tree_->GetScopeById(struct_body->scope_id_),
+          scope_tree_->GetScopeById(struct_body->scope_id),
           current_compound_name);
 
       // get all class variable define unit by finding kDataDeclarator.
@@ -581,7 +586,7 @@ void TypeSystem::collect_structure_definition(IRPtr cur, IRPtr root) {
         }
         structure_pointer_var.clear();
       }
-    } else if (isUse(cur->data_flag_)) {  // only strucutre variable define
+    } else if (isUse(cur->data_flag)) {  // only strucutre variable define
       if (DBG) cout << "data_flag = Use" << endl;
       vector<IRPtr> structure_name, strucutre_variable_name;
       search_by_data_type(cur, kDataClassName, structure_name);
@@ -633,8 +638,8 @@ void TypeSystem::collect_structure_definition(IRPtr cur, IRPtr root) {
       structure_pointer_var.clear();
     }
   } else {
-    if (cur->left_) collect_structure_definition(cur->left_, root);
-    if (cur->right_) collect_structure_definition(cur->right_, root);
+    if (cur->left_child) collect_structure_definition(cur->left_child, root);
+    if (cur->right_child) collect_structure_definition(cur->right_child, root);
   }
 }
 
@@ -708,11 +713,11 @@ void TypeSystem::collect_function_definition(IRPtr cur) {
       }
       // handle specially
       for (auto ir : ir_vec) {
-        if (ir->op_ == nullptr || ir->op_->prefix_.empty()) {
+        if (ir->op == nullptr || ir->op->prefix.empty()) {
           auto tmpp = ir->to_string();
           var_type += tmpp.substr(0, tmpp.size() - 1);
         } else {
-          var_type += ir->op_->prefix_;
+          var_type += ir->op->prefix;
         }
         var_type += " ";
       }
@@ -753,7 +758,7 @@ void TypeSystem::collect_function_definition(IRPtr cur) {
     if (DBG) cout << get_type_by_type_id(i)->type_name_ << endl;
   }
 
-  auto cur_scope = scope_tree_->GetScopeById(cur->scope_id_);
+  auto cur_scope = scope_tree_->GetScopeById(cur->scope_id);
   if (return_type) {
     auto function_ptr =
         make_function_type(function_name_str, return_type, arg_types);
@@ -765,7 +770,7 @@ void TypeSystem::collect_function_definition(IRPtr cur) {
 
   auto function_body = search_by_data_type(cur, kDataFunctionBody);
   if (function_body) {
-    cur_scope = scope_tree_->GetScopeById(function_body->scope_id_);
+    cur_scope = scope_tree_->GetScopeById(function_body->scope_id);
     for (auto i = 0; i < arg_types.size(); i++) {
       cur_scope->add_definition(arg_types[i], arg_names[i], arg_ids[i]);
     }
@@ -774,17 +779,17 @@ void TypeSystem::collect_function_definition(IRPtr cur) {
 }
 
 DATATYPE TypeSystem::find_define_type(IRPtr cur) {
-  if (cur->data_type_ == kDataVarType || cur->data_type_ == kDataClassType ||
-      cur->data_type_ == kDataFunctionType)
-    return cur->data_type_;
+  if (cur->data_type == kDataVarType || cur->data_type == kDataClassType ||
+      cur->data_type == kDataFunctionType)
+    return cur->data_type;
 
-  if (cur->left_) {
-    auto res = find_define_type(cur->left_);
+  if (cur->left_child) {
+    auto res = find_define_type(cur->left_child);
     if (res != kDataWhatever) return res;
   }
 
-  if (cur->right_) {
-    auto res = find_define_type(cur->right_);
+  if (cur->right_child) {
+    auto res = find_define_type(cur->right_child);
     if (res != kDataWhatever) return res;
   }
 
@@ -793,7 +798,7 @@ DATATYPE TypeSystem::find_define_type(IRPtr cur) {
 
 bool TypeSystem::collect_definition(IRPtr cur) {
   bool res = false;
-  if (cur->data_type_ == kDataVarDefine) {
+  if (cur->data_type == kDataVarDefine) {
     auto define_type = find_define_type(cur);
 
     switch (define_type) {
@@ -835,8 +840,8 @@ bool TypeSystem::collect_definition(IRPtr cur) {
         break;
     }
   } else {
-    if (cur->left_) res = collect_definition(cur->left_) && res;
-    if (cur->right_) res = collect_definition(cur->right_) && res;
+    if (cur->left_child) res = collect_definition(cur->left_child) && res;
+    if (cur->right_child) res = collect_definition(cur->right_child) && res;
   }
 
   return res;
@@ -890,8 +895,8 @@ bool TypeSystem::TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
     if (scope_type == NOTEXIST) {
       // match name in cur->scope_
 
-      res_type = locate_defined_variable_by_name(cur->str_val_.value(),
-                                                 cur->scope_id_);
+      res_type =
+          locate_defined_variable_by_name(cur->str_val_.value(), cur->scope_id);
       if (DBG) cout << "Name: " << cur->str_val_.value() << endl;
       if (DBG) cout << "Type: " << res_type << endl;
       // auto cur_type = make_shared<map<TYPEID, vector<pair<TYPEID,
@@ -939,26 +944,28 @@ bool TypeSystem::TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
     }
   }
 
-  if (is_op_null(cur->op_)) {
-    if (cur->left_ && cur->right_) {
-      flag = type_inference_new(cur->left_, scope_type);
+  if (is_op_null(cur->op)) {
+    if (cur->left_child && cur->right_child) {
+      flag = type_inference_new(cur->left_child, scope_type);
       if (!flag) return flag;
-      flag = type_inference_new(cur->right_, scope_type);
+      flag = type_inference_new(cur->right_child, scope_type);
       if (!flag) return flag;
-      for (auto &left : cache_inference_map_[cur->left_]->GetCandidates()) {
-        for (auto &right : cache_inference_map_[cur->right_]->GetCandidates()) {
+      for (auto &left :
+           cache_inference_map_[cur->left_child]->GetCandidates()) {
+        for (auto &right :
+             cache_inference_map_[cur->right_child]->GetCandidates()) {
           auto res_type = least_upper_common_type(left.first, right.first);
           cur_type->AddCandidate(res_type, left.first, right.first);
         }
       }
       cache_inference_map_[cur] = cur_type;
-    } else if (cur->left_) {
-      flag = type_inference_new(cur->left_, scope_type);
-      if (!flag || !cache_inference_map_[cur->left_]->HasCandidate())
+    } else if (cur->left_child) {
+      flag = type_inference_new(cur->left_child, scope_type);
+      if (!flag || !cache_inference_map_[cur->left_child]->HasCandidate())
         return false;
-      if (DBG) cout << "Left: " << cur->left_->to_string() << endl;
-      assert(cache_inference_map_[cur->left_]->HasCandidate());
-      cache_inference_map_[cur] = cache_inference_map_[cur->left_];
+      if (DBG) cout << "Left: " << cur->left_child->to_string() << endl;
+      assert(cache_inference_map_[cur->left_child]->HasCandidate());
+      cache_inference_map_[cur] = cache_inference_map_[cur->left_child];
     } else {
       if (DBG) cout << cur->to_string() << endl;
       return false;
@@ -969,12 +976,12 @@ bool TypeSystem::TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
 
   // handle by OP
 
-  auto cur_op = get_op_value(cur->op_);
+  auto cur_op = get_op_value(cur->op);
   if (cur_op == NOTEXIST) {
     if (DBG) cout << cur->to_string() << endl;
     if (DBG)
-      cout << cur->op_->prefix_ << ", " << cur->op_->middle_ << ", "
-           << cur->op_->suffix_ << endl;
+      cout << cur->op->prefix << ", " << cur->op->middle << ", "
+           << cur->op->suffix << endl;
     if (DBG) cout << "OP not exist!" << endl;
     return false;
     assert(0);
@@ -982,18 +989,18 @@ bool TypeSystem::TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
 
   if (is_op1(cur_op)) {
     // assert(cur->left_); //for test
-    if (cur->left_ == nullptr) {
+    if (cur->left_child == nullptr) {
       return false;
     }
-    flag = type_inference_new(cur->left_, scope_type);
+    flag = type_inference_new(cur->left_child, scope_type);
     if (!flag) return flag;
     // auto cur_type = make_shared<map<TYPEID, vector<pair<TYPEID, TYPEID>>>>();
-    for (auto &left : cache_inference_map_[cur->left_]->GetCandidates()) {
+    for (auto &left : cache_inference_map_[cur->left_child]->GetCandidates()) {
       auto left_type = left.first;
       if (DBG) cout << "Reaching op1" << endl;
       if (DBG)
-        cout << cur->op_->prefix_ << ", " << cur->op_->middle_ << ", "
-             << cur->op_->suffix_ << endl;
+        cout << cur->op->prefix << ", " << cur->op->middle << ", "
+             << cur->op->suffix << endl;
       res_type = query_result_type(cur_op, left_type);
       if (DBG) cout << "Result_type: " << res_type << endl;
       if (res_type != NOTEXIST) {
@@ -1002,17 +1009,18 @@ bool TypeSystem::TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
     }
     cache_inference_map_[cur] = cur_type;
   } else if (is_op2(cur_op)) {
-    if (!(cur->left_ && cur->right_)) return false;
+    if (!(cur->left_child && cur->right_child)) return false;
     // auto cur_type = make_shared<map<TYPEID, vector<pair<TYPEID, TYPEID>>>>();
     switch (get_fix_order(cur_op)) {
       case LEFT_TO_RIGHT: {
         // this shouldn't contain "FIXME"
         if (DBG) cout << "Left to right" << endl;
-        flag = type_inference_new(cur->left_, scope_type);
+        flag = type_inference_new(cur->left_child, scope_type);
         if (!flag) return flag;
-        if (!cache_inference_map_[cur->left_]->HasCandidate()) return false;
+        if (!cache_inference_map_[cur->left_child]->HasCandidate())
+          return false;
         auto left_type =
-            cache_inference_map_[cur->left_]->GetARandomCandidateType();
+            cache_inference_map_[cur->left_child]->GetARandomCandidateType();
         auto new_left_type = left_type;
         // if(cur->op_->middle_ == "->"){
         if (get_op_property(cur_op) == OP_PROP_Dereference) {
@@ -1024,10 +1032,10 @@ bool TypeSystem::TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
           assert(type_ptr);
           new_left_type = type_ptr->orig_type_;
         }
-        flag = type_inference_new(cur->right_, new_left_type);
+        flag = type_inference_new(cur->right_child, new_left_type);
         if (!flag) return flag;
         auto right_type =
-            cache_inference_map_[cur->right_]->GetARandomCandidateType();
+            cache_inference_map_[cur->right_child]->GetARandomCandidateType();
         res_type = right_type;
         cur_type->AddCandidate(res_type, left_type, right_type);
         break;
@@ -1039,12 +1047,12 @@ bool TypeSystem::TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
       }
       default: {
         // handle a + b Here
-        flag = type_inference_new(cur->left_, scope_type);
+        flag = type_inference_new(cur->left_child, scope_type);
         if (!flag) return flag;
-        flag = type_inference_new(cur->right_, scope_type);
+        flag = type_inference_new(cur->right_child, scope_type);
         if (!flag) return flag;
-        auto left_type = cache_inference_map_[cur->left_];
-        auto right_type = cache_inference_map_[cur->right_];
+        auto left_type = cache_inference_map_[cur->left_child];
+        auto right_type = cache_inference_map_[cur->right_child];
         // handle function call case-by-case
 
         if (left_type->GetCandidates().size() == 1 &&
@@ -1059,9 +1067,9 @@ bool TypeSystem::TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
 
         // res_type = query_type_dict(cur_op, left_type, right_type);
         for (auto &left_cahce :
-             cache_inference_map_[cur->left_]->GetCandidates()) {
+             cache_inference_map_[cur->left_child]->GetCandidates()) {
           for (auto &right_cache :
-               cache_inference_map_[cur->right_]->GetCandidates()) {
+               cache_inference_map_[cur->right_child]->GetCandidates()) {
             auto a_left_type = left_cahce.first;
             auto a_right_type = right_cache.first;
             if (DBG)
@@ -1110,7 +1118,7 @@ int TypeSystem::TypeInferer::locate_defined_variable_by_name(
 set<int> TypeSystem::TypeInferer::collect_usable_type(IRPtr cur) {
   set<int> result;
   auto ir_id = cur->id_;
-  auto current_scope = scope_tree_->GetScopeById(cur->scope_id_);
+  auto current_scope = scope_tree_->GetScopeById(cur->scope_id);
   while (current_scope) {
     if (DBG)
       cout << "Collecting scope id: " << current_scope->scope_id_ << endl;
@@ -1166,7 +1174,7 @@ vector<map<int, vector<string>>> TypeSystem::collect_all_var_definition_by_type(
   map<int, vector<string>> functions;
   map<int, vector<string>> compound_types;
   map<int, vector<string>> pointer_types;
-  auto cur_scope_id = cur->scope_id_;
+  auto cur_scope_id = cur->scope_id;
   auto ir_id = cur->id_;
   auto current_scope = scope_tree_->GetScopeById(cur_scope_id);
   while (current_scope) {
@@ -1811,8 +1819,8 @@ string TypeSystem::generate_expression_by_type_core(int type, IRPtr ir) {
   static vector<map<int, vector<string>>> var_maps;
   static map<int, vector<set<int>>> all_satisfiable_types;
   if (gen_counter_ == 0) {
-    if (current_fix_scope_ != ir->scope_id_) {
-      current_fix_scope_ = ir->scope_id_;
+    if (current_fix_scope_ != ir->scope_id) {
+      current_fix_scope_ = ir->scope_id;
       var_maps.clear();
       all_satisfiable_types.clear();
       var_maps = collect_all_var_definition_by_type(ir);
@@ -1991,16 +1999,16 @@ string TypeSystem::generate_expression_by_type_core(int type, IRPtr ir) {
 }
 
 IRPtr TypeSystem::locate_mutated_ir(IRPtr root) {
-  if (root->left_) {
-    if (root->right_ == nullptr) {
-      return locate_mutated_ir(root->left_);
+  if (root->left_child) {
+    if (root->right_child == nullptr) {
+      return locate_mutated_ir(root->left_child);
     }
 
-    if (contain_fixme(root->right_) == false) {
-      return locate_mutated_ir(root->left_);
+    if (contain_fixme(root->right_child) == false) {
+      return locate_mutated_ir(root->left_child);
     }
-    if (contain_fixme(root->left_) == false) {
-      return locate_mutated_ir(root->right_);
+    if (contain_fixme(root->left_child) == false) {
+      return locate_mutated_ir(root->right_child);
     }
 
     return root;
@@ -2044,19 +2052,19 @@ bool TypeSystem::simple_fix(IRPtr ir, int type, TypeInferer &inferer) {
       spdlog::debug("NodeType: {}", frontend_->GetIRTypeStr(ir->type_));
     }
     if (!inferer.GetCandidateTypes(ir)->HasCandidate(type)) return false;
-    if (ir->left_) {
+    if (ir->left_child) {
       auto iter =
           *random_pick(inferer.GetCandidateTypes(ir)->GetCandidates(type));
-      if (ir->right_) {
-        simple_fix(ir->left_, iter.left, inferer);
-        simple_fix(ir->right_, iter.right, inferer);
+      if (ir->right_child) {
+        simple_fix(ir->left_child, iter.left, inferer);
+        simple_fix(ir->right_child, iter.right, inferer);
       } else {
-        simple_fix(ir->left_, iter.left, inferer);
+        simple_fix(ir->left_child, iter.left, inferer);
       }
     }
   } else {
-    if (ir->left_) simple_fix(ir->left_, type, inferer);
-    if (ir->right_) simple_fix(ir->right_, type, inferer);
+    if (ir->left_child) simple_fix(ir->left_child, type, inferer);
+    if (ir->right_child) simple_fix(ir->right_child, type, inferer);
   }
   return true;
 }
@@ -2078,8 +2086,8 @@ bool TypeSystem::top_fix(IRPtr root) {
         int type = ALLTYPES;
         res = simple_fix(root, type, inferer);
       } else {
-        if (root->right_) stk.push(root->right_);
-        if (root->left_) stk.push(root->left_);
+        if (root->right_child) stk.push(root->right_child);
+        if (root->left_child) stk.push(root->left_child);
       }
     } else {
       if (root->type_ == gen::Configuration::GetInstance().GetFixIRType() ||
@@ -2096,8 +2104,8 @@ bool TypeSystem::top_fix(IRPtr root) {
         auto t = iter->first;
         res = simple_fix(root, t, inferer);
       } else {
-        if (root->right_) stk.push(root->right_);
-        if (root->left_) stk.push(root->left_);
+        if (root->right_child) stk.push(root->right_child);
+        if (root->left_child) stk.push(root->left_child);
       }
     }
   }
@@ -2135,34 +2143,34 @@ bool TypeSystem::validate_syntax_only(IRPtr root) {
 }
 
 void TypeSystem::extract_struct_after_mutation(IRPtr root) {
-  if (root->left_) {
-    if (root->left_->data_type_ == kDataFixUnit) {
-      if (contain_fixme(root->left_)) {
-        auto save_ir_id = root->left_->id_;
-        auto save_scope = root->left_->scope_id_;
+  if (root->left_child) {
+    if (root->left_child->data_type == kDataFixUnit) {
+      if (contain_fixme(root->left_child)) {
+        auto save_ir_id = root->left_child->id_;
+        auto save_scope = root->left_child->scope_id;
         ;
-        root->left_ =
+        root->left_child =
             std::make_shared<IR>(frontend_->GetStringLiteralType(), "FIXME");
-        root->left_->scope_id_ = save_scope;
-        root->left_->id_ = save_ir_id;
+        root->left_child->scope_id = save_scope;
+        root->left_child->id_ = save_ir_id;
       }
     } else {
-      extract_struct_after_mutation(root->left_);
+      extract_struct_after_mutation(root->left_child);
     }
   }
-  if (root->right_) {
-    if (root->right_->data_type_ == kDataFixUnit) {
-      if (contain_fixme(root->right_)) {
-        auto save_ir_id = root->right_->id_;
-        auto save_scope = root->right_->scope_id_;
+  if (root->right_child) {
+    if (root->right_child->data_type == kDataFixUnit) {
+      if (contain_fixme(root->right_child)) {
+        auto save_ir_id = root->right_child->id_;
+        auto save_scope = root->right_child->scope_id;
         ;
-        root->right_ =
+        root->right_child =
             std::make_shared<IR>(frontend_->GetStringLiteralType(), "FIXME");
-        root->right_->scope_id_ = save_scope;
-        root->right_->id_ = save_ir_id;
+        root->right_child->scope_id = save_scope;
+        root->right_child->id_ = save_ir_id;
       }
     } else {
-      extract_struct_after_mutation(root->right_);
+      extract_struct_after_mutation(root->right_child);
     }
   }
   return;
