@@ -38,8 +38,8 @@ IR::IR(IRTYPE type, int int_val)
   GEN_NAME();
 }
 
-IR::IR(IRTYPE type, double f_val, DATATYPE data_type, ScopeType scope,
-       DATAFLAG flag)
+IR::IR(IRTYPE type, double f_val, DataType data_type, ScopeType scope,
+       DataFlag flag)
     : type(type),
       float_val(f_val),
       left_child(nullptr),

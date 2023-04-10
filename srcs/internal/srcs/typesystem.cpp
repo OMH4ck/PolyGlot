@@ -243,8 +243,8 @@ bool TypeSystem::is_contain_definition(IRPtr cur) {
   return res;
 }
 
-void search_by_data_type(IRPtr cur, DATATYPE type, vector<IRPtr> &result,
-                         DATATYPE forbit_type = kDataWhatever,
+void search_by_data_type(IRPtr cur, DataType type, vector<IRPtr> &result,
+                         DataType forbit_type = kDataWhatever,
                          bool go_inside = false) {
   if (cur->data_type == type) {
     result.push_back(cur);
@@ -263,8 +263,8 @@ void search_by_data_type(IRPtr cur, DATATYPE type, vector<IRPtr> &result,
   }
 }
 
-IRPtr search_by_data_type(IRPtr cur, DATATYPE type,
-                          DATATYPE forbit_type = kDataWhatever) {
+IRPtr search_by_data_type(IRPtr cur, DataType type,
+                          DataType forbit_type = kDataWhatever) {
   if (cur->data_type == type) {
     return cur;
   } else if (forbit_type != kDataWhatever && cur->data_type == forbit_type) {
@@ -777,7 +777,7 @@ void TypeSystem::collect_function_definition(IRPtr cur) {
   }
 }
 
-DATATYPE TypeSystem::find_define_type(IRPtr cur) {
+DataType TypeSystem::find_define_type(IRPtr cur) {
   if (cur->data_type == kDataVarType || cur->data_type == kDataClassType ||
       cur->data_type == kDataFunctionType)
     return cur->data_type;

@@ -15,33 +15,28 @@ using namespace std;
 
 using IRTYPE = unsigned int;
 
-#define ALLDATATYPE(V)       \
-  V(DataWhatever)            \
-  V(DataFunctionType)        \
-  V(DataClassType)           \
-  V(DataInitiator)           \
-  V(DataFunctionBody)        \
-  V(DataFunctionArg)         \
-  V(DataFunctionReturnValue) \
-  V(DataFunctionName)        \
-  V(DataVarDefine)           \
-  V(DataClassName)           \
-  V(DataPointer)             \
-  V(DataStructBody)          \
-  V(DataDeclarator)          \
-  V(DataVarType)             \
-  V(DataFixUnit)             \
-  V(DataVarName)             \
-  V(DataVarScope)            \
-  V(DataDefault)
-
-enum DATATYPE {
-#define DECLARE_TYPE(v) k##v,
-  ALLDATATYPE(DECLARE_TYPE)
-#undef DECLARE_TYPE
+enum DataType {
+  kDataWhatever,
+  kDataFunctionType,
+  kDataClassType,
+  kDataInitiator,
+  kDataFunctionBody,
+  kDataFunctionArg,
+  kDataFunctionReturnValue,
+  kDataFunctionName,
+  kDataVarDefine,
+  kDataClassName,
+  kDataPointer,
+  kDataStructBody,
+  kDataDeclarator,
+  kDataVarType,
+  kDataFixUnit,
+  kDataVarName,
+  kDataVarScope,
+  kDataDefault
 };
 
-enum DATAFLAG {
+enum DataFlag {
   kDefine = 0x1,
   kUndefine = 0x2,
   kGlobal = 0x4,
@@ -77,7 +72,6 @@ enum ScopeType {
   kScopeClass,
 };
 
-using IRTYPE = unsigned int;
 struct IROperator {
   std::string prefix;
   std::string middle;
@@ -101,8 +95,8 @@ class IR {
 
   IR(IRTYPE type, int int_val);
 
-  IR(IRTYPE type, double f_val, DATATYPE data_type, ScopeType scope,
-     DATAFLAG flag);
+  IR(IRTYPE type, double f_val, DataType data_type, ScopeType scope,
+     DataFlag flag);
 
   /*
   IR(IRTYPE type, std::shared_ptr<IROperator> op, IRPtr left, IRPtr right,
@@ -123,8 +117,8 @@ class IR {
 
   ScopeType scope_type = kScopeDefault;
   unsigned long scope_id;
-  DATAFLAG data_flag = kUse;
-  DATATYPE data_type = kDataWhatever;
+  DataFlag data_flag = kUse;
+  DataType data_type = kDataWhatever;
   IRTYPE type;
 
   std::shared_ptr<IROperator> op = nullptr;

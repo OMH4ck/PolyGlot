@@ -24,19 +24,19 @@ public:
         // Add your custom logic to update the custom attribute here
     }
 
-    void SetDataFlag(DATAFLAG flag) {
+    void SetDataFlag(DataFlag flag) {
         data_flag = flag;
     }
 
-    DATAFLAG GetDataFlag() {
+    DataFlag GetDataFlag() {
         return data_flag;
     }
 
-    DATATYPE GetDataType() {
+    DataType GetDataType() {
         return data_type;
     }
 
-    void SetDataType(DATATYPE type) {
+    void SetDataType(DataType type) {
         data_type = type;
     }
 
@@ -48,8 +48,8 @@ public:
         return scope_type;
     }
 
-    DATAFLAG data_flag = kUse;
-    DATATYPE data_type = kDataDefault;
+    DataFlag data_flag = kUse;
+    DataType data_type = kDataDefault;
     ScopeType scope_type = kScopeDefault;
 };
 

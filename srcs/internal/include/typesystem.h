@@ -246,7 +246,7 @@ class TypeSystem {
                                                set<int> &visit);
   string get_class_member(int type_id);
 
-  DATATYPE find_define_type(IRPtr cur);
+  DataType find_define_type(IRPtr cur);
 
   void collect_structure_definition(IRPtr cur, IRPtr root);
   void collect_function_definition(IRPtr cur);
