@@ -63,28 +63,15 @@ find_package(antlr4-runtime REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
 # TODO: Add more
-list(APPEND SUPPORTED_LANG lua php c simplelang)
+set(SUPPORTED_LANG lua simplelang)
 
-set(LANG ${LANG})
-
-if(NOT LANG)
+if(NOT DEFINED LANG)
   message(FATAL_ERROR "Please specify a language to build with -DLANG=...")
 endif()
 
 if(NOT ${LANG} IN_LIST SUPPORTED_LANG)
   message(FATAL_ERROR "Language ${LANG} is not supported")
 endif()
-
-set(GENERATED_FILES
-    ${CMAKE_SOURCE_DIR}/gen/parser/bison_parser.cpp
-    ${CMAKE_SOURCE_DIR}/gen/parser/flex_lexer.cpp
-    ${CMAKE_SOURCE_DIR}/gen/gen_ir.cpp)
-# Code generation
-add_custom_command(
-  OUTPUT ${GENERATED_FILES}
-  DEPENDS ${CMAKE_SOURCE_DIR}/CodeGen.py ${CMAKE_SOURCE_DIR}/Generator.py
-  COMMAND python3 ${CMAKE_SOURCE_DIR}/CodeGen.py
-          ${CMAKE_SOURCE_DIR}/grammars/${LANG}_grammar)
 
 file(GLOB SRC_FILES ${CMAKE_SOURCE_DIR}/srcs/internal/srcs/*.cpp)
 
