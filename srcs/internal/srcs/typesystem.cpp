@@ -7,6 +7,7 @@
 #include "config_misc.h"
 // #include "define.h"
 #include "frontend.h"
+#include "ir.h"
 #include "spdlog/spdlog.h"
 #include "utils.h"
 #include "var_definition.h"
@@ -14,18 +15,29 @@
 using namespace std;
 namespace polyglot {
 
+#ifdef PHPFUZZ
+const char *member_str = "->";
+#else
+const char *member_str = ".";
+#endif
+
+void filter_element(map<int, vector<string>> &vars,
+                    set<int> &satisfiable_types) {
+  map<int, vector<string>> filtered;
+  for (auto t : satisfiable_types) {
+    if (vars.find(t) != vars.end()) {
+      filtered[t] = std::move(vars[t]);
+    }
+  }
+  vars = std::move(filtered);
+}
+
 namespace typesystem {
 
 #define DBG 0
 #define SOLIDITYFUZZ
 #define dbg_cout \
   if (DBG) cout
-
-#ifdef PHPFUZZ
-const char *member_str = "->";
-#else
-const char *member_str = ".";
-#endif
 
 // map<int, vector<OPRule>> TypeSystem::op_rules_;
 // map<string, map<string, map<string, OPTYPE>>> TypeSystem::op_id_map_;
@@ -38,8 +50,8 @@ const char *member_str = ".";
 // shared_ptr<Scope> TypeSystem::current_scope_ptr_;
 // map<IRPtr, shared_ptr<map<TYPEID, vector<pair<TYPEID, TYPEID>>>>>
 //     TypeSystem::cache_inference_map_;
-map<int, vector<OPRule>> TypeSystem::TypeInferer::op_rules_;
-map<string, map<string, map<string, int>>> TypeSystem::TypeInferer::op_id_map_;
+map<int, vector<OPRule>> TypeInferer::op_rules_;
+map<string, map<string, map<string, int>>> TypeInferer::op_id_map_;
 
 IRPtr cur_statement_root = nullptr;
 
@@ -107,7 +119,7 @@ void TypeSystem::init() {
       gen::Configuration::GetInstance().GetBuiltInObjectFilePath());
 }
 
-void TypeSystem::TypeInferer::init_type_dict() {
+void TypeInferer::init_type_dict() {
   // string line;
   // ifstream input_file("./js_grammar/type_dict");
 
@@ -166,7 +178,7 @@ void TypeSystem::connect_back(map<IRPtr *, IRPtr> &m_save) {
   }
 }
 
-FIXORDER TypeSystem::TypeInferer::get_fix_order(int op) {
+FIXORDER TypeInferer::get_fix_order(int op) {
   assert(op_rules_.find(op) != op_rules_.end());
   assert(op_rules_[op].empty() == false);
   return op_rules_[op].front().fix_order_;
@@ -178,12 +190,12 @@ FIXORDER TypeSystem::TypeInferer::get_fix_order(int op) {
   */
 }
 
-int TypeSystem::TypeInferer::get_op_value(std::shared_ptr<IROperator> op) {
+int TypeInferer::get_op_value(std::shared_ptr<IROperator> op) {
   if (op == nullptr) return 0;
   return op_id_map_[op->prefix][op->middle][op->suffix];
 }
 
-bool TypeSystem::TypeInferer::is_op_null(std::shared_ptr<IROperator> op) {
+bool TypeInferer::is_op_null(std::shared_ptr<IROperator> op) {
   return (op == nullptr ||
           (op->suffix == "" && op->middle == "" && op->prefix == ""));
 }
@@ -219,11 +231,11 @@ ScopeType scope_js(const string &s) {
 
 // map<IR*, shared_ptr<map<TYPEID, vector<pair<TYPEID, TYPEID>>>>>
 // TypeSystem::cache_inference_map_;
-bool TypeSystem::TypeInferer::Infer(IRPtr &cur, int scope_type) {
+bool TypeInferer::Infer(IRPtr &cur, int scope_type) {
   return type_inference_new(cur, scope_type);
 }
 
-bool TypeSystem::TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
+bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
   auto cur_type = std::make_shared<CandidateTypes>();
   int res_type = NOTEXIST;
   bool flag;
@@ -469,8 +481,8 @@ bool TypeSystem::TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
   return cur_type->HasCandidate();
 }
 
-int TypeSystem::TypeInferer::locate_defined_variable_by_name(
-    const string &var_name, int scope_id) {
+int TypeInferer::locate_defined_variable_by_name(const string &var_name,
+                                                 int scope_id) {
   int result = NOTEXIST;
   auto current_scope = scope_tree_->GetScopeById(scope_id);
   while (current_scope) {
@@ -485,7 +497,7 @@ int TypeSystem::TypeInferer::locate_defined_variable_by_name(
   return result;
 }
 
-set<int> TypeSystem::TypeInferer::collect_usable_type(IRPtr cur) {
+set<int> TypeInferer::collect_usable_type(IRPtr cur) {
   set<int> result;
   auto ir_id = cur->id;
   auto current_scope = scope_tree_->GetScopeById(cur->scope_id);
@@ -537,120 +549,7 @@ set<int> TypeSystem::TypeInferer::collect_usable_type(IRPtr cur) {
   return result;
 }
 
-vector<map<int, vector<string>>> TypeSystem::collect_all_var_definition_by_type(
-    IRPtr cur) {
-  vector<map<int, vector<string>>> result;
-  map<int, vector<string>> simple_var;
-  map<int, vector<string>> functions;
-  map<int, vector<string>> compound_types;
-  map<int, vector<string>> pointer_types;
-  auto cur_scope_id = cur->scope_id;
-  auto ir_id = cur->id;
-  // TODO: Fix this.
-  auto current_scope = scope_tree_->GetScopeById(cur_scope_id);
-  while (current_scope != nullptr) {
-    // if(DBG) cout <<"Searching scope "<< current_scope->scope_id_ << endl;
-    if (current_scope->definitions_.GetTable().size()) {
-      for (auto &iter : current_scope->definitions_.GetTable()) {
-        auto tmp_type = iter.first;
-        auto type_ptr = get_type_by_type_id(tmp_type);
-        if (type_ptr == nullptr) continue;
-        if (type_ptr->is_function_type()) {
-          for (auto &var : iter.second) {
-            if (var.order_id < ir_id) {
-              // if(DBG) cout << "Collectingi func: " << var.first << endl;
-              functions[tmp_type].push_back(var.name);
-            }
-          }
-        } else if (type_ptr->is_compound_type()) {
-          for (auto &var : iter.second) {
-            if (var.order_id < ir_id) {
-              if (DBG) cout << "Collecting compound: " << var.name << endl;
-              compound_types[tmp_type].push_back(var.name);
-            }
-          }
-        } else {
-          if (type_ptr->is_pointer_type()) {
-            for (auto &var : iter.second) {
-              if (var.order_id < ir_id) {
-                pointer_types[tmp_type].push_back(var.name);
-              }
-            }
-          }
-          for (auto &var : iter.second) {
-            if (var.order_id < ir_id) {
-              cout << "Collecting simple var: " << var.name << endl;
-              simple_var[tmp_type].push_back(var.name);
-            } else {
-              cout << "Not collecting simple var: " << var.name << endl;
-            }
-          }
-        }
-      }
-    }
-    current_scope = current_scope->parent_.lock();
-  }
-
-  // add builtin types
-
-  auto &builtin_func = get_all_builtin_function_types();
-  size_t add_prop = builtin_func.size();
-  // if(add_prop == 0) add_prop = 1;
-  for (auto &k : builtin_func) {
-    for (auto &n : k.second) {
-      if (get_rand_int(add_prop) == 0) functions[k.first].push_back(n);
-    }
-  }
-
-  if (builtin_func.size()) {
-    for (int ii = 0; ii < 2; ii++) {
-      auto t1 = random_pick(builtin_func);
-      if (t1->second.size())
-        functions[t1->first].push_back(*random_pick(t1->second));
-    }
-  }
-
-  auto &builtin_compounds = get_all_builtin_compound_types();
-  add_prop = builtin_compounds.size();
-  // if(add_prop == 0) add_prop = 1;
-  for (auto &k : builtin_compounds) {
-    for (auto &n : k.second) {
-      if (get_rand_int(add_prop) == 0) compound_types[k.first].push_back(n);
-    }
-  }
-
-  if (builtin_compounds.size()) {
-    for (int ii = 0; ii < 2; ii++) {
-      auto t1 = random_pick(builtin_compounds);
-      if (t1->second.size())
-        compound_types[t1->first].push_back(*random_pick(t1->second));
-    }
-  }
-
-  auto &builtin_simple_var = get_all_builtin_simple_var_types();
-  add_prop = builtin_simple_var.size();
-  // if(add_prop == 0) add_prop = 1;
-  for (auto &k : builtin_simple_var) {
-    for (auto &n : k.second) {
-      if (get_rand_int(add_prop) == 0) simple_var[k.first].push_back(n);
-    }
-  }
-
-  if (builtin_simple_var.size()) {
-    auto t1 = random_pick(builtin_simple_var);
-    if (t1->second.size())
-      simple_var[t1->first].push_back(*random_pick(t1->second));
-  }
-
-  result.push_back(std::move(simple_var));
-  result.push_back(std::move(compound_types));
-  result.push_back(std::move(functions));
-  result.push_back(std::move(pointer_types));
-  return result;
-}
-
-pair<OPTYPE, vector<int>>
-TypeSystem::TypeInferer::collect_sat_op_by_result_type(
+pair<OPTYPE, vector<int>> TypeInferer::collect_sat_op_by_result_type(
     int type, map<int, vector<set<int>>> &all_satisfiable_types,
     map<int, vector<string>> &function_map,
     map<int, vector<string>> &compound_var_map) {
@@ -719,7 +618,7 @@ TypeSystem::TypeInferer::collect_sat_op_by_result_type(
   return res;
 }
 
-vector<string> TypeSystem::TypeInferer::get_op_by_optype(OPTYPE op_type) {
+vector<string> TypeInferer::get_op_by_optype(OPTYPE op_type) {
   for (auto &s1 : op_id_map_) {
     for (auto &s2 : s1.second) {
       for (auto &s3 : s2.second) {
@@ -731,137 +630,7 @@ vector<string> TypeSystem::TypeInferer::get_op_by_optype(OPTYPE op_type) {
   return {};
 }
 
-string TypeSystem::get_class_member_by_type_no_duplicate(int type,
-                                                         int target_type,
-                                                         set<int> &visit) {
-  string res;
-  vector<string> all_sol;
-  vector<shared_ptr<FunctionType>> func_sol;
-  visit.insert(type);
-
-  auto type_ptr = get_compound_type_by_type_id(type);
-  for (auto &member : type_ptr->v_members_) {
-    if (member.first == target_type) {
-      res = member_str + *random_pick(member.second);
-      all_sol.push_back(res);
-    }
-  }
-
-  string res1;
-  for (auto &member : type_ptr->v_members_) {
-    if (is_compound_type(member.first)) {
-      if (visit.find(member.first) != visit.end()) continue;
-      auto tmp_res = get_class_member_by_type_no_duplicate(member.first,
-                                                           target_type, visit);
-      if (tmp_res.size()) {
-        res1 = member_str + *random_pick(type_ptr->v_members_[member.first]) +
-               tmp_res;
-        all_sol.push_back(res1);
-      }
-    } else if (is_function_type(member.first)) {
-      if (member.first == target_type) {
-        res1 = member_str + *random_pick(type_ptr->v_members_[member.first]);
-        all_sol.push_back(res1);
-      } else {
-        auto pfunc = get_function_type_by_type_id(member.first);
-        if (pfunc->return_type_ != target_type) continue;
-        func_sol.push_back(pfunc);
-      }
-    }
-  }
-
-  if (all_sol.size() && !func_sol.size()) {
-    res = *random_pick(all_sol);
-  } else if (!all_sol.size() && func_sol.size()) {
-    auto pfunc = *random_pick(func_sol);
-    map<int, vector<string>> tmp_func_map;
-    tmp_func_map[pfunc->type_id_] = {pfunc->type_name_};
-    res = member_str + function_call_gen_handler(tmp_func_map, nullptr);
-  } else if (all_sol.size() && func_sol.size()) {
-    if (get_rand_int(2)) {
-      auto pfunc = *random_pick(func_sol);
-      map<int, vector<string>> tmp_func_map;
-      tmp_func_map[pfunc->type_id_] = {pfunc->type_name_};
-      res = member_str + function_call_gen_handler(tmp_func_map, nullptr);
-    } else {
-      res = *random_pick(all_sol);
-    }
-  }
-
-  return res;
-}
-
-string TypeSystem::get_class_member_by_type(int type, int target_type) {
-  set<int> visit;
-  return get_class_member_by_type_no_duplicate(type, target_type, visit);
-}
-
-bool TypeSystem::filter_compound_type(
-    map<int, vector<string>> &compound_var_map, int type) {
-  bool res = false;
-  auto tmp = compound_var_map;
-
-  for (auto &each_compound_var : tmp) {
-    auto compound_type = each_compound_var.first;
-    auto member_name = get_class_member_by_type(compound_type, type);
-    if (!member_name.empty()) {
-      res = true;
-      break;
-    }
-
-    compound_var_map.erase(each_compound_var.first);
-  }
-
-  return res;
-}
-
-set<int> get_all_types_from_compound_type(int compound_type, set<int> &visit) {
-  set<int> res;
-  if (visit.find(compound_type) != visit.end()) return res;
-  visit.insert(compound_type);
-
-  auto compound_ptr = get_compound_type_by_type_id(compound_type);
-  for (auto member : compound_ptr->v_members_) {
-    auto member_type = member.first;
-    if (is_compound_type(member_type)) {
-      auto sub_structure_res =
-          get_all_types_from_compound_type(member_type, visit);
-      res.insert(sub_structure_res.begin(), sub_structure_res.end());
-      res.insert(member_type);
-    } else if (is_function_type(member_type)) {
-      // assert(0);
-      if (gen::Configuration::GetInstance().IsWeakType()) {
-        auto pfunc = get_function_type_by_type_id(member_type);
-        res.insert(pfunc->return_type_);
-        res.insert(member_type);
-      }
-    } else if (is_basic_type(member_type)) {
-      res.insert(member_type);
-    } else {
-      if (gen::Configuration::GetInstance().IsWeakType()) {
-        res.insert(member_type);
-      }
-    }
-  }
-
-  return res;
-}
-static map<int, set<int>> builtin_structure_type_cache;
-set<int> TypeSystem::calc_possible_types_from_structure(int structure_type) {
-  set<int> visit;
-  if (DBG) {
-    auto type_ptr = get_compound_type_by_type_id(structure_type);
-    cout << "[calc_possible_types_from_structure] " << type_ptr->type_name_
-         << endl;
-  }
-  if (builtin_structure_type_cache.count(structure_type))
-    return builtin_structure_type_cache[structure_type];
-  auto res = get_all_types_from_compound_type(structure_type, visit);
-  if (is_builtin_type(structure_type))
-    builtin_structure_type_cache[structure_type] = res;
-  return res;
-}
-
+/*
 bool TypeSystem::filter_function_type(
     map<int, vector<string>> &function_map,
     const map<int, vector<string>> &compound_var_map,
@@ -914,184 +683,14 @@ bool TypeSystem::filter_function_type(
   }
   return true;
 }
-
-set<int> TypeSystem::calc_satisfiable_functions(
-    const set<int> &function_type_set, const set<int> &available_types) {
-  map<int, set<int>> func_map;
-  set<int> current_types = available_types;
-  set<int> res = function_type_set;
-
-  // setup function graph into a map
-  for (auto &func : function_type_set) {
-    auto func_ptr = get_function_type_by_type_id(func);
-    func_map[func] =
-        set<int>(func_ptr->v_arg_types_.begin(), func_ptr->v_arg_types_.end());
-  }
-
-  // traverse function graph
-  // remove satisfied function type and add them into current_types
-  bool is_change;
-  do {
-    is_change = false;
-    for (auto func_itr = func_map.begin(); func_itr != func_map.end();) {
-      auto func = *func_itr;
-      auto func_ptr = get_function_type_by_type_id(func.first);
-      for (auto &t : current_types) {
-        func.second.erase(t);
-      }
-      if (func.second.size() == 0) {
-        is_change = true;
-        func_map.erase(func_itr++);
-        current_types.insert(func_ptr->return_type_);
-      } else {
-        func_itr++;
-      }
-    }
-  } while (is_change == true);
-
-  // unsatisfied function remain in func_map
-  for (auto &f : func_map) {
-    if (DBG) cout << "remove function: " << f.first << endl;
-    res.erase(f.first);
-  }
-  return res;
-}
+*/
 
 #define SIMPLE_VAR_IDX 0
 #define STRUCTURE_IDX 1
 #define FUNCTION_CALL_IDX 2
 #define HANDLER_CASE_NUM 3
 
-void filter_element(map<int, vector<string>> &vars,
-                    set<int> &satisfiable_types) {
-  map<int, vector<string>> filtered;
-  for (auto t : satisfiable_types) {
-    if (vars.find(t) != vars.end()) {
-      filtered[t] = std::move(vars[t]);
-    }
-  }
-  vars = std::move(filtered);
-}
-
-map<int, vector<set<int>>> TypeSystem::collect_satisfiable_types(
-    IRPtr ir, map<int, vector<string>> &simple_var_map,
-    map<int, vector<string>> &compound_var_map,
-    map<int, vector<string>> &function_map) {
-  map<int, vector<set<int>>> res;
-  // auto var_maps = collect_all_var_definition_by_type(ir);
-  // auto &simple_var_map = var_maps[0];
-  // auto &compound_var_map = var_maps[1];
-  // auto &function_map = var_maps[2];
-  set<int> current_types;
-
-  for (auto &t : simple_var_map) {
-    auto type = t.first;
-    if (res.find(type) == res.end()) {
-      res[type] = vector<set<int>>(HANDLER_CASE_NUM);
-    }
-    res[type][SIMPLE_VAR_IDX].insert(type);
-    current_types.insert(type);
-  }
-
-  for (auto &t : compound_var_map) {
-    auto type = t.first;
-    if (res.find(type) == res.end()) {
-      res[type] = vector<set<int>>(HANDLER_CASE_NUM);
-    }
-
-    res[type][STRUCTURE_IDX].insert(type);
-    auto member_types = calc_possible_types_from_structure(type);
-    // assert(member_types.size());
-    for (auto member_type : member_types) {
-      current_types.insert(member_type);
-      if (res.find(member_type) == res.end()) {
-        res[member_type] = vector<set<int>>(HANDLER_CASE_NUM);
-      }
-      res[member_type][STRUCTURE_IDX].insert(type);
-      // if(DBG) cout << "Collecting " << get_type_name_by_id(member_type) << "
-      // from " << get_type_name_by_id(type) << endl;
-    }
-  }
-
-  set<int> function_types;
-  for (auto &t : function_map) {
-    function_types.insert(t.first);
-  }
-
-  auto satisfiable_functions =
-      calc_satisfiable_functions(function_types, current_types);
-  for (auto type : satisfiable_functions) {
-    auto func_ptr = get_function_type_by_type_id(type);
-    auto return_type = func_ptr->return_type_;
-    if (res.find(return_type) == res.end()) {
-      res[return_type] = vector<set<int>>(HANDLER_CASE_NUM);
-    }
-    res[return_type][FUNCTION_CALL_IDX].insert(type);
-  }
-
-  return res;
-}
-
-string TypeSystem::function_call_gen_handler(
-    map<int, vector<string>> &function_map, IRPtr ir) {
-  string res;
-  assert(function_map.size());
-  if (DBG) cout << "function handler" << endl;
-  auto pick_func = *random_pick(function_map);
-  if (DBG) cout << "Function type: " << pick_func.first << endl;
-  shared_ptr<FunctionType> choice_ptr =
-      get_function_type_by_type_id(pick_func.first);
-
-  assert(choice_ptr != nullptr);
-
-  res = choice_ptr->type_name_;
-  res += "(";
-  function_gen_counter_ += choice_ptr->v_arg_types_.size();
-  for (auto k : choice_ptr->v_arg_types_) {
-    res += generate_expression_by_type_core(k, ir);
-    res += ",";
-  }
-  if (res[res.size() - 1] == ',')
-    res[res.size() - 1] = ')';
-  else
-    res += ")";
-  return res;
-}
-
-string TypeSystem::structure_member_gen_handler(
-    map<int, vector<string>> &compound_var_map, int member_type) {
-  if (DBG) cout << "Structure handler" << endl;
-
-  string res;
-
-  auto compound = *random_pick(compound_var_map);
-  auto compound_type = compound.first;
-
-  // if(compound.second.size() == 0){
-  //     cout << "empty structure" <<
-  // }
-  assert(compound.second.size());
-  auto compound_var = *random_pick(compound.second);
-  res = get_class_member_by_type(compound_type, member_type);
-  if (res.empty()) {
-    assert(member_type == compound_type);
-    if (gen::Configuration::GetInstance().IsWeakType()) {
-      if (is_builtin_type(compound_type) && get_rand_int(4)) {
-        auto compound_ptr = get_type_by_type_id(compound_type);
-        if (compound_ptr != nullptr && compound_var == compound_ptr->type_name_)
-          return "(new " + compound_ptr->type_name_ + "())";
-        else {
-          return compound_var;
-        }
-      }
-    }
-    return compound_var;
-  }
-  res = compound_var + res;
-
-  return res;
-}
-
+/*
 string TypeSystem::get_class_member(TYPEID type_id) {
   string res;
   auto compound_ptr = get_compound_type_by_type_id(type_id);
@@ -1117,257 +716,7 @@ string TypeSystem::get_class_member(TYPEID type_id) {
 
   return res;
 }
-
-void TypeSystem::update_pointer_var(
-    map<int, vector<string>> &pointer_var_map,
-    map<int, vector<string>> &simple_var_map,
-    map<int, vector<string>> &compound_var_map) {
-  for (auto pointer_type : pointer_var_map) {
-    if (pointer_type.second.size() == 0) break;
-    auto pointer_id = pointer_type.first;
-    auto pointer_ptr = get_pointer_type_by_type_id(pointer_id);
-    if (is_basic_type(pointer_ptr->basic_type_)) {
-      for (auto var_name : pointer_type.second) {
-        string target(pointer_ptr->reference_level_, '*');
-        simple_var_map[pointer_ptr->basic_type_].push_back(target + var_name);
-      }
-    } else if (is_compound_type(pointer_ptr->basic_type_)) {
-      for (auto var_name : pointer_type.second) {
-        string target(pointer_ptr->reference_level_, '*');
-        compound_var_map[pointer_ptr->basic_type_].push_back(target + var_name);
-      }
-    }
-  }
-
-  return;
-}
-
-string TypeSystem::expression_gen_handler(
-    int type, map<int, vector<set<int>>> &all_satisfiable_types,
-    map<int, vector<string>> &function_map,
-    map<int, vector<string>> &compound_var_map, IRPtr ir) {
-  string res;
-  auto sat_op = TypeInferer::collect_sat_op_by_result_type(
-      type, all_satisfiable_types, function_map,
-      compound_var_map);  // map<OPTYPE, vector<typeid>>
-  if (DBG) cout << "OP id: " << sat_op.first << endl;
-  if (sat_op.first == 0) {
-    return gen_random_num_string();
-  }
-  assert(sat_op.first);
-
-  auto op = TypeInferer::get_op_by_optype(
-      sat_op.first);  // vector<string> for prefix, middle, suffix
-  assert(op.size());  // should not be an empty operator
-  if (TypeInferer::is_op1(sat_op.first)) {
-    auto arg1_type = sat_op.second[0];
-    auto arg1 = generate_expression_by_type_core(arg1_type, ir);
-    assert(arg1.size());
-    res = op[0] + " " + arg1 + " " + op[1] + op[2];
-  } else {
-    auto arg1_type = sat_op.second[0];
-    auto arg2_type = sat_op.second[1];
-    auto arg1 = generate_expression_by_type_core(arg1_type, ir);
-    auto arg2 = generate_expression_by_type_core(arg2_type, ir);
-
-    assert(arg1.size() && arg2.size());
-    res = op[0] + " " + arg1 + " " + op[1] + " " + arg2 + " " + op[2];
-  }
-  return res;
-}
-
-string TypeSystem::generate_expression_by_type(int type, IRPtr ir) {
-  gen_counter_ = 0;
-  function_gen_counter_ = 0;
-  auto res = generate_expression_by_type_core(type, ir);
-  if (res.size() == 0) {
-    assert(0);
-  }
-  return res;
-}
-
-string TypeSystem::generate_expression_by_type_core(int type, IRPtr ir) {
-  static vector<map<int, vector<string>>> var_maps;
-  static map<int, vector<set<int>>> all_satisfiable_types;
-  if (gen_counter_ == 0) {
-    if (current_fix_scope_ != ir->scope_id) {
-      current_fix_scope_ = ir->scope_id;
-      var_maps.clear();
-      all_satisfiable_types.clear();
-      var_maps = collect_all_var_definition_by_type(ir);
-      all_satisfiable_types =
-          collect_satisfiable_types(ir, var_maps[0], var_maps[1], var_maps[2]);
-    }
-  }
-
-  if (gen_counter_ > 50) return gen_random_num_string();
-  gen_counter_++;
-  cout << "Generating type:" << get_type_name_by_id(type)
-       << ", type id: " << type << endl;
-  string res;
-
-  // collect all possible types
-  auto simple_var_map = var_maps[0];
-  auto compound_var_map = var_maps[1];
-  auto function_map = var_maps[2];
-  auto pointer_var_map = var_maps[3];
-
-  auto simple_var_size = simple_var_map.size();
-  auto compound_var_size = compound_var_map.size();
-  auto function_size = function_map.size();
-
-  if (!gen::Configuration::GetInstance().IsWeakType()) {
-    // add pointer into *_var_map
-    update_pointer_var(pointer_var_map, simple_var_map, compound_var_map);
-  }
-
-  if (type == ALLTYPES && all_satisfiable_types.size()) {
-    type = random_pick(all_satisfiable_types)->first;
-    if (DBG)
-      cout << "Type becomes: " << get_type_name_by_id(type) << ", id: " << type
-           << endl;
-    if (is_function_type(type) && (get_rand_int(3))) {
-      type = get_function_type_by_type_id(type)->return_type_;
-      if (DBG)
-        cout << "Type becomes: " << get_type_name_by_id(type)
-             << ", id: " << type << endl;
-    }
-
-    /*
-    if(rand_choice < simple_var_size){
-        type = random_pick(simple_var_map)->first;
-    }else if(rand_choice < simple_var_size + compound_var_size){
-        type = random_pick(compound_var_map)->first;
-    }else{
-        type = random_pick(function_map)->first;
-    }
-    */
-  }
-
-  if (all_satisfiable_types.find(type) == all_satisfiable_types.end()) {
-    std::cout << "No satifyting type?" << std::endl;
-    // should invoke insert_definition;
-    return gen_random_num_string();
-    assert(0);
-  }
-
-  int tmp_prob = 2;
-  /*
-  while (0) {
-    // can choose to generate its derived_type if possible
-    auto type_ptr = get_type_by_type_id(type);
-    if (type_ptr->derived_type_.empty()) {
-      break;
-    }
-    auto derived_type_ptr = (*random_pick(type_ptr->derived_type_)).lock();
-    auto derived_type = derived_type_ptr->get_type_id();
-    if (all_satisfiable_types.find(derived_type) !=
-        all_satisfiable_types.end()) {
-      if (get_rand_int(tmp_prob) == 0) {
-        if (DBG)
-          cout << "Changing type from " << type << " to " << derived_type
-               << endl;
-        type = derived_type;
-        tmp_prob <<= 1;
-      } else {
-        break;
-      }
-    } else {
-      break;
-    }
-  }
-   */
-
-  // Filter out unmatched types, update the sizes
-  filter_element(simple_var_map, all_satisfiable_types[type][SIMPLE_VAR_IDX]);
-  filter_element(compound_var_map, all_satisfiable_types[type][STRUCTURE_IDX]);
-  filter_element(function_map, all_satisfiable_types[type][FUNCTION_CALL_IDX]);
-
-  simple_var_size = simple_var_map.size();
-  // compound_var_size = 0;
-  compound_var_size = compound_var_map.size();
-  // compound_var_size = simple_var_map.size();//compound_var_map.size();
-  function_size = function_map.size();
-
-// calculate probility
-#define SIMPLE_VAR_WEIGHT 6
-#define COMPOUND_VAR_WEIGHT 3
-#define FUNCTION_WEIGHT 3
-#define EXPRESSION_WEIGHT 1
-
-  unsigned long expression_size =
-      (function_size + compound_var_size + simple_var_size) >> 1;
-
-  // when we use builtin types, we should not worry about this.
-  /*
-  while(expression_size > simple_var_size){
-      expression_size >>= 1;
-  }
-  */
-  if (!(function_size + compound_var_size + simple_var_size)) {
-    return gen_random_num_string();
-  }
-
-  if (expression_size == 0) expression_size = 1;
-  if (is_function_type(type) || is_compound_type(type))
-    expression_size =
-        0;  // when meeting a function size, we do not use it in operation.
-
-  if (DBG) cout << "Function size: " << function_size << endl;
-  if (DBG) cout << "Compound size: " << compound_var_size << endl;
-  if (DBG) cout << "Simple var size: " << simple_var_size << endl;
-  expression_size <<= EXPRESSION_WEIGHT;
-  function_size <<= FUNCTION_WEIGHT;
-  compound_var_size <<= COMPOUND_VAR_WEIGHT;
-  simple_var_size <<= SIMPLE_VAR_WEIGHT;
-  if (gen_counter_ > 3) expression_size >>= 2;
-  if (gen_counter_ > 15) {
-    simple_var_size <<= 0x10;
-    expression_size = 0;
-  }
-  if (function_gen_counter_ > 2) function_size >>= (function_gen_counter_ >> 2);
-  unsigned long prob[] = {expression_size, function_size, compound_var_size,
-                          simple_var_size};
-
-  auto total_size = simple_var_size + function_size + compound_var_size;
-  if (total_size == 0) return gen_random_num_string();
-  auto choice = get_rand_int(total_size);
-  if (DBG)
-    cout << "choice: " << choice << "/"
-         << simple_var_size + function_size + compound_var_size +
-                expression_size
-         << endl;
-  if (DBG) cout << expression_size << endl;
-  // assert(expression_size);
-  // if(expression_size == 0){
-  //     return "";
-  // }
-  if (0 <= choice && choice < prob[0]) {
-    if (DBG) cout << "exp op exp handler" << endl;
-    res = expression_gen_handler(type, all_satisfiable_types, function_map,
-                                 compound_var_map, ir);
-    return res;
-    // expr op expr
-  }
-
-  choice -= prob[0];
-  if (0 <= choice && choice < prob[1]) {
-    return function_call_gen_handler(function_map, ir);
-  }
-
-  choice -= prob[1];
-  if (0 <= choice && choice < prob[2]) {
-    // handle structure here
-    return structure_member_gen_handler(compound_var_map, type);
-  } else {
-    // handle simple var here
-    if (DBG) cout << "simple_type handler" << endl;
-
-    assert(!simple_var_map[type].empty());
-
-    return *random_pick(simple_var_map[type]);
-  }
-}
+*/
 
 IRPtr TypeSystem::locate_mutated_ir(IRPtr root) {
   if (root->left_child) {
@@ -1401,7 +750,8 @@ bool TypeSystem::simple_fix(IRPtr ir, int type, TypeInferer &inferer) {
   // if (ir->type_ == kIdentifier && ir->str_val_ == "FIXME")
   if (ir->ContainString() && ir->GetString() == "FIXME") {
     spdlog::debug("Reach here");
-    ir->data = generate_expression_by_type(type, ir);
+    validation::ExpressionGenerator generator(scope_tree_);
+    ir->data = generator.GenerateExpression(type, ir);
     return true;
   }
 
@@ -1638,7 +988,7 @@ int OPRule::apply(int arg1, int arg2) {
   return least_upper_common_type(arg1, arg2);
 }
 
-int TypeSystem::TypeInferer::query_result_type(int op, int arg1, int arg2) {
+int TypeInferer::query_result_type(int op, int arg1, int arg2) {
   bool isop1 = arg2 == 0;
 
   if (op_rules_.find(op) == op_rules_.end()) {
@@ -1674,14 +1024,14 @@ int TypeSystem::TypeInferer::query_result_type(int op, int arg1, int arg2) {
   return NOTEXIST;
 }
 
-int TypeSystem::TypeInferer::get_op_property(int op_id) {
+int TypeInferer::get_op_property(int op_id) {
   assert(op_rules_.find(op_id) != op_rules_.end());
   assert(op_rules_[op_id].size());
 
   return op_rules_[op_id][0].property_;
 }
 
-bool TypeSystem::TypeInferer::is_op1(int op_id) {
+bool TypeInferer::is_op1(int op_id) {
   if (op_rules_.find(op_id) == op_rules_.end()) {
     return false;
   }
@@ -1691,7 +1041,7 @@ bool TypeSystem::TypeInferer::is_op1(int op_id) {
   return op_rules_[op_id][0].operand_num_ == 1;
 }
 
-bool TypeSystem::TypeInferer::is_op2(int op_id) {
+bool TypeInferer::is_op2(int op_id) {
   if (op_rules_.find(op_id) == op_rules_.end()) {
     return false;
   }
@@ -1711,7 +1061,7 @@ void OPRule::add_property(const string &s) {
   }
 }
 
-OPRule TypeSystem::TypeInferer::parse_op_rule(string s) {
+OPRule TypeInferer::parse_op_rule(string s) {
   vector<string> v_strbuf;
   int pos = 0, last_pos = 0;
   while ((pos = s.find(" # ", last_pos)) != string::npos) {
@@ -1813,5 +1163,649 @@ ValidationError SemanticValidator::Validate(IRPtr &root) {
     return ValidationError::kNoSymbolToUse;
   }
 }
+
+std::string ExpressionGenerator::GenerateExpression(TYPEID type, IRPtr &ir) {
+  return generate_expression_by_type(type, ir);
+}
+
+string ExpressionGenerator::generate_expression_by_type(int type, IRPtr &ir) {
+  gen_counter_ = 0;
+  function_gen_counter_ = 0;
+  auto res = generate_expression_by_type_core(type, ir);
+  if (res.size() == 0) {
+    assert(0);
+  }
+  return res;
+}
+
+string ExpressionGenerator::expression_gen_handler(
+    int type, map<int, vector<set<int>>> &all_satisfiable_types,
+    map<int, vector<string>> &function_map,
+    map<int, vector<string>> &compound_var_map, IRPtr ir) {
+  string res;
+  auto sat_op = typesystem::TypeInferer::collect_sat_op_by_result_type(
+      type, all_satisfiable_types, function_map,
+      compound_var_map);  // map<OPTYPE, vector<typeid>>
+  if (DBG) cout << "OP id: " << sat_op.first << endl;
+  if (sat_op.first == 0) {
+    return gen_random_num_string();
+  }
+  assert(sat_op.first);
+
+  auto op = typesystem::TypeInferer::get_op_by_optype(
+      sat_op.first);  // vector<string> for prefix, middle, suffix
+  assert(op.size());  // should not be an empty operator
+  if (typesystem::TypeInferer::is_op1(sat_op.first)) {
+    auto arg1_type = sat_op.second[0];
+    auto arg1 = generate_expression_by_type_core(arg1_type, ir);
+    assert(arg1.size());
+    res = op[0] + " " + arg1 + " " + op[1] + op[2];
+  } else {
+    auto arg1_type = sat_op.second[0];
+    auto arg2_type = sat_op.second[1];
+    auto arg1 = generate_expression_by_type_core(arg1_type, ir);
+    auto arg2 = generate_expression_by_type_core(arg2_type, ir);
+
+    assert(arg1.size() && arg2.size());
+    res = op[0] + " " + arg1 + " " + op[1] + " " + arg2 + " " + op[2];
+  }
+  return res;
+}
+
+string ExpressionGenerator::generate_expression_by_type_core(int type,
+                                                             IRPtr &ir) {
+  static vector<map<int, vector<string>>> var_maps;
+  static map<int, vector<set<int>>> all_satisfiable_types;
+  if (gen_counter_ == 0) {
+    if (current_fix_scope_ != ir->scope_id) {
+      current_fix_scope_ = ir->scope_id;
+      var_maps.clear();
+      all_satisfiable_types.clear();
+      var_maps = collect_all_var_definition_by_type(ir);
+      all_satisfiable_types =
+          collect_satisfiable_types(ir, var_maps[0], var_maps[1], var_maps[2]);
+    }
+  }
+
+  if (gen_counter_ > 50) return gen_random_num_string();
+  gen_counter_++;
+  cout << "Generating type:" << get_type_name_by_id(type)
+       << ", type id: " << type << endl;
+  string res;
+
+  // collect all possible types
+  auto simple_var_map = var_maps[0];
+  auto compound_var_map = var_maps[1];
+  auto function_map = var_maps[2];
+  auto pointer_var_map = var_maps[3];
+
+  auto simple_var_size = simple_var_map.size();
+  auto compound_var_size = compound_var_map.size();
+  auto function_size = function_map.size();
+
+  if (!gen::Configuration::GetInstance().IsWeakType()) {
+    // add pointer into *_var_map
+    update_pointer_var(pointer_var_map, simple_var_map, compound_var_map);
+  }
+
+  if (type == ALLTYPES && all_satisfiable_types.size()) {
+    type = random_pick(all_satisfiable_types)->first;
+    if (DBG)
+      cout << "Type becomes: " << get_type_name_by_id(type) << ", id: " << type
+           << endl;
+    if (is_function_type(type) && (get_rand_int(3))) {
+      type = get_function_type_by_type_id(type)->return_type_;
+      if (DBG)
+        cout << "Type becomes: " << get_type_name_by_id(type)
+             << ", id: " << type << endl;
+    }
+
+    /*
+    if(rand_choice < simple_var_size){
+        type = random_pick(simple_var_map)->first;
+    }else if(rand_choice < simple_var_size + compound_var_size){
+        type = random_pick(compound_var_map)->first;
+    }else{
+        type = random_pick(function_map)->first;
+    }
+    */
+  }
+
+  if (all_satisfiable_types.find(type) == all_satisfiable_types.end()) {
+    std::cout << "No satifyting type?" << std::endl;
+    // should invoke insert_definition;
+    return gen_random_num_string();
+    assert(0);
+  }
+
+  int tmp_prob = 2;
+  /*
+  while (0) {
+    // can choose to generate its derived_type if possible
+    auto type_ptr = get_type_by_type_id(type);
+    if (type_ptr->derived_type_.empty()) {
+      break;
+    }
+    auto derived_type_ptr = (*random_pick(type_ptr->derived_type_)).lock();
+    auto derived_type = derived_type_ptr->get_type_id();
+    if (all_satisfiable_types.find(derived_type) !=
+        all_satisfiable_types.end()) {
+      if (get_rand_int(tmp_prob) == 0) {
+        if (DBG)
+          cout << "Changing type from " << type << " to " << derived_type
+               << endl;
+        type = derived_type;
+        tmp_prob <<= 1;
+      } else {
+        break;
+      }
+    } else {
+      break;
+    }
+  }
+   */
+
+  // Filter out unmatched types, update the sizes
+  filter_element(simple_var_map, all_satisfiable_types[type][SIMPLE_VAR_IDX]);
+  filter_element(compound_var_map, all_satisfiable_types[type][STRUCTURE_IDX]);
+  filter_element(function_map, all_satisfiable_types[type][FUNCTION_CALL_IDX]);
+
+  simple_var_size = simple_var_map.size();
+  // compound_var_size = 0;
+  compound_var_size = compound_var_map.size();
+  // compound_var_size = simple_var_map.size();//compound_var_map.size();
+  function_size = function_map.size();
+
+// calculate probility
+#define SIMPLE_VAR_WEIGHT 6
+#define COMPOUND_VAR_WEIGHT 3
+#define FUNCTION_WEIGHT 3
+#define EXPRESSION_WEIGHT 1
+
+  unsigned long expression_size =
+      (function_size + compound_var_size + simple_var_size) >> 1;
+
+  // when we use builtin types, we should not worry about this.
+  /*
+  while(expression_size > simple_var_size){
+      expression_size >>= 1;
+  }
+  */
+  if (!(function_size + compound_var_size + simple_var_size)) {
+    return gen_random_num_string();
+  }
+
+  if (expression_size == 0) expression_size = 1;
+  if (is_function_type(type) || is_compound_type(type))
+    expression_size =
+        0;  // when meeting a function size, we do not use it in operation.
+
+  if (DBG) cout << "Function size: " << function_size << endl;
+  if (DBG) cout << "Compound size: " << compound_var_size << endl;
+  if (DBG) cout << "Simple var size: " << simple_var_size << endl;
+  expression_size <<= EXPRESSION_WEIGHT;
+  function_size <<= FUNCTION_WEIGHT;
+  compound_var_size <<= COMPOUND_VAR_WEIGHT;
+  simple_var_size <<= SIMPLE_VAR_WEIGHT;
+  if (gen_counter_ > 3) expression_size >>= 2;
+  if (gen_counter_ > 15) {
+    simple_var_size <<= 0x10;
+    expression_size = 0;
+  }
+  if (function_gen_counter_ > 2) function_size >>= (function_gen_counter_ >> 2);
+  unsigned long prob[] = {expression_size, function_size, compound_var_size,
+                          simple_var_size};
+
+  auto total_size = simple_var_size + function_size + compound_var_size;
+  if (total_size == 0) return gen_random_num_string();
+  auto choice = get_rand_int(total_size);
+  if (DBG)
+    cout << "choice: " << choice << "/"
+         << simple_var_size + function_size + compound_var_size +
+                expression_size
+         << endl;
+  if (DBG) cout << expression_size << endl;
+  // assert(expression_size);
+  // if(expression_size == 0){
+  //     return "";
+  // }
+  if (0 <= choice && choice < prob[0]) {
+    if (DBG) cout << "exp op exp handler" << endl;
+    res = expression_gen_handler(type, all_satisfiable_types, function_map,
+                                 compound_var_map, ir);
+    return res;
+    // expr op expr
+  }
+
+  choice -= prob[0];
+  if (0 <= choice && choice < prob[1]) {
+    return function_call_gen_handler(function_map, ir);
+  }
+
+  choice -= prob[1];
+  if (0 <= choice && choice < prob[2]) {
+    // handle structure here
+    return structure_member_gen_handler(compound_var_map, type);
+  } else {
+    // handle simple var here
+    if (DBG) cout << "simple_type handler" << endl;
+
+    assert(!simple_var_map[type].empty());
+
+    return *random_pick(simple_var_map[type]);
+  }
+}
+
+string ExpressionGenerator::function_call_gen_handler(
+    map<int, vector<string>> &function_map, IRPtr ir) {
+  string res;
+  assert(function_map.size());
+  if (DBG) cout << "function handler" << endl;
+  auto pick_func = *random_pick(function_map);
+  if (DBG) cout << "Function type: " << pick_func.first << endl;
+  shared_ptr<FunctionType> choice_ptr =
+      get_function_type_by_type_id(pick_func.first);
+
+  assert(choice_ptr != nullptr);
+
+  res = choice_ptr->type_name_;
+  res += "(";
+  function_gen_counter_ += choice_ptr->v_arg_types_.size();
+  for (auto k : choice_ptr->v_arg_types_) {
+    res += generate_expression_by_type_core(k, ir);
+    res += ",";
+  }
+  if (res[res.size() - 1] == ',')
+    res[res.size() - 1] = ')';
+  else
+    res += ")";
+  return res;
+}
+
+string ExpressionGenerator::structure_member_gen_handler(
+    map<int, vector<string>> &compound_var_map, int member_type) {
+  if (DBG) cout << "Structure handler" << endl;
+
+  string res;
+
+  auto compound = *random_pick(compound_var_map);
+  auto compound_type = compound.first;
+
+  // if(compound.second.size() == 0){
+  //     cout << "empty structure" <<
+  // }
+  assert(compound.second.size());
+  auto compound_var = *random_pick(compound.second);
+  res = get_class_member_by_type(compound_type, member_type);
+  if (res.empty()) {
+    assert(member_type == compound_type);
+    if (gen::Configuration::GetInstance().IsWeakType()) {
+      if (is_builtin_type(compound_type) && get_rand_int(4)) {
+        auto compound_ptr = get_type_by_type_id(compound_type);
+        if (compound_ptr != nullptr && compound_var == compound_ptr->type_name_)
+          return "(new " + compound_ptr->type_name_ + "())";
+        else {
+          return compound_var;
+        }
+      }
+    }
+    return compound_var;
+  }
+  res = compound_var + res;
+
+  return res;
+}
+
+void ExpressionGenerator::update_pointer_var(
+    map<int, vector<string>> &pointer_var_map,
+    map<int, vector<string>> &simple_var_map,
+    map<int, vector<string>> &compound_var_map) {
+  for (auto pointer_type : pointer_var_map) {
+    if (pointer_type.second.size() == 0) break;
+    auto pointer_id = pointer_type.first;
+    auto pointer_ptr = get_pointer_type_by_type_id(pointer_id);
+    if (is_basic_type(pointer_ptr->basic_type_)) {
+      for (auto var_name : pointer_type.second) {
+        string target(pointer_ptr->reference_level_, '*');
+        simple_var_map[pointer_ptr->basic_type_].push_back(target + var_name);
+      }
+    } else if (is_compound_type(pointer_ptr->basic_type_)) {
+      for (auto var_name : pointer_type.second) {
+        string target(pointer_ptr->reference_level_, '*');
+        compound_var_map[pointer_ptr->basic_type_].push_back(target + var_name);
+      }
+    }
+  }
+
+  return;
+}
+
+string ExpressionGenerator::get_class_member_by_type_no_duplicate(
+    int type, int target_type, set<int> &visit) {
+  string res;
+  vector<string> all_sol;
+  vector<shared_ptr<FunctionType>> func_sol;
+  visit.insert(type);
+
+  auto type_ptr = get_compound_type_by_type_id(type);
+  for (auto &member : type_ptr->v_members_) {
+    if (member.first == target_type) {
+      res = member_str + *random_pick(member.second);
+      all_sol.push_back(res);
+    }
+  }
+
+  string res1;
+  for (auto &member : type_ptr->v_members_) {
+    if (is_compound_type(member.first)) {
+      if (visit.find(member.first) != visit.end()) continue;
+      auto tmp_res = get_class_member_by_type_no_duplicate(member.first,
+                                                           target_type, visit);
+      if (tmp_res.size()) {
+        res1 = member_str + *random_pick(type_ptr->v_members_[member.first]) +
+               tmp_res;
+        all_sol.push_back(res1);
+      }
+    } else if (is_function_type(member.first)) {
+      if (member.first == target_type) {
+        res1 = member_str + *random_pick(type_ptr->v_members_[member.first]);
+        all_sol.push_back(res1);
+      } else {
+        auto pfunc = get_function_type_by_type_id(member.first);
+        if (pfunc->return_type_ != target_type) continue;
+        func_sol.push_back(pfunc);
+      }
+    }
+  }
+
+  if (all_sol.size() && !func_sol.size()) {
+    res = *random_pick(all_sol);
+  } else if (!all_sol.size() && func_sol.size()) {
+    auto pfunc = *random_pick(func_sol);
+    map<int, vector<string>> tmp_func_map;
+    tmp_func_map[pfunc->type_id_] = {pfunc->type_name_};
+    res = member_str + function_call_gen_handler(tmp_func_map, nullptr);
+  } else if (all_sol.size() && func_sol.size()) {
+    if (get_rand_int(2)) {
+      auto pfunc = *random_pick(func_sol);
+      map<int, vector<string>> tmp_func_map;
+      tmp_func_map[pfunc->type_id_] = {pfunc->type_name_};
+      res = member_str + function_call_gen_handler(tmp_func_map, nullptr);
+    } else {
+      res = *random_pick(all_sol);
+    }
+  }
+
+  return res;
+}
+
+string ExpressionGenerator::get_class_member_by_type(int type,
+                                                     int target_type) {
+  set<int> visit;
+  return get_class_member_by_type_no_duplicate(type, target_type, visit);
+}
+
+vector<map<int, vector<string>>>
+ExpressionGenerator::collect_all_var_definition_by_type(IRPtr cur) {
+  vector<map<int, vector<string>>> result;
+  map<int, vector<string>> simple_var;
+  map<int, vector<string>> functions;
+  map<int, vector<string>> compound_types;
+  map<int, vector<string>> pointer_types;
+  auto cur_scope_id = cur->scope_id;
+  auto ir_id = cur->id;
+  // TODO: Fix this.
+  auto current_scope = scope_tree_->GetScopeById(cur_scope_id);
+  while (current_scope != nullptr) {
+    // if(DBG) cout <<"Searching scope "<< current_scope->scope_id_ << endl;
+    if (current_scope->definitions_.GetTable().size()) {
+      for (auto &iter : current_scope->definitions_.GetTable()) {
+        auto tmp_type = iter.first;
+        auto type_ptr = get_type_by_type_id(tmp_type);
+        if (type_ptr == nullptr) continue;
+        if (type_ptr->is_function_type()) {
+          for (auto &var : iter.second) {
+            if (var.order_id < ir_id) {
+              // if(DBG) cout << "Collectingi func: " << var.first << endl;
+              functions[tmp_type].push_back(var.name);
+            }
+          }
+        } else if (type_ptr->is_compound_type()) {
+          for (auto &var : iter.second) {
+            if (var.order_id < ir_id) {
+              if (DBG) cout << "Collecting compound: " << var.name << endl;
+              compound_types[tmp_type].push_back(var.name);
+            }
+          }
+        } else {
+          if (type_ptr->is_pointer_type()) {
+            for (auto &var : iter.second) {
+              if (var.order_id < ir_id) {
+                pointer_types[tmp_type].push_back(var.name);
+              }
+            }
+          }
+          for (auto &var : iter.second) {
+            if (var.order_id < ir_id) {
+              cout << "Collecting simple var: " << var.name << endl;
+              simple_var[tmp_type].push_back(var.name);
+            } else {
+              cout << "Not collecting simple var: " << var.name << endl;
+            }
+          }
+        }
+      }
+    }
+    current_scope = current_scope->parent_.lock();
+  }
+
+  // add builtin types
+
+  auto &builtin_func = get_all_builtin_function_types();
+  size_t add_prop = builtin_func.size();
+  // if(add_prop == 0) add_prop = 1;
+  for (auto &k : builtin_func) {
+    for (auto &n : k.second) {
+      if (get_rand_int(add_prop) == 0) functions[k.first].push_back(n);
+    }
+  }
+
+  if (builtin_func.size()) {
+    for (int ii = 0; ii < 2; ii++) {
+      auto t1 = random_pick(builtin_func);
+      if (t1->second.size())
+        functions[t1->first].push_back(*random_pick(t1->second));
+    }
+  }
+
+  auto &builtin_compounds = get_all_builtin_compound_types();
+  add_prop = builtin_compounds.size();
+  // if(add_prop == 0) add_prop = 1;
+  for (auto &k : builtin_compounds) {
+    for (auto &n : k.second) {
+      if (get_rand_int(add_prop) == 0) compound_types[k.first].push_back(n);
+    }
+  }
+
+  if (builtin_compounds.size()) {
+    for (int ii = 0; ii < 2; ii++) {
+      auto t1 = random_pick(builtin_compounds);
+      if (t1->second.size())
+        compound_types[t1->first].push_back(*random_pick(t1->second));
+    }
+  }
+
+  auto &builtin_simple_var = get_all_builtin_simple_var_types();
+  add_prop = builtin_simple_var.size();
+  // if(add_prop == 0) add_prop = 1;
+  for (auto &k : builtin_simple_var) {
+    for (auto &n : k.second) {
+      if (get_rand_int(add_prop) == 0) simple_var[k.first].push_back(n);
+    }
+  }
+
+  if (builtin_simple_var.size()) {
+    auto t1 = random_pick(builtin_simple_var);
+    if (t1->second.size())
+      simple_var[t1->first].push_back(*random_pick(t1->second));
+  }
+
+  result.push_back(std::move(simple_var));
+  result.push_back(std::move(compound_types));
+  result.push_back(std::move(functions));
+  result.push_back(std::move(pointer_types));
+  return result;
+}
+
+map<int, vector<set<int>>> ExpressionGenerator::collect_satisfiable_types(
+    IRPtr ir, map<int, vector<string>> &simple_var_map,
+    map<int, vector<string>> &compound_var_map,
+    map<int, vector<string>> &function_map) {
+  map<int, vector<set<int>>> res;
+  // auto var_maps = collect_all_var_definition_by_type(ir);
+  // auto &simple_var_map = var_maps[0];
+  // auto &compound_var_map = var_maps[1];
+  // auto &function_map = var_maps[2];
+  set<int> current_types;
+
+  for (auto &t : simple_var_map) {
+    auto type = t.first;
+    if (res.find(type) == res.end()) {
+      res[type] = vector<set<int>>(HANDLER_CASE_NUM);
+    }
+    res[type][SIMPLE_VAR_IDX].insert(type);
+    current_types.insert(type);
+  }
+
+  for (auto &t : compound_var_map) {
+    auto type = t.first;
+    if (res.find(type) == res.end()) {
+      res[type] = vector<set<int>>(HANDLER_CASE_NUM);
+    }
+
+    res[type][STRUCTURE_IDX].insert(type);
+    auto member_types = calc_possible_types_from_structure(type);
+    // assert(member_types.size());
+    for (auto member_type : member_types) {
+      current_types.insert(member_type);
+      if (res.find(member_type) == res.end()) {
+        res[member_type] = vector<set<int>>(HANDLER_CASE_NUM);
+      }
+      res[member_type][STRUCTURE_IDX].insert(type);
+      // if(DBG) cout << "Collecting " << get_type_name_by_id(member_type) << "
+      // from " << get_type_name_by_id(type) << endl;
+    }
+  }
+
+  set<int> function_types;
+  for (auto &t : function_map) {
+    function_types.insert(t.first);
+  }
+
+  auto satisfiable_functions =
+      calc_satisfiable_functions(function_types, current_types);
+  for (auto type : satisfiable_functions) {
+    auto func_ptr = get_function_type_by_type_id(type);
+    auto return_type = func_ptr->return_type_;
+    if (res.find(return_type) == res.end()) {
+      res[return_type] = vector<set<int>>(HANDLER_CASE_NUM);
+    }
+    res[return_type][FUNCTION_CALL_IDX].insert(type);
+  }
+
+  return res;
+}
+
+set<int> ExpressionGenerator::calc_satisfiable_functions(
+    const set<int> &function_type_set, const set<int> &available_types) {
+  map<int, set<int>> func_map;
+  set<int> current_types = available_types;
+  set<int> res = function_type_set;
+
+  // setup function graph into a map
+  for (auto &func : function_type_set) {
+    auto func_ptr = get_function_type_by_type_id(func);
+    func_map[func] =
+        set<int>(func_ptr->v_arg_types_.begin(), func_ptr->v_arg_types_.end());
+  }
+
+  // traverse function graph
+  // remove satisfied function type and add them into current_types
+  bool is_change;
+  do {
+    is_change = false;
+    for (auto func_itr = func_map.begin(); func_itr != func_map.end();) {
+      auto func = *func_itr;
+      auto func_ptr = get_function_type_by_type_id(func.first);
+      for (auto &t : current_types) {
+        func.second.erase(t);
+      }
+      if (func.second.size() == 0) {
+        is_change = true;
+        func_map.erase(func_itr++);
+        current_types.insert(func_ptr->return_type_);
+      } else {
+        func_itr++;
+      }
+    }
+  } while (is_change == true);
+
+  // unsatisfied function remain in func_map
+  for (auto &f : func_map) {
+    if (DBG) cout << "remove function: " << f.first << endl;
+    res.erase(f.first);
+  }
+  return res;
+}
+
+set<int> get_all_types_from_compound_type(int compound_type, set<int> &visit) {
+  set<int> res;
+  if (visit.find(compound_type) != visit.end()) return res;
+  visit.insert(compound_type);
+
+  auto compound_ptr = get_compound_type_by_type_id(compound_type);
+  for (auto member : compound_ptr->v_members_) {
+    auto member_type = member.first;
+    if (is_compound_type(member_type)) {
+      auto sub_structure_res =
+          get_all_types_from_compound_type(member_type, visit);
+      res.insert(sub_structure_res.begin(), sub_structure_res.end());
+      res.insert(member_type);
+    } else if (is_function_type(member_type)) {
+      // assert(0);
+      if (gen::Configuration::GetInstance().IsWeakType()) {
+        auto pfunc = get_function_type_by_type_id(member_type);
+        res.insert(pfunc->return_type_);
+        res.insert(member_type);
+      }
+    } else if (is_basic_type(member_type)) {
+      res.insert(member_type);
+    } else {
+      if (gen::Configuration::GetInstance().IsWeakType()) {
+        res.insert(member_type);
+      }
+    }
+  }
+
+  return res;
+}
+
+set<int> ExpressionGenerator::calc_possible_types_from_structure(
+    int structure_type) {
+  static map<int, set<int>> builtin_structure_type_cache;
+  set<int> visit;
+  if (DBG) {
+    auto type_ptr = get_compound_type_by_type_id(structure_type);
+    cout << "[calc_possible_types_from_structure] " << type_ptr->type_name_
+         << endl;
+  }
+  if (builtin_structure_type_cache.count(structure_type))
+    return builtin_structure_type_cache[structure_type];
+  auto res = get_all_types_from_compound_type(structure_type, visit);
+  if (is_builtin_type(structure_type))
+    builtin_structure_type_cache[structure_type] = res;
+  return res;
+}
+
 }  // namespace validation
 }  // namespace polyglot

@@ -22,6 +22,49 @@
 
 namespace polyglot {
 
+namespace validation {
+// Generate expression based on the type and scope
+// to replace the "FIXME".
+class ExpressionGenerator {
+ public:
+  ExpressionGenerator(std::shared_ptr<ScopeTree> scope_tree)
+      : scope_tree_(scope_tree) {}
+  std::string GenerateExpression(TYPEID type, IRPtr &ir);
+
+ private:
+  std::shared_ptr<ScopeTree> scope_tree_;
+  int gen_counter_ = 0;
+  int function_gen_counter_ = 0;
+  int current_fix_scope_ = -1;
+  // Moved from the old type system
+  string generate_expression_by_type(int type, IRPtr &ir);
+  string generate_expression_by_type_core(int type, IRPtr &ir);
+  string expression_gen_handler(
+      int type, map<int, vector<set<int>>> &all_satisfiable_types,
+      map<int, vector<string>> &function_map,
+      map<int, vector<string>> &compound_var_map, IRPtr ir);
+  string function_call_gen_handler(map<int, vector<string>> &function_map,
+                                   IRPtr ir);
+  string structure_member_gen_handler(
+      map<int, vector<string>> &compound_var_map, int member_type);
+  void update_pointer_var(map<int, vector<string>> &pointer_var_map,
+                          map<int, vector<string>> &simple_var_map,
+                          map<int, vector<string>> &compound_var_map);
+  string get_class_member_by_type_no_duplicate(int type, int target_type,
+                                               set<int> &visit);
+  string get_class_member_by_type(int type, int target_type);
+  vector<map<int, vector<string>>> collect_all_var_definition_by_type(
+      IRPtr cur);
+  map<int, vector<set<int>>> collect_satisfiable_types(
+      IRPtr ir, map<int, vector<string>> &simple_var_map,
+      map<int, vector<string>> &compound_var_map,
+      map<int, vector<string>> &function_map);
+  set<int> calc_satisfiable_functions(const set<int> &function_type_set,
+                                      const set<int> &available_types);
+  set<int> calc_possible_types_from_structure(int structure_type);
+};
+}  // namespace validation
+
 namespace typesystem {
 
 using std::map;
@@ -75,6 +118,98 @@ class OPRule {
   OPRuleProperty property_ = OP_PROP_Default;
 };
 
+struct InferenceType {
+  TYPEID result;
+  TYPEID left;
+  TYPEID right;
+};
+
+class CandidateTypes {
+ public:
+  std::unordered_map<TYPEID, std::vector<InferenceType>> &GetCandidates() {
+    return candidates_;
+  }
+
+  void AddCandidate(TYPEID result, TYPEID left, TYPEID right) {
+    candidates_[result].push_back({result, left, right});
+  }
+
+  void AddCandidate(InferenceType inference_type) {
+    candidates_[inference_type.result].push_back(inference_type);
+  }
+
+  bool HasCandidate() {
+    for (auto &c : candidates_) {
+      if (c.second.size() > 0) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool HasCandidate(TYPEID result) {
+    return candidates_.find(result) != candidates_.end();
+  }
+
+  std::vector<InferenceType> &GetCandidates(TYPEID result) {
+    return candidates_[result];
+  }
+
+  TYPEID GetARandomCandidateType() {
+    for (auto &c : candidates_) {
+      if (c.second.size() > 0) {
+        return c.first;
+      }
+    }
+    return NOTEXIST;
+  }
+
+ private:
+  std::unordered_map<TYPEID /* result type*/, std::vector<InferenceType>>
+      candidates_;
+};
+
+class TypeInferer {
+ public:
+  TypeInferer(std::shared_ptr<Frontend> frontend = nullptr,
+              std::shared_ptr<ScopeTree> scope_tree = nullptr)
+      : frontend_(frontend), scope_tree_(scope_tree) {}
+  bool Infer(IRPtr &root, int scope_type = NOTEXIST);
+  std::shared_ptr<CandidateTypes> GetCandidateTypes(IRPtr &root) {
+    if (cache_inference_map_.find(root) == cache_inference_map_.end())
+      return nullptr;
+    else
+      return cache_inference_map_[root];
+  }
+  // Operator related functions, since they are configuration so they are
+  // static.
+  // TODO: Mark them as const if possible
+  static OPRule parse_op_rule(string s);
+  static bool is_op1(int);
+  static bool is_op2(int);
+  static int query_result_type(int op, int, int = 0);
+  static int get_op_property(int op_id);
+  static void init_type_dict();
+  static FIXORDER get_fix_order(int type);  // need to finish
+  static int get_op_value(std::shared_ptr<IROperator> op);
+  static bool is_op_null(std::shared_ptr<IROperator> op);
+  static vector<string> get_op_by_optype(OPTYPE op_type);
+  static pair<OPTYPE, vector<int>> collect_sat_op_by_result_type(
+      int type, map<int, vector<set<int>>> &a,
+      map<int, vector<string>> &function_map,
+      map<int, vector<string>> &compound_var_map);
+
+ private:
+  std::shared_ptr<Frontend> frontend_;
+  std::shared_ptr<ScopeTree> scope_tree_;
+  static map<string, map<string, map<string, int>>> op_id_map_;
+  static map<int, vector<OPRule>> op_rules_;
+  bool type_inference_new(IRPtr cur, int scope_type = NOTEXIST);
+  int locate_defined_variable_by_name(const string &var_name, int scope_id);
+  set<int> collect_usable_type(IRPtr cur);
+  std::map<IRPtr, std::shared_ptr<CandidateTypes>> cache_inference_map_;
+};
+
 class TypeSystem {
  private:
   std::shared_ptr<Frontend> frontend_;
@@ -106,98 +241,6 @@ class TypeSystem {
     scope_tree_ = scope_tree;
   }
 
-  struct InferenceType {
-    TYPEID result;
-    TYPEID left;
-    TYPEID right;
-  };
-
-  class CandidateTypes {
-   public:
-    std::unordered_map<TYPEID, std::vector<InferenceType>> &GetCandidates() {
-      return candidates_;
-    }
-
-    void AddCandidate(TYPEID result, TYPEID left, TYPEID right) {
-      candidates_[result].push_back({result, left, right});
-    }
-
-    void AddCandidate(InferenceType inference_type) {
-      candidates_[inference_type.result].push_back(inference_type);
-    }
-
-    bool HasCandidate() {
-      for (auto &c : candidates_) {
-        if (c.second.size() > 0) {
-          return true;
-        }
-      }
-      return false;
-    }
-
-    bool HasCandidate(TYPEID result) {
-      return candidates_.find(result) != candidates_.end();
-    }
-
-    std::vector<InferenceType> &GetCandidates(TYPEID result) {
-      return candidates_[result];
-    }
-
-    TYPEID GetARandomCandidateType() {
-      for (auto &c : candidates_) {
-        if (c.second.size() > 0) {
-          return c.first;
-        }
-      }
-      return NOTEXIST;
-    }
-
-   private:
-    std::unordered_map<TYPEID /* result type*/, std::vector<InferenceType>>
-        candidates_;
-  };
-
-  class TypeInferer {
-   public:
-    TypeInferer(std::shared_ptr<Frontend> frontend = nullptr,
-                std::shared_ptr<ScopeTree> scope_tree = nullptr)
-        : frontend_(frontend), scope_tree_(scope_tree) {}
-    bool Infer(IRPtr &root, int scope_type = NOTEXIST);
-    std::shared_ptr<CandidateTypes> GetCandidateTypes(IRPtr &root) {
-      if (cache_inference_map_.find(root) == cache_inference_map_.end())
-        return nullptr;
-      else
-        return cache_inference_map_[root];
-    }
-    // Operator related functions, since they are configuration so they are
-    // static.
-    // TODO: Mark them as const if possible
-    static OPRule parse_op_rule(string s);
-    static bool is_op1(int);
-    static bool is_op2(int);
-    static int query_result_type(int op, int, int = 0);
-    static int get_op_property(int op_id);
-    static void init_type_dict();
-    static FIXORDER get_fix_order(int type);  // need to finish
-    static int get_op_value(std::shared_ptr<IROperator> op);
-    static bool is_op_null(std::shared_ptr<IROperator> op);
-    static vector<string> get_op_by_optype(OPTYPE op_type);
-    static pair<OPTYPE, vector<int>> collect_sat_op_by_result_type(
-        int type, map<int, vector<set<int>>> &a,
-        map<int, vector<string>> &function_map,
-        map<int, vector<string>> &compound_var_map);
-
-   private:
-    std::shared_ptr<Frontend> frontend_;
-    std::shared_ptr<ScopeTree> scope_tree_;
-    static map<string, map<string, map<string, int>>> op_id_map_;
-    static map<int, vector<OPRule>> op_rules_;
-    bool type_inference_new(IRPtr cur, int scope_type = NOTEXIST);
-    int locate_defined_variable_by_name(const string &var_name, int scope_id);
-    set<int> collect_usable_type(IRPtr cur);
-    std::map<IRPtr, std::shared_ptr<CandidateTypes>> cache_inference_map_;
-  };
-
  private:
   [[deprecated("Should be removed")]] void split_to_basic_unit(
       IRPtr root, std::queue<IRPtr> &q, map<IRPtr *, IRPtr> &m_save,
@@ -216,8 +259,8 @@ class TypeSystem {
                                                set<int> &visit);
   string get_class_member(int type_id);
 
-  void collect_function_definition(IRPtr cur);
-  void collect_function_definition_wt(IRPtr cur);
+  // void collect_function_definition(IRPtr cur);
+  // void collect_function_definition_wt(IRPtr cur);
 
   // void collect_structure_definition(IRPtr cur, IRPtr root);
   // void collect_structure_definition_wt(IRPtr cur, IRPtr root);
@@ -225,10 +268,12 @@ class TypeSystem {
 
   // TODO: It should return the collected definitions instead of bool.
   // bool collect_definition(IRPtr cur);
+  /*
   string generate_expression_by_type(int type, IRPtr ir);
   string generate_expression_by_type_core(int type, IRPtr ir);
   vector<map<int, vector<string>>> collect_all_var_definition_by_type(
       IRPtr cur);
+  */
 
   bool simple_fix(IRPtr ir, int type, TypeInferer &inferer);
   bool validate_syntax_only(IRPtr root);
@@ -238,32 +283,32 @@ class TypeSystem {
   string generate_definition(vector<string> &var_name, int type);
   // bool insert_definition();
 
-  bool filter_compound_type(map<int, vector<string>> &compound_var_map,
-                            int type);
-  bool filter_function_type(map<int, vector<string>> &function_map,
-                            const map<int, vector<string>> &compound_var_map,
-                            const map<int, vector<string>> &simple_type,
-                            int type);
-  set<int> calc_satisfiable_functions(const set<int> &function_type_set,
-                                      const set<int> &available_types);
-  map<int, vector<set<int>>> collect_satisfiable_types(
-      IRPtr ir, map<int, vector<string>> &simple_var_map,
-      map<int, vector<string>> &compound_var_map,
-      map<int, vector<string>> &function_map);
-  set<int> calc_possible_types_from_structure(int structure_type);
-  string function_call_gen_handler(map<int, vector<string>> &function_map,
-                                   IRPtr ir);
-  string structure_member_gen_handler(
-      map<int, vector<string>> &compound_var_map, int member_type);
-  void update_pointer_var(map<int, vector<string>> &pointer_var_map,
-                          map<int, vector<string>> &simple_var_map,
-                          map<int, vector<string>> &compound_var_map);
+  // bool filter_compound_type(map<int, vector<string>> &compound_var_map,
+  //                           int type);
+  // bool filter_function_type(map<int, vector<string>> &function_map,
+  //                           const map<int, vector<string>> &compound_var_map,
+  //                           const map<int, vector<string>> &simple_type,
+  //                           int type);
+  // set<int> calc_satisfiable_functions(const set<int> &function_type_set,
+  //                                     const set<int> &available_types);
+  // map<int, vector<set<int>>> collect_satisfiable_types(
+  //     IRPtr ir, map<int, vector<string>> &simple_var_map,
+  //     map<int, vector<string>> &compound_var_map,
+  //     map<int, vector<string>> &function_map);
+  // set<int> calc_possible_types_from_structure(int structure_type);
+  // string function_call_gen_handler(map<int, vector<string>> &function_map,
+  //                                  IRPtr ir);
+  // string structure_member_gen_handler(
+  //     map<int, vector<string>> &compound_var_map, int member_type);
+  // void update_pointer_var(map<int, vector<string>> &pointer_var_map,
+  //                         map<int, vector<string>> &simple_var_map,
+  //                         map<int, vector<string>> &compound_var_map);
 
-  string expression_gen_handler(
-      int type, map<int, vector<set<int>>> &all_satisfiable_types,
-      map<int, vector<string>> &function_map,
-      map<int, vector<string>> &compound_var_map, IRPtr ir);
-  int gen_counter_, function_gen_counter_, current_fix_scope_;
+  // string expression_gen_handler(
+  //     int type, map<int, vector<set<int>>> &all_satisfiable_types,
+  //     map<int, vector<string>> &function_map,
+  //     map<int, vector<string>> &compound_var_map, IRPtr ir);
+  // int gen_counter_, function_gen_counter_, current_fix_scope_;
 
   // bool insert_definition(int scope_id, int type_id, string var_name);
 
