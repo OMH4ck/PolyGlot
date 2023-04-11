@@ -83,5 +83,4 @@ void PolyGlotMutator::initialize(std::string_view config_path) {
     cerr << "init filename: " << f << endl;
     g_mutator.init_ir_library_from_a_file(f);
   }
-  g_typesystem.init();
 }

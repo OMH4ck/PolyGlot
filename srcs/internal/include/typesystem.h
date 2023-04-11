@@ -10,6 +10,7 @@
 #include <memory>
 #include <queue>
 #include <set>
+#include <span>
 #include <stack>
 #include <string>
 #include <unordered_map>
@@ -20,45 +21,6 @@
 #include "var_definition.h"
 
 namespace polyglot {
-
-namespace validation {
-
-enum class ValidationError {
-  kSuccess,
-  kUnparseable,
-  kNoSymbolToUse,
-  // And others.
-};
-
-class Scope;
-class ScopeTree;
-class InferenceResult;
-
-// Refactored interfaces
-class Validator {
- public:
-  // Validate the IR. Return true if the IR is valid.
-  virtual ValidationError Validate(IRPtr &root) = 0;
-  virtual ~Validator() = default;
-};
-
-class SemanticValidator : public Validator {
- public:
-  ValidationError Validate(IRPtr &root) override;
-
-  // This validation consists of three steps:
-  // 1. It builds the sysmbol table in each scope, which are stored in a
-  // `ScopeTree`.
-  // 2. It infers the types of the IRs that need fixing, which needs the help of
-  // the symbol table.
-  // 3. Fix the IRs.
-  std::shared_ptr<ScopeTree> BuildSymbolTable(IRCPtr &root);
-  std::shared_ptr<InferenceResult> InferType(
-      IRPtr &root, std::shared_ptr<ScopeTree> scope_tree);
-  bool Fix(IRPtr &root, std::shared_ptr<InferenceResult> inference_result,
-           std::shared_ptr<ScopeTree> scope_tree);
-};
-}  // namespace validation
 
 namespace typesystem {
 
@@ -121,6 +83,8 @@ class TypeSystem {
   shared_ptr<Scope> current_scope_ptr_;
   bool contain_used_;
   set<IRTYPE> s_basic_unit_;
+
+  // TODO: Remove this by separating the fixme expression generation.
   std::shared_ptr<ScopeTree> scope_tree_;
 
  public:
@@ -130,8 +94,15 @@ class TypeSystem {
   // 1. It builds the sysmbol table in each scope.
   // 2. It infers the types of the IRs that need fixing.
   // 3. Fix the IRs based on their inferred types and symbol tables.
-  bool validate(IRPtr &root);
-  void init();
+  [[deprecated("Replaced by Validator::Validate()")]] bool validate(
+      IRPtr &root);
+  void MarkFixMe(IRPtr);
+  bool top_fix(IRPtr root);
+
+  // TODO: This is a hacky helper for now.
+  void SetScopeTree(std::shared_ptr<ScopeTree> scope_tree) {
+    scope_tree_ = scope_tree;
+  }
 
   struct InferenceType {
     TYPEID result;
@@ -226,19 +197,16 @@ class TypeSystem {
   };
 
  private:
-  // map<IR*, map<int, vector<pair<int,int>>>> cache_inference_map_;
-  // TODO: Make type explicit
-  // void init_basic_types();
+  [[deprecated("Should be removed")]] void split_to_basic_unit(
+      IRPtr root, std::queue<IRPtr> &q, map<IRPtr *, IRPtr> &m_save,
+      set<IRTYPE> &s_basic_unit_ptr);
+  [[deprecated("Should be removed")]] void split_to_basic_unit(
+      IRPtr root, std::queue<IRPtr> &q, map<IRPtr *, IRPtr> &m_save);
 
-  void split_to_basic_unit(IRPtr root, std::queue<IRPtr> &q,
-                           map<IRPtr *, IRPtr> &m_save,
-                           set<IRTYPE> &s_basic_unit_ptr);
-  void split_to_basic_unit(IRPtr root, std::queue<IRPtr> &q,
-                           map<IRPtr *, IRPtr> &m_save);
+  [[deprecated("Should be removed")]] void connect_back(
+      map<IRPtr *, IRPtr> &m_save);
 
-  void connect_back(map<IRPtr *, IRPtr> &m_save);
-
-  bool create_symbol_table(IRPtr root);
+  // bool create_symbol_table(IRPtr root);
 
   // new
   string get_class_member_by_type(int type, int target_type);
@@ -246,19 +214,15 @@ class TypeSystem {
                                                set<int> &visit);
   string get_class_member(int type_id);
 
-  DataType find_define_type(IRPtr cur);
-
-  void collect_structure_definition(IRPtr cur, IRPtr root);
   void collect_function_definition(IRPtr cur);
-
-  void collect_simple_variable_defintion_wt(IRPtr cur);
   void collect_function_definition_wt(IRPtr cur);
-  void collect_structure_definition_wt(IRPtr cur, IRPtr root);
-  std::optional<SymbolTable> collect_simple_variable_defintion(IRPtr cur);
-  bool is_contain_definition(IRPtr cur);
+
+  // void collect_structure_definition(IRPtr cur, IRPtr root);
+  // void collect_structure_definition_wt(IRPtr cur, IRPtr root);
+  //  std::optional<SymbolTable> collect_simple_variable_defintion(IRPtr cur);
 
   // TODO: It should return the collected definitions instead of bool.
-  bool collect_definition(IRPtr cur);
+  // bool collect_definition(IRPtr cur);
   string generate_expression_by_type(int type, IRPtr ir);
   string generate_expression_by_type_core(int type, IRPtr ir);
   vector<map<int, vector<string>>> collect_all_var_definition_by_type(
@@ -266,7 +230,6 @@ class TypeSystem {
 
   bool simple_fix(IRPtr ir, int type, TypeInferer &inferer);
   bool validate_syntax_only(IRPtr root);
-  bool top_fix(IRPtr root);
   IRPtr locate_mutated_ir(IRPtr root);
 
   string generate_definition(string &var_name, int type);
@@ -306,10 +269,63 @@ class TypeSystem {
   void init_internal_obj(string dir_name);
   void init_one_internal_obj(string filename);
   void debug();
-  void extract_struct_after_mutation(IRPtr);
+  void init();
 };
 
 }  // namespace typesystem
+
+namespace validation {
+
+enum class ValidationError {
+  kSuccess,
+  kUnparseable,
+  kNoSymbolToUse,
+  // And others.
+};
+
+class InferenceResult {};
+
+class TypeSystemRefactor {
+ public:
+  TypePtr GetTypeById(TYPEID id);
+  TypePtr CreateVarType(std::string name, ScopePtr scope);
+  TypePtr CreateFunctionType(std::string name, std::span<TypePtr> args,
+                             TypePtr ret, ScopePtr scope);
+  // TODO: The signature of this function is not finalized.
+  TypePtr CreateCompoundType(std::string name, std::span<TypePtr> args,
+                             ScopePtr scope);
+};
+
+// Refactored interfaces
+class Validator {
+ public:
+  // Validate the IR. Return true if the IR is valid.
+  virtual ValidationError Validate(IRPtr &root) = 0;
+  virtual ~Validator() = default;
+};
+
+class SemanticValidator : public Validator {
+ public:
+  SemanticValidator(std::shared_ptr<Frontend> frontend)
+      : old_type_system_(frontend) {}
+  ValidationError Validate(IRPtr &root) override;
+
+  // This validation consists of three steps:
+  // 1. It builds the sysmbol table in each scope, which are stored in a
+  // `ScopeTree`.
+  // 2. It infers the types of the IRs that need fixing, which needs the help of
+  // the symbol table.
+  // 3. Fix the IRs.
+  std::shared_ptr<ScopeTree> BuildSymbolTable(IRCPtr &root);
+  std::shared_ptr<InferenceResult> InferType(
+      IRPtr &root, std::shared_ptr<ScopeTree> scope_tree);
+  bool Fix(IRPtr &root, std::shared_ptr<InferenceResult> inference_result,
+           std::shared_ptr<ScopeTree> scope_tree);
+
+ private:
+  typesystem::TypeSystem old_type_system_;
+};
+}  // namespace validation
 }  // namespace polyglot
 
 #endif

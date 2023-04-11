@@ -16,9 +16,9 @@ using TYPEID = int;
 using ORDERID = unsigned long;
 using ScopeID = int;
 
-class IR;
 class Scope;
-using IRPtr = std::shared_ptr<IR>;
+class VarType;
+using TypePtr = std::shared_ptr<VarType>;
 using ScopePtr = std::shared_ptr<Scope>;
 
 #define ALLTYPES 1
@@ -136,6 +136,8 @@ class ScopeTree {
   ScopePtr GetCurrentScope() { return g_scope_current_; }
   ScopeID GetCurrentScopeId() { return g_scope_current_->scope_id_; }
 
+  void BuildSymbolTables(IRPtr &root);
+
  private:
   int g_scope_id_counter_ = 0;
   // TODO: I think this should be the static scope, where we save all the
@@ -143,6 +145,18 @@ class ScopeTree {
   ScopePtr g_scope_root_;
   std::shared_ptr<Scope> g_scope_current_;
   std::map<ScopeID, ScopePtr> scope_id_map_;
+
+  // Moved from the Old TypeSystem
+  bool create_symbol_table(IRPtr root);
+  bool is_contain_definition(IRPtr cur);
+  bool collect_definition(IRPtr cur);
+  DataType find_define_type(IRPtr cur);
+  void collect_simple_variable_defintion_wt(IRPtr cur);
+  std::optional<SymbolTable> collect_simple_variable_defintion(IRPtr cur);
+  void collect_structure_definition(IRPtr cur, IRPtr root);
+  void collect_structure_definition_wt(IRPtr cur, IRPtr root);
+  void collect_function_definition_wt(IRPtr cur);
+  void collect_function_definition(IRPtr cur);
 };
 
 // extern std::shared_ptr<Scope> g_scope_root;

@@ -154,9 +154,9 @@ TEST(TypeSystemTest, ValidateFixDefineUse) {
   mutator.extract_struct(root);
 
   std::cerr << "After extract: " << root->to_string() << std::endl;
-  typesystem::TypeSystem ts(frontend);
-  ts.init();
-  ASSERT_TRUE(ts.validate(root));
+  validation::SemanticValidator validator(frontend);
+  ASSERT_TRUE(validator.Validate(root) ==
+              validation::ValidationError::kSuccess);
   ASSERT_TRUE(root != nullptr);
   EXPECT_EQ(root->to_string(), validated_test_case);
 }
