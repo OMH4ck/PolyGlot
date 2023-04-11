@@ -52,7 +52,6 @@ namespace typesystem {
 //     TypeSystem::cache_inference_map_;
 map<int, vector<OPRule>> TypeInferer::op_rules_;
 map<string, map<string, map<string, int>>> TypeInferer::op_id_map_;
-std::shared_ptr<RealTypeSystem> TypeInferer::real_type_system_;
 std::shared_ptr<RealTypeSystem> OPRule::real_type_system_;
 
 IRPtr cur_statement_root = nullptr;
@@ -555,7 +554,8 @@ set<int> TypeInferer::collect_usable_type(IRPtr cur) {
 pair<OPTYPE, vector<int>> TypeInferer::collect_sat_op_by_result_type(
     int type, map<int, vector<set<int>>> &all_satisfiable_types,
     map<int, vector<string>> &function_map,
-    map<int, vector<string>> &compound_var_map) {
+    map<int, vector<string>> &compound_var_map,
+    std::shared_ptr<RealTypeSystem> &real_type_system) {
   static map<int, vector<vector<int>>>
       cache;  // map<type, vector<pair<opid, int<operand_1, operand_2>>>
   auto res = make_pair(0, std::move(vector<int>(2, 0)));
@@ -576,7 +576,7 @@ pair<OPTYPE, vector<int>> TypeInferer::collect_sat_op_by_result_type(
   int counter = 0;
   for (auto &iter : cache) {
     if (DBG) cout << "OP result type: " << iter.first << endl;
-    if (real_type_system_->is_derived_type(type, iter.first)) {
+    if (real_type_system->is_derived_type(type, iter.first)) {
       for (auto &v : iter.second) {
         int left = 0, right = 0;
         if (v[1] > ALLUPPERBOUND &&
@@ -805,7 +805,7 @@ bool TypeSystem::Fix(IRPtr root) {
 
   bool res = true;
 
-  TypeInferer inferer(frontend_);
+  TypeInferer inferer(frontend_, scope_tree_);
   while (res && !stk.empty()) {
     root = stk.top();
     stk.pop();
@@ -1079,9 +1079,9 @@ OPRule TypeInferer::parse_op_rule(string s) {
 
   if (DBG) cout << s << endl;
   if (v_strbuf[0][0] == '2') {
-    auto left = real_type_system_->get_basic_type_id_by_string(v_strbuf[4]);
-    auto right = real_type_system_->get_basic_type_id_by_string(v_strbuf[5]);
-    auto result = real_type_system_->get_basic_type_id_by_string(v_strbuf[6]);
+    auto left = RealTypeSystem::get_basic_type_id_by_string(v_strbuf[4]);
+    auto right = RealTypeSystem::get_basic_type_id_by_string(v_strbuf[5]);
+    auto result = RealTypeSystem::get_basic_type_id_by_string(v_strbuf[6]);
 
     assert(left && right && result);
 
@@ -1098,8 +1098,8 @@ OPRule TypeInferer::parse_op_rule(string s) {
   } else {
     assert(v_strbuf[0][0] == '1');
     if (DBG) cout << "Here: " << v_strbuf[4] << endl;
-    auto left = real_type_system_->get_basic_type_id_by_string(v_strbuf[4]);
-    auto result = real_type_system_->get_basic_type_id_by_string(v_strbuf[5]);
+    auto left = RealTypeSystem::get_basic_type_id_by_string(v_strbuf[4]);
+    auto result = RealTypeSystem::get_basic_type_id_by_string(v_strbuf[5]);
 
     OPRule res(cur_id, result, left);
     res.add_property(v_strbuf.back());
@@ -1159,7 +1159,6 @@ ValidationError SemanticValidator::Validate(IRPtr &root) {
   // TODO: Fix this super ugly code.
   old_type_system_.SetRealTypeSystem(scope_tree->GetRealTypeSystem());
   typesystem::OPRule::SetRealTypeSystem(scope_tree->GetRealTypeSystem());
-  typesystem::TypeInferer::SetRealTypeSystem(scope_tree->GetRealTypeSystem());
   if (old_type_system_.Fix(root)) {
     return ValidationError::kSuccess;
   } else {
@@ -1188,8 +1187,8 @@ string ExpressionGenerator::expression_gen_handler(
     map<int, vector<string>> &compound_var_map, IRPtr ir) {
   string res;
   auto sat_op = typesystem::TypeInferer::collect_sat_op_by_result_type(
-      type, all_satisfiable_types, function_map,
-      compound_var_map);  // map<OPTYPE, vector<typeid>>
+      type, all_satisfiable_types, function_map, compound_var_map,
+      real_type_system_);  // map<OPTYPE, vector<typeid>>
   if (DBG) cout << "OP id: " << sat_op.first << endl;
   if (sat_op.first == 0) {
     return gen_random_num_string();
@@ -1446,7 +1445,7 @@ string ExpressionGenerator::structure_member_gen_handler(
   if (res.empty()) {
     assert(member_type == compound_type);
     if (gen::Configuration::GetInstance().IsWeakType()) {
-      if (real_type_system_->IsBuiltin(compound_type) && get_rand_int(4)) {
+      if (real_type_system_->IsBuiltinType(compound_type) && get_rand_int(4)) {
         auto compound_ptr =
             real_type_system_->get_type_by_type_id(compound_type);
         if (compound_ptr != nullptr && compound_var == compound_ptr->type_name_)
@@ -1782,7 +1781,7 @@ set<int> ExpressionGenerator::calc_possible_types_from_structure(
     return builtin_structure_type_cache[structure_type];
   auto res = real_type_system_->get_all_types_from_compound_type(structure_type,
                                                                  visit);
-  if (real_type_system_->IsBuiltin(structure_type))
+  if (real_type_system_->IsBuiltinType(structure_type))
     builtin_structure_type_cache[structure_type] = res;
   return res;
 }

@@ -21,6 +21,7 @@
 #include "var_definition.h"
 
 namespace polyglot {
+typedef int OPTYPE;
 
 namespace validation {
 // Generate expression based on the type and scope
@@ -78,7 +79,6 @@ using std::string;
 using std::vector;
 #define NOTEXIST 0
 typedef int VALUETYPE;
-typedef int OPTYPE;
 using TYPEID = int;
 class Scope;
 
@@ -182,7 +182,9 @@ class TypeInferer {
  public:
   TypeInferer(std::shared_ptr<Frontend> frontend = nullptr,
               std::shared_ptr<ScopeTree> scope_tree = nullptr)
-      : frontend_(frontend), scope_tree_(scope_tree) {}
+      : frontend_(frontend),
+        scope_tree_(scope_tree),
+        real_type_system_(scope_tree_->GetRealTypeSystem()) {}
   bool Infer(IRPtr &root, int scope_type = NOTEXIST);
   std::shared_ptr<CandidateTypes> GetCandidateTypes(IRPtr &root) {
     if (cache_inference_map_.find(root) == cache_inference_map_.end())
@@ -196,7 +198,7 @@ class TypeInferer {
   static OPRule parse_op_rule(string s);
   static bool is_op1(int);
   static bool is_op2(int);
-  static int query_result_type(int op, int, int = 0);
+  int query_result_type(int op, int, int = 0);
   static int get_op_property(int op_id);
   static void init_type_dict();
   static FIXORDER get_fix_order(int type);  // need to finish
@@ -206,11 +208,8 @@ class TypeInferer {
   static pair<OPTYPE, vector<int>> collect_sat_op_by_result_type(
       int type, map<int, vector<set<int>>> &a,
       map<int, vector<string>> &function_map,
-      map<int, vector<string>> &compound_var_map);
-  static void SetRealTypeSystem(
-      std::shared_ptr<RealTypeSystem> real_type_system) {
-    real_type_system_ = real_type_system;
-  }
+      map<int, vector<string>> &compound_var_map,
+      std::shared_ptr<RealTypeSystem> &real_type_system);
 
  private:
   std::shared_ptr<Frontend> frontend_;
@@ -221,7 +220,7 @@ class TypeInferer {
   int locate_defined_variable_by_name(const string &var_name, int scope_id);
   set<int> collect_usable_type(IRPtr cur);
   std::map<IRPtr, std::shared_ptr<CandidateTypes>> cache_inference_map_;
-  static std::shared_ptr<RealTypeSystem> real_type_system_;
+  std::shared_ptr<RealTypeSystem> real_type_system_;
 };
 
 class TypeSystem {

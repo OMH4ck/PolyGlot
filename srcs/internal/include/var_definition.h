@@ -139,7 +139,7 @@ class RealTypeSystem {
   std::map<TYPEID, std::vector<std::string>> &GetBuiltinSimpleVarTypes();
   std::map<TYPEID, std::vector<std::string>> &GetBuiltinCompoundTypes();
   std::map<TYPEID, std::vector<std::string>> &GetBuiltinFunctionTypes();
-  bool IsBuiltin(TYPEID type_id);
+  bool IsBuiltinType(TYPEID type_id);
 
   void init_convert_chain();
   bool is_derived_type(TYPEID dtype, TYPEID btype);
@@ -162,11 +162,12 @@ class RealTypeSystem {
       TYPEID type_id);
   void make_basic_type_add_map(TYPEID id, const std::string &s);
   std::shared_ptr<VarType> make_basic_type(TYPEID id, const std::string &s);
-  bool is_basic_type(TYPEID type_id);
+  static bool is_basic_type(TYPEID type_id);
   bool is_compound_type(TYPEID type_id);
   bool is_function_type(TYPEID type_id);
-  bool is_basic_type(const std::string &s);
-  TYPEID get_basic_type_id_by_string(const std::string &s);
+  static bool is_basic_type(const std::string &s);
+  static TYPEID get_basic_type_id_by_string(const std::string &s);
+  [[deprecated]] static TYPEID get_basic_typeid_by_string(const string &s);
   TYPEID get_type_id_by_string(const std::string &s);
   TYPEID get_compound_type_id_by_string(const std::string &s);
   int gen_type_id();
@@ -184,7 +185,6 @@ class RealTypeSystem {
   void clear_definition_all();
   std::shared_ptr<PointerType> get_pointer_type_by_type_id(TYPEID type_id);
   void init_internal_type();
-  TYPEID get_basic_typeid_by_string(const string &s);
   static bool IsInternalObjectSetup() { return is_internal_obj_setup; }
   void SetInClass(bool in_class) { is_in_class = in_class; }
   bool GetInClass() { return is_in_class; }
@@ -200,7 +200,7 @@ class RealTypeSystem {
   bool is_in_class;
   map<TYPEID, shared_ptr<VarType>> type_map;
   static map<string, shared_ptr<VarType>> basic_types;
-  set<TYPEID> basic_types_set;  // For fast lookup
+  static set<TYPEID> basic_types_set;  // For fast lookup
   set<int> all_internal_class_methods;
   static bool is_internal_obj_setup;
 };

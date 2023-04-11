@@ -27,8 +27,9 @@ map<TYPEID, map<int, TYPEID>> pointer_map;  // original_type:<level: typeid>
 
 bool RealTypeSystem::is_internal_obj_setup = true;
 map<string, shared_ptr<VarType>> RealTypeSystem::basic_types;
+set<TYPEID> RealTypeSystem::basic_types_set;
 
-bool RealTypeSystem::IsBuiltin(TYPEID type_id) {
+bool RealTypeSystem::IsBuiltinType(TYPEID type_id) {
   return internal_type_map.count(type_id) > 0;
 }
 
