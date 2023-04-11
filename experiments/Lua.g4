@@ -23,24 +23,24 @@ stat
     | functioncall
     | label
     | 'break'
-    | 'goto' NAME
+    | 'goto' identifier
     | 'do' block 'end'
     | 'while' exp 'do' block 'end'
     | 'repeat' block 'until' exp
     | 'if' exp 'then' block ('elseif' exp 'then' block)* ('else' block)? 'end'
-    | 'for' NAME '=' exp ',' exp (',' exp)? 'do' block 'end'
+    | 'for' identifier '=' exp ',' exp (',' exp)? 'do' block 'end'
     | 'for' namelist 'in' explist 'do' block 'end'
     | 'function' funcname funcbody
-    | 'local' 'function' NAME funcbody
+    | 'local' 'function' identifier funcbody
     | 'local' attnamelist ('=' explist)?
     ;
 
 attnamelist
-    : NAME attrib (',' NAME attrib)*
+    : identifier attrib (',' identifier attrib)*
     ;
 
 attrib
-    : ('<' NAME '>')?
+    : ('<' identifier '>')?
     ;
 
 laststat
@@ -48,11 +48,11 @@ laststat
     ;
 
 label
-    : '::' NAME '::'
+    : '::' identifier '::'
     ;
 
 funcname
-    : NAME ('.' NAME)* (':' NAME)?
+    : identifier ('.' identifier)* (':' identifier)?
     ;
 
 varlist
@@ -60,7 +60,7 @@ varlist
     ;
 
 namelist
-    : NAME (',' NAME)*
+    : identifier (',' identifier)*
     ;
 
 explist
@@ -99,15 +99,15 @@ varOrExp
     ;
 
 var
-    : (NAME | '(' exp ')' varSuffix) varSuffix*
+    : (identifier | '(' exp ')' varSuffix) varSuffix*
     ;
 
 varSuffix
-    : nameAndArgs* ('[' exp ']' | '.' NAME)
+    : nameAndArgs* ('[' exp ']' | '.' identifier)
     ;
 
 nameAndArgs
-    : (':' NAME)? args
+    : (':' identifier)? args
     ;
 
 args
@@ -135,7 +135,7 @@ fieldlist
     ;
 
 field
-    : '[' exp ']' '=' exp | NAME '=' exp | exp
+    : '[' exp ']' '=' exp | identifier '=' exp | exp
     ;
 
 fieldsep
@@ -187,9 +187,19 @@ string_literal
 
 // LEXER
 
+identifier
+    : NAME
+    ;
+
 NAME
     : [a-zA-Z_][a-zA-Z_0-9]*
     ;
+
+NORMALSTRING
+    : '"' ( EscapeSequence | ~('\\'|'"') )* '"'
+    ;
+
+CHARSTRING
 
 NORMALSTRING
     : '"' ( EscapeSequence | ~('\\'|'"') )* '"'
