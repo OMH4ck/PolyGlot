@@ -5,6 +5,7 @@
 #include "config_misc.h"
 // #include "define.h"
 #include "frontend.h"
+#include "typesystem.h"
 #include "utils.h"
 #include "var_definition.h"
 
@@ -46,7 +47,8 @@ size_t PolyGlotMutator::generate(const char *test_case) {
         assert(0);
       }
     } else {
-      if (g_typesystem.validate(ir)) {
+      if (g_validator.Validate(ir) ==
+          polyglot::validation::ValidationError::kSuccess) {
         save_test_cases_.push_back(ir->to_string());
       }
     }

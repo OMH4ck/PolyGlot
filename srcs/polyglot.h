@@ -20,12 +20,12 @@ class PolyGlotMutator {
 
  private:
   PolyGlotMutator(std::shared_ptr<polyglot::Frontend> frontend)
-      : g_frontend(frontend), g_mutator(frontend){};
+      : g_frontend(frontend), g_mutator(frontend), g_validator(frontend){};
   void initialize(std::string_view);
   std::shared_ptr<polyglot::Frontend> g_frontend;
   polyglot::mutation::Mutator g_mutator;
   std::string current_input_;
-  polyglot::typesystem::TypeSystem g_typesystem;
+  polyglot::validation::SemanticValidator g_validator;
   char *g_libary_path;
   char *g_current_input = nullptr;
   std::vector<std::string> save_test_cases_;

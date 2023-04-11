@@ -1545,6 +1545,7 @@ void TypeSystem::MarkFixMe(IRPtr root) {
   return;
 }
 
+/*
 bool TypeSystem::validate(IRPtr &root) {
   bool res = false;
   gen_counter_ = 0;
@@ -1576,6 +1577,7 @@ bool TypeSystem::validate(IRPtr &root) {
 
   return res;
 }
+*/
 
 string TypeSystem::generate_definition(string &var_name, int type) {
   auto type_ptr = get_type_by_type_id(type);

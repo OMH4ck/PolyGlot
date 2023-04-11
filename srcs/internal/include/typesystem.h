@@ -94,8 +94,10 @@ class TypeSystem {
   // 1. It builds the sysmbol table in each scope.
   // 2. It infers the types of the IRs that need fixing.
   // 3. Fix the IRs based on their inferred types and symbol tables.
+  /*
   [[deprecated("Replaced by Validator::Validate()")]] bool validate(
       IRPtr &root);
+  */
   void MarkFixMe(IRPtr);
   bool top_fix(IRPtr root);
 
