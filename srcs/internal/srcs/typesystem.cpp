@@ -87,12 +87,7 @@ void TypeSystem::init_internal_obj(string dirname) {
 
 void TypeSystem::init_one_internal_obj(string filename) {
   spdlog::info("Initting builtin file: {}", filename);
-  char content[0x4000] = {0};
-  auto fd = open(filename.c_str(), 0);
-
-  assert(read(fd, content, 0x3fff) > 0);
-  close(fd);
-
+  std::string content = ReadFileIntoString(filename);
   // set_scope_translation_flag(true);
   auto res = frontend_->TranslateToIR(content);
   // set_scope_translation_flag(false);

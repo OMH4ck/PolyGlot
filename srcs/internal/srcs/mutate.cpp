@@ -179,11 +179,7 @@ void Mutator::init_convertable_ir_type_map() {
 }
 
 bool Mutator::init_ir_library_from_a_file(string filename) {
-  char content[0x4000] = {0};
-  auto fd = open(filename.c_str(), 0);
-
-  assert(read(fd, content, 0x3fff) > 0);
-  close(fd);
+  std::string content = ReadFileIntoString(filename);
 
   auto res = frontend_->TranslateToIR(content);
   if (res == nullptr) {

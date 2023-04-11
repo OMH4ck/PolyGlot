@@ -42,5 +42,6 @@ typename T::iterator random_pick(T &cc) {
   advance(iter, rand() % (cc.size()));
   return iter;
 }
-// template<typename T> typename T::iterator random_pick(T &cc);
+
+std::string ReadFileIntoString(std::string_view file_name);
 #endif

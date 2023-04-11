@@ -4,6 +4,7 @@
 //#include "var_definition.h"
 
 #include <cstring>
+#include <fstream>
 #include <iostream>
 #include <string>
 
@@ -229,3 +230,10 @@ cout << ir->name_ << " = " << res << endl;
 return;
 }
 */
+
+std::string ReadFileIntoString(std::string_view file_name) {
+  std::ifstream ifs(file_name.data());
+  std::string content((std::istreambuf_iterator<char>(ifs)),
+                      (std::istreambuf_iterator<char>()));
+  return content;
+}
