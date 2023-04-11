@@ -13,12 +13,17 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -g -O2 -fsanitize=address")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3")
 add_link_options("-Wl,--no-undefined")
 
-# Check whether CC is clang
-if(CMAKE_C_COMPILER_ID MATCHES "Clang")
-  set(ASAN_SHARED "-shared-libasan")
-else()
-  set(ASAN_SHARED "")
+# Check whether we are in debug mode
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+  add_link_options("-fsanitize=address")
 endif()
+
+# Check whether CC is clang
+#if(CMAKE_C_COMPILER_ID MATCHES "Clang")
+  #set(ASAN_SHARED "-shared-libasan")
+#else()
+#  set(ASAN_SHARED "")
+#endif()
 
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
   message(

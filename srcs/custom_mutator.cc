@@ -34,6 +34,7 @@ u8 afl_custom_queue_new_entry(PolyGlotMutator *mutator,
 unsigned int afl_custom_fuzz_count(PolyGlotMutator *mutator,
                                    const unsigned char *buf, size_t buf_size) {
   std::string test_case((const char *)buf, buf_size);
+  assert(!mutator->has_next_test_case());
   return mutator->generate(test_case.c_str());
 }
 

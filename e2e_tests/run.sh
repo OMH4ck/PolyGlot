@@ -4,8 +4,8 @@ set -e
 
 sudo apt-get install -y libreadline-dev
 # Clone the repo
-rm -rf lua
-git clone https://github.com/lua/lua
+#rm -rf lua
+git clone https://github.com/lua/lua || true
 
 cp build_lua.sh lua
 
@@ -39,7 +39,8 @@ sed -i "s|grammars/lua_grammar/input/|${ROOT}/grammars/lua_grammar/input/|g" $PO
 cat $POLYGLOT_CONFIG
 
 cd $ROOT
-$AFLPATH/afl-fuzz -i $ROOT/grammars/lua_grammar/input -V 100 -o $OUT/lua_out -- $OUT/fuzz_lua @@
+$AFLPATH/afl-fuzz -i $ROOT/grammars/lua_grammar/input -V 100000 -o $OUT/lua_out -- $OUT/fuzz_lua @@
+#LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libasan.so.6 /usr/lib/x86_64-linux-gnu/libstdc++.so.6" $AFLPATH/afl-fuzz -i $ROOT/grammars/lua_grammar/input -V 100000 -o $OUT/lua_out -- $OUT/fuzz_lua @@
 
 # check the number of files in the output directory is larger than 1000
 if [ $(ls -1 $OUT/lua_out/default/queue | wc -l) -gt 500 ]; then

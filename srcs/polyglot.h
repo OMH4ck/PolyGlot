@@ -13,6 +13,7 @@ class PolyGlotMutator {
   void add_to_library(const char *mem);
   size_t generate(const char *test_case);
   std::string_view get_next_test_case();
+  bool has_next_test_case() const { return !save_test_cases_.empty(); }
   // const std::string &current_input() const { return current_input_; }
 
   static PolyGlotMutator *CreateInstance(std::string_view config,

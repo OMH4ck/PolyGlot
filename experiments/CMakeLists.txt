@@ -3,6 +3,14 @@ project(AntlrTest)
 
 set(CMAKE_CXX_STANDARD 17)
 
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -g -O2 -fsanitize=address")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3")
+
+# Check whether we are in debug mode
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+  add_link_options("-fsanitize=address")
+endif()
+
 set(ANTLR4CPP_JAR_LOCATION
     ${CMAKE_CURRENT_SOURCE_DIR}/antlr-4.12.0-complete.jar)
 

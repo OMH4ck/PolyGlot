@@ -160,7 +160,9 @@ void Mutator::add_ir_to_library_limited(IRPtr cur) {
     ir_library_hash_[type].erase(removed_h);
   }
 
-  ir_type_library.push_back(deep_copy(cur));
+  // TODO: Don't save unknown type.
+  // No need to deep copy any more since we use shared_ptr.
+  ir_type_library.push_back(cur);
   ir_library_hash_[type].insert(h);
 
   if (cur->left_child) {
