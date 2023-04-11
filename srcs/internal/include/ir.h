@@ -141,7 +141,6 @@ class IR {
 std::vector<IRPtr> collect_all_ir(IRPtr root);
 int cal_list_num(IRPtr);
 
-IRPtr locate_define_top_ir(IRPtr, IRPtr);
 IRPtr locate_parent(IRPtr root, IRPtr old_ir);
 
 unsigned int calc_node_num(IRPtr root);

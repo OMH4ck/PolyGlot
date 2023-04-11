@@ -26,6 +26,17 @@ using namespace std;
 
 namespace polyglot {
 
+namespace {
+unsigned long hash(string &sql) {
+  return ducking_hash(sql.c_str(), sql.size());
+}
+
+unsigned long hash(IRPtr root) {
+  auto tmp_str = root->to_string();
+  return hash(tmp_str);
+}
+}  // namespace
+
 namespace mutation {
 
 #define _NON_REPLACE_
@@ -137,11 +148,11 @@ vector<IRPtr> Mutator::MutateIRs(vector<IRPtr> &irs_to_mutate) {
 void Mutator::AddIRToLibrary(IRPtr cur) {
   extract_struct(cur);
 
-  add_ir_to_library_limited(cur);
+  ir_library2_.SaveIRRecursive(cur);
   return;
 }
 
-void Mutator::add_ir_to_library_limited(IRPtr cur) {
+void IRLibrary::SaveIRRecursive(IRPtr cur) {
   const auto type = cur->type;
   const auto h = hash(cur);
 
@@ -166,10 +177,10 @@ void Mutator::add_ir_to_library_limited(IRPtr cur) {
   ir_library_hash_[type].insert(h);
 
   if (cur->left_child) {
-    add_ir_to_library_limited(cur->left_child);
+    SaveIRRecursive(cur->left_child);
   }
   if (cur->right_child) {
-    add_ir_to_library_limited(cur->right_child);
+    SaveIRRecursive(cur->right_child);
   }
 }
 
@@ -264,7 +275,7 @@ IRPtr Mutator::strategy_replace_with_constraint(IRPtr cur) {
   // if(cur->type_ == kIterationStatement && replace_type ==
   // kSelectionStatement) cout << "try to mutate while: ";
 
-  auto res = get_ir_from_library(replace_type);
+  auto res = ir_library2_.GetRandomIR(replace_type);
 
   if (res->left_child && !cur->left_child ||
       cur->left_child && !res->left_child ||
@@ -321,7 +332,7 @@ IRPtr Mutator::strategy_replace(IRPtr cur) {
     case 0:
       if (cur->left_child != nullptr && not_unknown(cur->left_child)) {
         res = deep_copy(cur);
-        auto new_node = get_ir_from_library(res->left_child->type);
+        auto new_node = ir_library2_.GetRandomIR(res->left_child->type);
         res->left_child = deep_copy(new_node);
       }
       break;
@@ -329,7 +340,7 @@ IRPtr Mutator::strategy_replace(IRPtr cur) {
     case 1:
       if (cur->right_child != nullptr && not_unknown(cur->right_child)) {
         res = deep_copy(cur);
-        auto new_node = get_ir_from_library(res->right_child->type);
+        auto new_node = ir_library2_.GetRandomIR(res->right_child->type);
         res->right_child = deep_copy(new_node);
       }
       break;
@@ -339,8 +350,8 @@ IRPtr Mutator::strategy_replace(IRPtr cur) {
           not_unknown(cur->left_child) && not_unknown(cur->right_child)) {
         res = deep_copy(cur);
 
-        auto new_left = get_ir_from_library(res->left_child->type);
-        auto new_right = get_ir_from_library(res->right_child->type);
+        auto new_left = ir_library2_.GetRandomIR(res->left_child->type);
+        auto new_right = ir_library2_.GetRandomIR(res->right_child->type);
         ;
         res->right_child = deep_copy(new_right);
 
@@ -361,29 +372,12 @@ bool Mutator::lucky_enough_to_be_mutated(unsigned int mutated_times) {
 }
 
 // Fix, if no item, generate from scratch
-IRPtr Mutator::get_ir_from_library(IRTYPE type) {
+IRPtr IRLibrary::GetRandomIR(IRTYPE type) {
+  // TODO: Fix the type of the empty IR.
   static IRPtr empty_ir =
-      std::make_shared<IR>(frontend_->GetStringLiteralType(), "");
+      std::make_shared<IR>(0x1234567 /*Should be a random type*/, "");
   if (ir_library_[type].empty()) return empty_ir;
   return vector_rand_ele(ir_library_[type]);
-}
-
-unsigned long Mutator::hash(string &sql) {
-  return ducking_hash(sql.c_str(), sql.size());
-}
-
-unsigned long Mutator::hash(IRPtr root) {
-  auto tmp_str = root->to_string();
-  return this->hash(tmp_str);
-}
-
-// Need No Fix
-void Mutator::debug(IRPtr root) {
-  // cout << get_string_by_type(root->type_) << endl;
-  cout << ir_library_.size() << endl;
-  for (auto &i : ir_library_) {
-    cout << frontend_->GetIRTypeStr(i.first) << ": " << i.second.size() << endl;
-  }
 }
 
 void Mutator::extract_struct(IRPtr root) {

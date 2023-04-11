@@ -18,6 +18,16 @@ using std::set;
 // TODO: Define how we do the mutation.
 class MutationStrategy {};
 
+class IRLibrary {
+ public:
+  void SaveIRRecursive(IRPtr ir);
+  IRPtr GetRandomIR(IRTYPE type);
+
+ private:
+  std::map<IRTYPE, std::vector<IRPtr>> ir_library_;
+  std::map<IRTYPE, std::set<unsigned long>> ir_library_hash_;
+};
+
 class Mutator {
  public:
   Mutator(std::shared_ptr<Frontend> frontend = nullptr);
@@ -35,8 +45,6 @@ class Mutator {
   bool should_mutate(IRPtr cur);
   void init_convertable_ir_type_map();
   IRPtr deep_copy_with_record(const IRPtr root, const IRPtr record);
-  unsigned long hash(IRPtr);
-  unsigned long hash(string &);
   bool not_unknown(IRPtr r);
 
   // Delete and insert seems useless.
@@ -48,17 +56,15 @@ class Mutator {
 
   bool replace(IRPtr root, IRPtr old_ir, IRPtr new_ir);  // done
 
-  void add_ir_to_library_limited(IRPtr);  // DONE
+  // void add_ir_to_library_limited(IRPtr);  // DONE
 
-  IRPtr get_ir_from_library(IRTYPE);  // DONE
+  // IRPtr get_ir_from_library(IRTYPE);  // DONE
 
   bool is_ir_type_connvertable(IRTYPE a, IRTYPE b);
   void debug(IRPtr root);
   bool can_be_mutated(IRPtr);
 
   IRPtr record_ = nullptr;
-  map<IRTYPE, vector<IRPtr>> ir_library_;
-  map<IRTYPE, set<unsigned long>> ir_library_hash_;
 
   set<IRTYPE> not_mutatable_types_;
   set<IRTYPE> string_types_;
@@ -66,6 +72,7 @@ class Mutator {
   set<IRTYPE> float_types_;
 
   map<IRTYPE, set<IRTYPE>> m_convertable_map_;
+  IRLibrary ir_library2_;
 };
 
 }  // namespace mutation

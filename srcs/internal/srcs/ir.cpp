@@ -181,27 +181,6 @@ IRPtr locate_parent(IRPtr root, IRPtr old_ir) {
   return nullptr;
 }
 
-IRPtr locate_define_top_ir(IRPtr root, IRPtr ir) {
-  static std::set<IRTYPE> define_top_set;
-  static bool is_init = false;
-
-  /* FIXME
-  if(is_init == false){
-      __INIT_TOP_DEFINE_SET__
-  }
-  */
-  while (auto parent = locate_parent(root, ir)) {
-    if (define_top_set.find(parent->type) != define_top_set.end()) {
-      return parent;
-    }
-    ir = parent;
-  }
-  cout << "root: " << root->to_string() << endl;
-  cout << "find: " << ir->to_string() << endl;
-  assert(0);
-  return nullptr;
-}
-
 unsigned int calc_node_num(IRPtr root) {
   unsigned int res = 0;
   if (root->left_child) res += calc_node_num(root->left_child);
