@@ -734,9 +734,6 @@ IRPtr TypeSystem::locate_mutated_ir(IRPtr root) {
 }
 
 bool TypeSystem::simple_fix(IRPtr ir, int type, TypeInferer &inferer) {
-  // if (contain_fixme(ir) == false)
-  //     return true;
-
   if (type == NOTEXIST) return false;
 
   spdlog::debug("NodeType: {}", frontend_->GetIRTypeStr(ir->type));
@@ -785,7 +782,12 @@ bool TypeSystem::simple_fix(IRPtr ir, int type, TypeInferer &inferer) {
   return true;
 }
 
-bool TypeSystem::top_fix(IRPtr root) {
+bool Fixable(IRPtr root) {
+  return root->type == gen::Configuration::GetInstance().GetFixIRType() ||
+         (root->ContainString() && root->GetString() == "FIXME");
+}
+
+bool TypeSystem::Fix(IRPtr root) {
   stack<IRPtr> stk;
 
   stk.push(root);
@@ -796,33 +798,22 @@ bool TypeSystem::top_fix(IRPtr root) {
   while (res && !stk.empty()) {
     root = stk.top();
     stk.pop();
-    if (gen::Configuration::GetInstance().IsWeakType()) {
-      // if(root->type_ == kSingleExpression){
-      if (root->ContainString() && root->GetString() == "FIXME") {
-        int type = ALLTYPES;
-        res = simple_fix(root, type, inferer);
-      } else {
-        if (root->right_child) stk.push(root->right_child);
-        if (root->left_child) stk.push(root->left_child);
-      }
-    } else {
-      if (root->type == gen::Configuration::GetInstance().GetFixIRType() ||
-          (root->ContainString() && root->GetString() == "FIXME")) {
-        if (contain_fixme(root) == false) continue;
-
-        bool flag = inferer.Infer(root, 0);
-        if (!flag) {
+    if (Fixable(root)) {
+      assert(contain_fixme(root));
+      int type = ALLTYPES;
+      if (!gen::Configuration::GetInstance().IsWeakType()) {
+        if (!inferer.Infer(root, 0)) {
           res = false;
           break;
         }
         auto iter =
             random_pick(inferer.GetCandidateTypes(root)->GetCandidates());
-        auto t = iter->first;
-        res = simple_fix(root, t, inferer);
-      } else {
-        if (root->right_child) stk.push(root->right_child);
-        if (root->left_child) stk.push(root->left_child);
+        type = iter->first;
       }
+      res = simple_fix(root, type, inferer);
+    } else {
+      if (root->right_child) stk.push(root->right_child);
+      if (root->left_child) stk.push(root->left_child);
     }
   }
   return res;
@@ -1151,7 +1142,7 @@ ValidationError SemanticValidator::Validate(IRPtr &root) {
   std::shared_ptr<ScopeTree> scope_tree = BuildScopeTree(root);
   scope_tree->BuildSymbolTables(root);
   old_type_system_.SetScopeTree(scope_tree);
-  if (old_type_system_.top_fix(root)) {
+  if (old_type_system_.Fix(root)) {
     return ValidationError::kSuccess;
   } else {
     // TODO: return the correct error code

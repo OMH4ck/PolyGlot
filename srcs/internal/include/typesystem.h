@@ -234,7 +234,7 @@ class TypeSystem {
       IRPtr &root);
   */
   void MarkFixMe(IRPtr);
-  bool top_fix(IRPtr root);
+  bool Fix(IRPtr root);
 
   // TODO: This is a hacky helper for now.
   void SetScopeTree(std::shared_ptr<ScopeTree> scope_tree) {
@@ -251,66 +251,12 @@ class TypeSystem {
   [[deprecated("Should be removed")]] void connect_back(
       map<IRPtr *, IRPtr> &m_save);
 
-  // bool create_symbol_table(IRPtr root);
-
-  // new
-  string get_class_member_by_type(int type, int target_type);
-  string get_class_member_by_type_no_duplicate(int type, int target_type,
-                                               set<int> &visit);
-  string get_class_member(int type_id);
-
-  // void collect_function_definition(IRPtr cur);
-  // void collect_function_definition_wt(IRPtr cur);
-
-  // void collect_structure_definition(IRPtr cur, IRPtr root);
-  // void collect_structure_definition_wt(IRPtr cur, IRPtr root);
-  //  std::optional<SymbolTable> collect_simple_variable_defintion(IRPtr cur);
-
-  // TODO: It should return the collected definitions instead of bool.
-  // bool collect_definition(IRPtr cur);
-  /*
-  string generate_expression_by_type(int type, IRPtr ir);
-  string generate_expression_by_type_core(int type, IRPtr ir);
-  vector<map<int, vector<string>>> collect_all_var_definition_by_type(
-      IRPtr cur);
-  */
-
   bool simple_fix(IRPtr ir, int type, TypeInferer &inferer);
   bool validate_syntax_only(IRPtr root);
   IRPtr locate_mutated_ir(IRPtr root);
 
-  string generate_definition(string &var_name, int type);
-  string generate_definition(vector<string> &var_name, int type);
-  // bool insert_definition();
-
-  // bool filter_compound_type(map<int, vector<string>> &compound_var_map,
-  //                           int type);
-  // bool filter_function_type(map<int, vector<string>> &function_map,
-  //                           const map<int, vector<string>> &compound_var_map,
-  //                           const map<int, vector<string>> &simple_type,
-  //                           int type);
-  // set<int> calc_satisfiable_functions(const set<int> &function_type_set,
-  //                                     const set<int> &available_types);
-  // map<int, vector<set<int>>> collect_satisfiable_types(
-  //     IRPtr ir, map<int, vector<string>> &simple_var_map,
-  //     map<int, vector<string>> &compound_var_map,
-  //     map<int, vector<string>> &function_map);
-  // set<int> calc_possible_types_from_structure(int structure_type);
-  // string function_call_gen_handler(map<int, vector<string>> &function_map,
-  //                                  IRPtr ir);
-  // string structure_member_gen_handler(
-  //     map<int, vector<string>> &compound_var_map, int member_type);
-  // void update_pointer_var(map<int, vector<string>> &pointer_var_map,
-  //                         map<int, vector<string>> &simple_var_map,
-  //                         map<int, vector<string>> &compound_var_map);
-
-  // string expression_gen_handler(
-  //     int type, map<int, vector<set<int>>> &all_satisfiable_types,
-  //     map<int, vector<string>> &function_map,
-  //     map<int, vector<string>> &compound_var_map, IRPtr ir);
-  // int gen_counter_, function_gen_counter_, current_fix_scope_;
-
-  // bool insert_definition(int scope_id, int type_id, string var_name);
+  [[deprecated]] string generate_definition(string &var_name, int type);
+  [[deprecated]] string generate_definition(vector<string> &var_name, int type);
 
   // set up internal object
   void init_internal_obj(string dir_name);
