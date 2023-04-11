@@ -234,8 +234,8 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
   auto cur_type = std::make_shared<CandidateTypes>();
   int res_type = NOTEXIST;
   bool flag;
-  if (DBG) cout << "Infering: " << cur->to_string() << endl;
-  if (DBG) cout << "Scope type: " << scope_type << endl;
+  spdlog::debug("Inferring: {}", cur->to_string());
+  spdlog::debug("Scope type: {}", scope_type);
 
   if (cur->type == frontend_->GetStringLiteralType()) {
     res_type = get_type_id_by_string("ANYTYPE");
@@ -274,8 +274,8 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
 
       res_type =
           locate_defined_variable_by_name(cur->GetString(), cur->scope_id);
-      if (DBG) cout << "Name: " << cur->GetString() << endl;
-      if (DBG) cout << "Type: " << res_type << endl;
+      spdlog::debug("Name: {}", cur->GetString());
+      spdlog::debug("Type: {}", res_type);
       // auto cur_type = make_shared<map<TYPEID, vector<pair<TYPEID,
       // TYPEID>>>>();
       if (!res_type) res_type = ANYTYPE;  // should fix
@@ -287,7 +287,7 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
     } else {
       // match name in scope_type
       // currently only class/struct is possible
-      if (DBG) cout << "Scope type: " << scope_type << endl;
+      spdlog::debug("Scope type: {}", scope_type);
       if (is_compound_type(scope_type) == false) {
         if (is_function_type(scope_type)) {
           auto ret_type =
@@ -305,8 +305,9 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
       for (auto &iter : ct->v_members_) {
         for (auto &member : iter.second) {
           if (cur->GetString() == member) {
-            if (DBG) cout << "Match member" << endl;
-            // auto cur_type = make_shared<map<TYPEID, vector<pair<TYPEID,
+            spdlog::debug(
+                "Match member");  // auto cur_type = make_shared<map<TYPEID,
+                                  // vector<pair<TYPEID,
             // TYPEID>>>>();
             assert(iter.first);
             cur_type->AddCandidate(iter.first, iter.first, 0);
@@ -747,6 +748,9 @@ bool TypeSystem::simple_fix(IRPtr ir, int type, TypeInferer &inferer) {
     return true;
   }
 
+  // TODO: Refactor.
+  // This checks whether we can find a derived type from `type`.
+  // We should consider the availability of the derived type.
   if (!gen::Configuration::GetInstance().IsWeakType()) {
     if (!inferer.GetCandidateTypes(ir)->HasCandidate(type)) {
       auto new_type = NOTEXIST;
