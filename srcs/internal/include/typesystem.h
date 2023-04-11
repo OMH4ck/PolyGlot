@@ -28,10 +28,14 @@ namespace validation {
 class ExpressionGenerator {
  public:
   ExpressionGenerator(std::shared_ptr<ScopeTree> scope_tree)
-      : scope_tree_(scope_tree) {}
+      : scope_tree_(scope_tree),
+        real_type_system_(scope_tree->GetRealTypeSystem()) {
+    assert(real_type_system_ != nullptr);
+  }
   std::string GenerateExpression(TYPEID type, IRPtr &ir);
 
  private:
+  std::shared_ptr<RealTypeSystem> real_type_system_;
   std::shared_ptr<ScopeTree> scope_tree_;
   int gen_counter_ = 0;
   int function_gen_counter_ = 0;
@@ -116,6 +120,11 @@ class OPRule {
   // more properties to add;
 
   OPRuleProperty property_ = OP_PROP_Default;
+  static void SetRealTypeSystem(
+      std::shared_ptr<RealTypeSystem> real_type_system) {
+    real_type_system_ = real_type_system;
+  }
+  static std::shared_ptr<RealTypeSystem> real_type_system_;
 };
 
 struct InferenceType {
@@ -198,6 +207,10 @@ class TypeInferer {
       int type, map<int, vector<set<int>>> &a,
       map<int, vector<string>> &function_map,
       map<int, vector<string>> &compound_var_map);
+  static void SetRealTypeSystem(
+      std::shared_ptr<RealTypeSystem> real_type_system) {
+    real_type_system_ = real_type_system;
+  }
 
  private:
   std::shared_ptr<Frontend> frontend_;
@@ -208,6 +221,7 @@ class TypeInferer {
   int locate_defined_variable_by_name(const string &var_name, int scope_id);
   set<int> collect_usable_type(IRPtr cur);
   std::map<IRPtr, std::shared_ptr<CandidateTypes>> cache_inference_map_;
+  static std::shared_ptr<RealTypeSystem> real_type_system_;
 };
 
 class TypeSystem {
@@ -241,7 +255,12 @@ class TypeSystem {
     scope_tree_ = scope_tree;
   }
 
+  void SetRealTypeSystem(std::shared_ptr<RealTypeSystem> real_type_system) {
+    real_type_system_ = real_type_system;
+  }
+
  private:
+  std::shared_ptr<RealTypeSystem> real_type_system_;
   [[deprecated("Should be removed")]] void split_to_basic_unit(
       IRPtr root, std::queue<IRPtr> &q, map<IRPtr *, IRPtr> &m_save,
       set<IRTYPE> &s_basic_unit_ptr);

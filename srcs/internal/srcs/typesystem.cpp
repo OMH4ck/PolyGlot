@@ -52,6 +52,8 @@ namespace typesystem {
 //     TypeSystem::cache_inference_map_;
 map<int, vector<OPRule>> TypeInferer::op_rules_;
 map<string, map<string, map<string, int>>> TypeInferer::op_id_map_;
+std::shared_ptr<RealTypeSystem> TypeInferer::real_type_system_;
+std::shared_ptr<RealTypeSystem> OPRule::real_type_system_;
 
 IRPtr cur_statement_root = nullptr;
 
@@ -61,6 +63,7 @@ unsigned long top_fix_success_counter = 0;
 
 static set<TYPEID> current_define_types;
 
+/*
 void TypeSystem::debug() {
   spdlog::info("---------debug-----------");
   spdlog::info("all_internal_compound_types: {}",
@@ -77,6 +80,7 @@ void TypeSystem::debug() {
   }
   spdlog::info("---------end------------");
 }
+*/
 
 void TypeSystem::init_internal_obj(string dirname) {
   auto files = get_all_files_in_dir(dirname.c_str());
@@ -96,19 +100,17 @@ void TypeSystem::init_one_internal_obj(string filename) {
     return;
   }
 
-  is_internal_obj_setup = true;
   // TODO: Fix this.
+  // is_internal_obj_setup = true;
   /*
   if (create_symbol_table(res) == false)
     spdlog::error("[init_internal_obj] setup {} failed", filename);
-  */
   is_internal_obj_setup = false;
+  */
 }
 
 void TypeSystem::init() {
   s_basic_unit_ = gen::Configuration::GetInstance().GetBasicUnits();
-  init_basic_types();
-  init_convert_chain();
   TypeInferer::init_type_dict();
   init_internal_obj(
       gen::Configuration::GetInstance().GetBuiltInObjectFilePath());
@@ -238,17 +240,17 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
   spdlog::debug("Scope type: {}", scope_type);
 
   if (cur->type == frontend_->GetStringLiteralType()) {
-    res_type = get_type_id_by_string("ANYTYPE");
+    res_type = real_type_system_->get_type_id_by_string("ANYTYPE");
     cur_type->AddCandidate(res_type, 0, 0);
     cache_inference_map_[cur] = cur_type;
     return true;
   } else if (cur->type == frontend_->GetIntLiteralType()) {
-    res_type = get_type_id_by_string("ANYTYPE");
+    res_type = real_type_system_->get_type_id_by_string("ANYTYPE");
     cur_type->AddCandidate(res_type, 0, 0);
     cache_inference_map_[cur] = cur_type;
     return true;
   } else if (cur->type == frontend_->GetFloatLiteralType()) {
-    res_type = get_type_id_by_string("ANYTYPE");
+    res_type = real_type_system_->get_type_id_by_string("ANYTYPE");
     cur_type->AddCandidate(res_type, 0, 0);
     cache_inference_map_[cur] = cur_type;
     return true;
@@ -261,7 +263,7 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
       auto v_usable_type = collect_usable_type(cur);
       spdlog::debug("collect_usable_type.size(): {}", v_usable_type.size());
       for (auto t : v_usable_type) {
-        spdlog::debug("Type: {}", get_type_name_by_id(t));
+        spdlog::debug("Type: {}", real_type_system_->get_type_name_by_id(t));
         assert(t);
         cur_type->AddCandidate(t, t, 0);
       }
@@ -288,11 +290,12 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
       // match name in scope_type
       // currently only class/struct is possible
       spdlog::debug("Scope type: {}", scope_type);
-      if (is_compound_type(scope_type) == false) {
-        if (is_function_type(scope_type)) {
+      if (real_type_system_->is_compound_type(scope_type) == false) {
+        if (real_type_system_->is_function_type(scope_type)) {
           auto ret_type =
-              get_function_type_by_type_id(scope_type)->return_type_;
-          if (is_compound_type(ret_type)) {
+              real_type_system_->get_function_type_by_type_id(scope_type)
+                  ->return_type_;
+          if (real_type_system_->is_compound_type(ret_type)) {
             scope_type = ret_type;
           } else {
             return false;
@@ -301,7 +304,7 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
           return false;
       }
       // assert(is_compound_type(scope_type));
-      auto ct = get_compound_type_by_type_id(scope_type);
+      auto ct = real_type_system_->get_compound_type_by_type_id(scope_type);
       for (auto &iter : ct->v_members_) {
         for (auto &member : iter.second) {
           if (cur->GetString() == member) {
@@ -332,7 +335,8 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
            cache_inference_map_[cur->left_child]->GetCandidates()) {
         for (auto &right :
              cache_inference_map_[cur->right_child]->GetCandidates()) {
-          auto res_type = least_upper_common_type(left.first, right.first);
+          auto res_type = real_type_system_->least_upper_common_type(
+              left.first, right.first);
           cur_type->AddCandidate(res_type, left.first, right.first);
         }
       }
@@ -402,7 +406,7 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
         auto new_left_type = left_type;
         // if(cur->op_->middle_ == "->"){
         if (get_op_property(cur_op) == OP_PROP_Dereference) {
-          auto tmp_ptr = get_type_by_type_id(left_type);
+          auto tmp_ptr = real_type_system_->get_type_by_type_id(left_type);
           assert(tmp_ptr->is_pointer_type());
           if (DBG) cout << "left type of -> is : " << left_type << endl;
           auto type_ptr = static_pointer_cast<PointerType>(tmp_ptr);
@@ -434,10 +438,12 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
         // handle function call case-by-case
 
         if (left_type->GetCandidates().size() == 1 &&
-            is_function_type(left_type->GetARandomCandidateType())) {
-          res_type =
-              get_function_type_by_type_id(left_type->GetARandomCandidateType())
-                  ->return_type_;
+            real_type_system_->is_function_type(
+                left_type->GetARandomCandidateType())) {
+          res_type = real_type_system_
+                         ->get_function_type_by_type_id(
+                             left_type->GetARandomCandidateType())
+                         ->return_type_;
           if (DBG) cout << "get_function_type_by_type_id: " << res_type << endl;
           cur_type->AddCandidate(res_type, 0, 0);
           break;
@@ -452,15 +458,16 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
             auto a_right_type = right_cache.first;
             if (DBG)
               cout << "[a+b] left_type = " << a_left_type << ":"
-                   << get_type_name_by_id(a_left_type)
+                   << real_type_system_->get_type_name_by_id(a_left_type)
                    << " ,right_type = " << a_right_type << ":"
-                   << get_type_name_by_id(a_right_type) << ", op = " << cur_op
-                   << endl;
+                   << real_type_system_->get_type_name_by_id(a_right_type)
+                   << ", op = " << cur_op << endl;
             if (DBG)
               cout << "Left to alltype: "
-                   << is_derived_type(a_left_type, ALLTYPES)
+                   << real_type_system_->is_derived_type(a_left_type, ALLTYPES)
                    << ", right to alltype: "
-                   << is_derived_type(a_right_type, ALLTYPES) << endl;
+                   << real_type_system_->is_derived_type(a_right_type, ALLTYPES)
+                   << endl;
             auto t = query_result_type(cur_op, a_left_type, a_right_type);
             if (t != NOTEXIST) {
               if (DBG) cout << "Adding" << endl;
@@ -510,7 +517,7 @@ set<int> TypeInferer::collect_usable_type(IRPtr cur) {
             cout << kk.first << endl;
         }
         */
-        auto type_ptr = get_type_by_type_id(tmp_type);
+        auto type_ptr = real_type_system_->get_type_by_type_id(tmp_type);
         if (type_ptr == nullptr) continue;
         for (auto &kk : iter.second) {
           if (ir_id > kk.order_id) {
@@ -525,10 +532,10 @@ set<int> TypeInferer::collect_usable_type(IRPtr cur) {
 
         if (type_ptr->is_function_type()) {
           // whether to insert the function type it self
-          auto ptr = get_function_type_by_type_id(tmp_type);
+          auto ptr = real_type_system_->get_function_type_by_type_id(tmp_type);
           result.insert(ptr->return_type_);
         } else if (type_ptr->is_compound_type()) {
-          auto ptr = get_compound_type_by_type_id(tmp_type);
+          auto ptr = real_type_system_->get_compound_type_by_type_id(tmp_type);
           for (auto &iter : ptr->v_members_) {
             // haven't search deeper right now
             result.insert(iter.first);
@@ -569,7 +576,7 @@ pair<OPTYPE, vector<int>> TypeInferer::collect_sat_op_by_result_type(
   int counter = 0;
   for (auto &iter : cache) {
     if (DBG) cout << "OP result type: " << iter.first << endl;
-    if (is_derived_type(type, iter.first)) {
+    if (real_type_system_->is_derived_type(type, iter.first)) {
       for (auto &v : iter.second) {
         int left = 0, right = 0;
         if (v[1] > ALLUPPERBOUND &&
@@ -756,7 +763,7 @@ bool TypeSystem::simple_fix(IRPtr ir, int type, TypeInferer &inferer) {
       auto new_type = NOTEXIST;
       int counter = 0;
       for (auto &iter : inferer.GetCandidateTypes(ir)->GetCandidates()) {
-        if (is_derived_type(type, iter.first)) {
+        if (real_type_system_->is_derived_type(type, iter.first)) {
           if (new_type == NOTEXIST || get_rand_int(counter) == 0) {
             new_type = iter.first;
           }
@@ -920,7 +927,7 @@ bool TypeSystem::validate(IRPtr &root) {
 */
 
 string TypeSystem::generate_definition(string &var_name, int type) {
-  auto type_ptr = get_type_by_type_id(type);
+  auto type_ptr = real_type_system_->get_type_by_type_id(type);
   assert(type_ptr != nullptr);
   auto type_str = type_ptr->type_name_;
   string res = type_str + " " + var_name + ";";
@@ -930,7 +937,7 @@ string TypeSystem::generate_definition(string &var_name, int type) {
 
 string TypeSystem::generate_definition(vector<string> &var_name, int type) {
   if (DBG) cout << "Generating definitions for type: " << type << endl;
-  auto type_ptr = get_type_by_type_id(type);
+  auto type_ptr = real_type_system_->get_type_by_type_id(type);
   assert(type_ptr != nullptr);
   assert(var_name.size());
   auto type_str = type_ptr->type_name_;
@@ -956,18 +963,19 @@ int OPRule::apply(int arg1, int arg2) {
   if (is_op1()) {
     switch (property_) {
       case OP_PROP_Reference:
-        return get_or_create_pointer_type(arg1);
+        return real_type_system_->get_or_create_pointer_type(arg1);
       case OP_PROP_Dereference:
-        if (is_pointer_type(arg1) == false) return NOTEXIST;
-        return get_pointer_type_by_type_id(arg1)->orig_type_;
+        if (real_type_system_->is_pointer_type(arg1) == false) return NOTEXIST;
+        return real_type_system_->get_pointer_type_by_type_id(arg1)->orig_type_;
       case OP_PROP_FunctionCall:
-        if (is_function_type(arg1) == false) {
+        if (real_type_system_->is_function_type(arg1) == false) {
           break;
         }
         // cout << get_function_type_by_type_id(arg1)->return_type_ << endl;
         // assert(0);
         // cout << "reach here" << endl;
-        return get_function_type_by_type_id(arg1)->return_type_;
+        return real_type_system_->get_function_type_by_type_id(arg1)
+            ->return_type_;
       case OP_PROP_Default:
         return arg1;
       default:
@@ -975,7 +983,7 @@ int OPRule::apply(int arg1, int arg2) {
     }
   } else {
   }
-  return least_upper_common_type(arg1, arg2);
+  return real_type_system_->least_upper_common_type(arg1, arg2);
 }
 
 int TypeInferer::query_result_type(int op, int arg1, int arg2) {
@@ -1003,9 +1011,11 @@ int TypeInferer::query_result_type(int op, int arg1, int arg2) {
     if (r.is_op1() != isop1) continue;
 
     if (isop1) {
-      if (is_derived_type(arg1, r.left_)) return r.apply(arg1);
+      if (real_type_system_->is_derived_type(arg1, r.left_))
+        return r.apply(arg1);
     } else {
-      if (is_derived_type(arg1, r.left_) && is_derived_type(arg2, r.right_))
+      if (real_type_system_->is_derived_type(arg1, r.left_) &&
+          real_type_system_->is_derived_type(arg2, r.right_))
         return r.apply(arg1, arg2);
     }
   }
@@ -1069,9 +1079,9 @@ OPRule TypeInferer::parse_op_rule(string s) {
 
   if (DBG) cout << s << endl;
   if (v_strbuf[0][0] == '2') {
-    auto left = get_basic_type_id_by_string(v_strbuf[4]);
-    auto right = get_basic_type_id_by_string(v_strbuf[5]);
-    auto result = get_basic_type_id_by_string(v_strbuf[6]);
+    auto left = real_type_system_->get_basic_type_id_by_string(v_strbuf[4]);
+    auto right = real_type_system_->get_basic_type_id_by_string(v_strbuf[5]);
+    auto result = real_type_system_->get_basic_type_id_by_string(v_strbuf[6]);
 
     assert(left && right && result);
 
@@ -1088,8 +1098,8 @@ OPRule TypeInferer::parse_op_rule(string s) {
   } else {
     assert(v_strbuf[0][0] == '1');
     if (DBG) cout << "Here: " << v_strbuf[4] << endl;
-    auto left = get_basic_type_id_by_string(v_strbuf[4]);
-    auto result = get_basic_type_id_by_string(v_strbuf[5]);
+    auto left = real_type_system_->get_basic_type_id_by_string(v_strbuf[4]);
+    auto result = real_type_system_->get_basic_type_id_by_string(v_strbuf[5]);
 
     OPRule res(cur_id, result, left);
     res.add_property(v_strbuf.back());
@@ -1146,6 +1156,10 @@ ValidationError SemanticValidator::Validate(IRPtr &root) {
   std::shared_ptr<ScopeTree> scope_tree = BuildScopeTree(root);
   scope_tree->BuildSymbolTables(root);
   old_type_system_.SetScopeTree(scope_tree);
+  // TODO: Fix this super ugly code.
+  old_type_system_.SetRealTypeSystem(scope_tree->GetRealTypeSystem());
+  typesystem::OPRule::SetRealTypeSystem(scope_tree->GetRealTypeSystem());
+  typesystem::TypeInferer::SetRealTypeSystem(scope_tree->GetRealTypeSystem());
   if (old_type_system_.Fix(root)) {
     return ValidationError::kSuccess;
   } else {
@@ -1219,7 +1233,7 @@ string ExpressionGenerator::generate_expression_by_type_core(int type,
 
   if (gen_counter_ > 50) return gen_random_num_string();
   gen_counter_++;
-  cout << "Generating type:" << get_type_name_by_id(type)
+  cout << "Generating type:" << real_type_system_->get_type_name_by_id(type)
        << ", type id: " << type << endl;
   string res;
 
@@ -1241,12 +1255,13 @@ string ExpressionGenerator::generate_expression_by_type_core(int type,
   if (type == ALLTYPES && all_satisfiable_types.size()) {
     type = random_pick(all_satisfiable_types)->first;
     if (DBG)
-      cout << "Type becomes: " << get_type_name_by_id(type) << ", id: " << type
-           << endl;
-    if (is_function_type(type) && (get_rand_int(3))) {
-      type = get_function_type_by_type_id(type)->return_type_;
+      cout << "Type becomes: " << real_type_system_->get_type_name_by_id(type)
+           << ", id: " << type << endl;
+    if (real_type_system_->is_function_type(type) && (get_rand_int(3))) {
+      type =
+          real_type_system_->get_function_type_by_type_id(type)->return_type_;
       if (DBG)
-        cout << "Type becomes: " << get_type_name_by_id(type)
+        cout << "Type becomes: " << real_type_system_->get_type_name_by_id(type)
              << ", id: " << type << endl;
     }
 
@@ -1326,7 +1341,8 @@ string ExpressionGenerator::generate_expression_by_type_core(int type,
   }
 
   if (expression_size == 0) expression_size = 1;
-  if (is_function_type(type) || is_compound_type(type))
+  if (real_type_system_->is_function_type(type) ||
+      real_type_system_->is_compound_type(type))
     expression_size =
         0;  // when meeting a function size, we do not use it in operation.
 
@@ -1394,7 +1410,7 @@ string ExpressionGenerator::function_call_gen_handler(
   auto pick_func = *random_pick(function_map);
   if (DBG) cout << "Function type: " << pick_func.first << endl;
   shared_ptr<FunctionType> choice_ptr =
-      get_function_type_by_type_id(pick_func.first);
+      real_type_system_->get_function_type_by_type_id(pick_func.first);
 
   assert(choice_ptr != nullptr);
 
@@ -1430,8 +1446,9 @@ string ExpressionGenerator::structure_member_gen_handler(
   if (res.empty()) {
     assert(member_type == compound_type);
     if (gen::Configuration::GetInstance().IsWeakType()) {
-      if (is_builtin_type(compound_type) && get_rand_int(4)) {
-        auto compound_ptr = get_type_by_type_id(compound_type);
+      if (real_type_system_->IsBuiltin(compound_type) && get_rand_int(4)) {
+        auto compound_ptr =
+            real_type_system_->get_type_by_type_id(compound_type);
         if (compound_ptr != nullptr && compound_var == compound_ptr->type_name_)
           return "(new " + compound_ptr->type_name_ + "())";
         else {
@@ -1453,13 +1470,14 @@ void ExpressionGenerator::update_pointer_var(
   for (auto pointer_type : pointer_var_map) {
     if (pointer_type.second.size() == 0) break;
     auto pointer_id = pointer_type.first;
-    auto pointer_ptr = get_pointer_type_by_type_id(pointer_id);
-    if (is_basic_type(pointer_ptr->basic_type_)) {
+    auto pointer_ptr =
+        real_type_system_->get_pointer_type_by_type_id(pointer_id);
+    if (real_type_system_->is_basic_type(pointer_ptr->basic_type_)) {
       for (auto var_name : pointer_type.second) {
         string target(pointer_ptr->reference_level_, '*');
         simple_var_map[pointer_ptr->basic_type_].push_back(target + var_name);
       }
-    } else if (is_compound_type(pointer_ptr->basic_type_)) {
+    } else if (real_type_system_->is_compound_type(pointer_ptr->basic_type_)) {
       for (auto var_name : pointer_type.second) {
         string target(pointer_ptr->reference_level_, '*');
         compound_var_map[pointer_ptr->basic_type_].push_back(target + var_name);
@@ -1477,7 +1495,7 @@ string ExpressionGenerator::get_class_member_by_type_no_duplicate(
   vector<shared_ptr<FunctionType>> func_sol;
   visit.insert(type);
 
-  auto type_ptr = get_compound_type_by_type_id(type);
+  auto type_ptr = real_type_system_->get_compound_type_by_type_id(type);
   for (auto &member : type_ptr->v_members_) {
     if (member.first == target_type) {
       res = member_str + *random_pick(member.second);
@@ -1487,7 +1505,7 @@ string ExpressionGenerator::get_class_member_by_type_no_duplicate(
 
   string res1;
   for (auto &member : type_ptr->v_members_) {
-    if (is_compound_type(member.first)) {
+    if (real_type_system_->is_compound_type(member.first)) {
       if (visit.find(member.first) != visit.end()) continue;
       auto tmp_res = get_class_member_by_type_no_duplicate(member.first,
                                                            target_type, visit);
@@ -1496,12 +1514,13 @@ string ExpressionGenerator::get_class_member_by_type_no_duplicate(
                tmp_res;
         all_sol.push_back(res1);
       }
-    } else if (is_function_type(member.first)) {
+    } else if (real_type_system_->is_function_type(member.first)) {
       if (member.first == target_type) {
         res1 = member_str + *random_pick(type_ptr->v_members_[member.first]);
         all_sol.push_back(res1);
       } else {
-        auto pfunc = get_function_type_by_type_id(member.first);
+        auto pfunc =
+            real_type_system_->get_function_type_by_type_id(member.first);
         if (pfunc->return_type_ != target_type) continue;
         func_sol.push_back(pfunc);
       }
@@ -1551,7 +1570,7 @@ ExpressionGenerator::collect_all_var_definition_by_type(IRPtr cur) {
     if (current_scope->definitions_.GetTable().size()) {
       for (auto &iter : current_scope->definitions_.GetTable()) {
         auto tmp_type = iter.first;
-        auto type_ptr = get_type_by_type_id(tmp_type);
+        auto type_ptr = real_type_system_->get_type_by_type_id(tmp_type);
         if (type_ptr == nullptr) continue;
         if (type_ptr->is_function_type()) {
           for (auto &var : iter.second) {
@@ -1591,7 +1610,7 @@ ExpressionGenerator::collect_all_var_definition_by_type(IRPtr cur) {
 
   // add builtin types
 
-  auto &builtin_func = get_all_builtin_function_types();
+  auto &builtin_func = real_type_system_->GetBuiltinFunctionTypes();
   size_t add_prop = builtin_func.size();
   // if(add_prop == 0) add_prop = 1;
   for (auto &k : builtin_func) {
@@ -1608,7 +1627,7 @@ ExpressionGenerator::collect_all_var_definition_by_type(IRPtr cur) {
     }
   }
 
-  auto &builtin_compounds = get_all_builtin_compound_types();
+  auto &builtin_compounds = real_type_system_->GetBuiltinCompoundTypes();
   add_prop = builtin_compounds.size();
   // if(add_prop == 0) add_prop = 1;
   for (auto &k : builtin_compounds) {
@@ -1625,7 +1644,7 @@ ExpressionGenerator::collect_all_var_definition_by_type(IRPtr cur) {
     }
   }
 
-  auto &builtin_simple_var = get_all_builtin_simple_var_types();
+  auto &builtin_simple_var = real_type_system_->GetBuiltinSimpleVarTypes();
   add_prop = builtin_simple_var.size();
   // if(add_prop == 0) add_prop = 1;
   for (auto &k : builtin_simple_var) {
@@ -1695,7 +1714,7 @@ map<int, vector<set<int>>> ExpressionGenerator::collect_satisfiable_types(
   auto satisfiable_functions =
       calc_satisfiable_functions(function_types, current_types);
   for (auto type : satisfiable_functions) {
-    auto func_ptr = get_function_type_by_type_id(type);
+    auto func_ptr = real_type_system_->get_function_type_by_type_id(type);
     auto return_type = func_ptr->return_type_;
     if (res.find(return_type) == res.end()) {
       res[return_type] = vector<set<int>>(HANDLER_CASE_NUM);
@@ -1714,7 +1733,7 @@ set<int> ExpressionGenerator::calc_satisfiable_functions(
 
   // setup function graph into a map
   for (auto &func : function_type_set) {
-    auto func_ptr = get_function_type_by_type_id(func);
+    auto func_ptr = real_type_system_->get_function_type_by_type_id(func);
     func_map[func] =
         set<int>(func_ptr->v_arg_types_.begin(), func_ptr->v_arg_types_.end());
   }
@@ -1726,7 +1745,8 @@ set<int> ExpressionGenerator::calc_satisfiable_functions(
     is_change = false;
     for (auto func_itr = func_map.begin(); func_itr != func_map.end();) {
       auto func = *func_itr;
-      auto func_ptr = get_function_type_by_type_id(func.first);
+      auto func_ptr =
+          real_type_system_->get_function_type_by_type_id(func.first);
       for (auto &t : current_types) {
         func.second.erase(t);
       }
@@ -1748,51 +1768,21 @@ set<int> ExpressionGenerator::calc_satisfiable_functions(
   return res;
 }
 
-set<int> get_all_types_from_compound_type(int compound_type, set<int> &visit) {
-  set<int> res;
-  if (visit.find(compound_type) != visit.end()) return res;
-  visit.insert(compound_type);
-
-  auto compound_ptr = get_compound_type_by_type_id(compound_type);
-  for (auto member : compound_ptr->v_members_) {
-    auto member_type = member.first;
-    if (is_compound_type(member_type)) {
-      auto sub_structure_res =
-          get_all_types_from_compound_type(member_type, visit);
-      res.insert(sub_structure_res.begin(), sub_structure_res.end());
-      res.insert(member_type);
-    } else if (is_function_type(member_type)) {
-      // assert(0);
-      if (gen::Configuration::GetInstance().IsWeakType()) {
-        auto pfunc = get_function_type_by_type_id(member_type);
-        res.insert(pfunc->return_type_);
-        res.insert(member_type);
-      }
-    } else if (is_basic_type(member_type)) {
-      res.insert(member_type);
-    } else {
-      if (gen::Configuration::GetInstance().IsWeakType()) {
-        res.insert(member_type);
-      }
-    }
-  }
-
-  return res;
-}
-
 set<int> ExpressionGenerator::calc_possible_types_from_structure(
     int structure_type) {
   static map<int, set<int>> builtin_structure_type_cache;
   set<int> visit;
   if (DBG) {
-    auto type_ptr = get_compound_type_by_type_id(structure_type);
+    auto type_ptr =
+        real_type_system_->get_compound_type_by_type_id(structure_type);
     cout << "[calc_possible_types_from_structure] " << type_ptr->type_name_
          << endl;
   }
   if (builtin_structure_type_cache.count(structure_type))
     return builtin_structure_type_cache[structure_type];
-  auto res = get_all_types_from_compound_type(structure_type, visit);
-  if (is_builtin_type(structure_type))
+  auto res = real_type_system_->get_all_types_from_compound_type(structure_type,
+                                                                 visit);
+  if (real_type_system_->IsBuiltin(structure_type))
     builtin_structure_type_cache[structure_type] = res;
   return res;
 }

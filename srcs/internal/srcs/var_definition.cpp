@@ -14,22 +14,21 @@ using namespace polyglot;
 #define DBG 0
 // shared_ptr<Scope> g_scope_current;
 // static shared_ptr<Scope> g_scope_root;
+/*
 static set<int> all_functions;
-set<int> all_compound_types;
+set<int> all_compound_types_;
 set<int> all_internal_compound_types;
 set<int> all_internal_functions;
-set<int> all_internal_class_methods;
 map<TYPEID, shared_ptr<VarType>> internal_type_map;
 
 map<TYPEID, map<int, TYPEID>> pointer_map;  // original_type:<level: typeid>
-static map<TYPEID, shared_ptr<VarType>> type_map;
-static map<string, shared_ptr<VarType>> basic_types;
-set<TYPEID> basic_types_set;  // For faster search
 
-bool is_internal_obj_setup = false;
-bool is_in_class = false;
+*/
 
-bool is_builtin_type(TYPEID type_id) {
+bool RealTypeSystem::is_internal_obj_setup = true;
+map<string, shared_ptr<VarType>> RealTypeSystem::basic_types;
+
+bool RealTypeSystem::IsBuiltin(TYPEID type_id) {
   return internal_type_map.count(type_id) > 0;
 }
 
@@ -59,13 +58,13 @@ std::optional<Definition> SymbolTable::GetDefinition(
   return std::nullopt;
 }
 
-map<TYPEID, vector<string>> &get_all_builtin_simple_var_types() {
+map<TYPEID, vector<string>> &RealTypeSystem::GetBuiltinSimpleVarTypes() {
   static map<TYPEID, vector<string>> res;
   if (res.size() > 0) return res;
 
   return res;
 }
-map<TYPEID, vector<string>> &get_all_builtin_compound_types() {
+map<TYPEID, vector<string>> &RealTypeSystem::GetBuiltinCompoundTypes() {
   static map<TYPEID, vector<string>> res;
   if (res.size() > 0) return res;
 
@@ -77,7 +76,7 @@ map<TYPEID, vector<string>> &get_all_builtin_compound_types() {
   return res;
 }
 
-map<TYPEID, vector<string>> &get_all_builtin_function_types() {
+map<TYPEID, vector<string>> &RealTypeSystem::GetBuiltinFunctionTypes() {
   static map<TYPEID, vector<string>> res;
   if (res.size() > 0) return res;
 
@@ -93,7 +92,7 @@ TYPEID VarType::get_type_id() const { return type_id_; }
 
 // shared_ptr<Scope> get_scope_root() { return g_scope_root; }
 
-void init_convert_chain() {
+void RealTypeSystem::init_convert_chain() {
   // init instance for ALLTYPES, ALLCLASS, ALLFUNCTION ...
 
   /*
@@ -120,7 +119,7 @@ void init_convert_chain() {
   }
 }
 
-bool is_derived_type(TYPEID dtype, TYPEID btype) {
+bool RealTypeSystem::is_derived_type(TYPEID dtype, TYPEID btype) {
   auto derived_type = get_type_by_type_id(dtype);
   auto base_type = get_type_by_type_id(btype);
 
@@ -138,7 +137,12 @@ bool is_derived_type(TYPEID dtype, TYPEID btype) {
   return res;
 }
 
-void init_basic_types() {
+RealTypeSystem::RealTypeSystem() {
+  init_basic_types();
+  init_convert_chain();
+}
+
+void RealTypeSystem::init_basic_types() {
   for (auto &line : gen::Configuration::GetInstance().GetBasicTypeStr()) {
     if (line.empty()) continue;
     auto new_id = gen_type_id();
@@ -161,7 +165,7 @@ void init_basic_types() {
   basic_types["ANYTYPE"] = get_type_by_type_id(ANYTYPE);
 }
 
-TYPEID get_basic_typeid_by_string(const string &s) {
+TYPEID RealTypeSystem::get_basic_typeid_by_string(const string &s) {
   if (basic_types.find(s) != basic_types.end()) {
     return basic_types[s]->get_type_id();
   }
@@ -169,12 +173,12 @@ TYPEID get_basic_typeid_by_string(const string &s) {
   return NOTEXISTS;
 }
 
-int gen_type_id() {
+int RealTypeSystem::gen_type_id() {
   static int id = 10;
   return id++;
 }
 
-void init_internal_type() {
+void RealTypeSystem::init_internal_type() {
   for (auto i : all_internal_functions) {
     auto ptr = get_function_type_by_type_id(i);
     // TODO: Fix this.
@@ -189,12 +193,12 @@ void init_internal_type() {
   */
 }
 
-void clear_type_map() {
+void RealTypeSystem::clear_type_map() {
   // clear type_map
   // copy basic type back to type_map
   pointer_map.clear();
   type_map.clear();
-  all_compound_types.clear();
+  all_compound_types_.clear();
 
   // make_basic_type_add_map(ALLTYPES, "ALLTYPES");
   // make_basic_type_add_map(ALLCOMPOUNDTYPE, "ALLCOMPOUNDTYPE");
@@ -211,8 +215,8 @@ void clear_type_map() {
   // make_basic_type_add_map(ALLUPPERBOUND, "ALLUPPERBOUND");
 }
 
-set<int> get_all_class() {
-  set<int> res(all_compound_types);
+set<int> RealTypeSystem::get_all_class() {
+  set<int> res(all_compound_types_);
   res.insert(all_internal_compound_types.begin(),
              all_internal_compound_types.end());
 
@@ -226,7 +230,7 @@ shared_ptr<Scope> get_scope_by_id(int scope_id) {
 }
 */
 
-shared_ptr<VarType> get_type_by_type_id(TYPEID type_id) {
+shared_ptr<VarType> RealTypeSystem::get_type_by_type_id(TYPEID type_id) {
   if (type_map.find(type_id) != type_map.end()) return type_map[type_id];
 
   if (internal_type_map.find(type_id) != internal_type_map.end())
@@ -235,7 +239,8 @@ shared_ptr<VarType> get_type_by_type_id(TYPEID type_id) {
   return nullptr;
 }
 
-shared_ptr<CompoundType> get_compound_type_by_type_id(TYPEID type_id) {
+shared_ptr<CompoundType> RealTypeSystem::get_compound_type_by_type_id(
+    TYPEID type_id) {
   if (type_map.find(type_id) != type_map.end())
     return static_pointer_cast<CompoundType>(type_map[type_id]);
   if (internal_type_map.find(type_id) != internal_type_map.end())
@@ -244,7 +249,8 @@ shared_ptr<CompoundType> get_compound_type_by_type_id(TYPEID type_id) {
   return nullptr;
 }
 
-shared_ptr<FunctionType> get_function_type_by_type_id(TYPEID type_id) {
+shared_ptr<FunctionType> RealTypeSystem::get_function_type_by_type_id(
+    TYPEID type_id) {
   if (type_map.find(type_id) != type_map.end())
     return static_pointer_cast<FunctionType>(type_map[type_id]);
   if (internal_type_map.find(type_id) != internal_type_map.end())
@@ -253,14 +259,14 @@ shared_ptr<FunctionType> get_function_type_by_type_id(TYPEID type_id) {
   return nullptr;
 }
 
-bool is_compound_type(TYPEID type_id) {
-  return all_compound_types.find(type_id) != all_compound_types.end() ||
+bool RealTypeSystem::is_compound_type(TYPEID type_id) {
+  return all_compound_types_.find(type_id) != all_compound_types_.end() ||
          all_internal_compound_types.find(type_id) !=
              all_internal_compound_types.end();
 }
 
-TYPEID get_compound_type_id_by_string(const string &s) {
-  for (auto k : all_compound_types) {
+TYPEID RealTypeSystem::get_compound_type_id_by_string(const string &s) {
+  for (auto k : all_compound_types_) {
     if (type_map[k]->type_name_ == s) return k;
   }
 
@@ -271,22 +277,22 @@ TYPEID get_compound_type_id_by_string(const string &s) {
   return NOTEXISTS;
 }
 
-bool is_function_type(TYPEID type_id) {
+bool RealTypeSystem::is_function_type(TYPEID type_id) {
   return all_functions.find(type_id) != all_functions.end() ||
          all_internal_functions.find(type_id) != all_internal_functions.end() ||
          all_internal_class_methods.find(type_id) !=
              all_internal_class_methods.end();
 }
 
-bool is_basic_type(TYPEID type_id) {
+bool RealTypeSystem::is_basic_type(TYPEID type_id) {
   return basic_types_set.find(type_id) != basic_types_set.end();
 }
 
-bool is_basic_type(const string &s) {
+bool RealTypeSystem::is_basic_type(const string &s) {
   return basic_types.find(s) != basic_types.end();
 }
 
-TYPEID get_basic_type_id_by_string(const string &s) {
+TYPEID RealTypeSystem::get_basic_type_id_by_string(const string &s) {
   if (s == "ALLTYPES") return ALLTYPES;
   if (s == "ALLCOMPOUNDTYPE") return ALLCOMPOUNDTYPE;
   if (s == "ALLFUNCTION") return ALLFUNCTION;
@@ -295,7 +301,7 @@ TYPEID get_basic_type_id_by_string(const string &s) {
   return basic_types[s]->get_type_id();
 }
 
-TYPEID get_type_id_by_string(const string &s) {
+TYPEID RealTypeSystem::get_type_id_by_string(const string &s) {
   for (auto iter : type_map) {
     if (iter.second->type_name_ == s) return iter.first;
   }
@@ -306,7 +312,8 @@ TYPEID get_type_id_by_string(const string &s) {
   return NOTEXISTS;
 }
 
-shared_ptr<FunctionType> get_function_type_by_return_type_id(TYPEID type_id) {
+shared_ptr<FunctionType> RealTypeSystem::get_function_type_by_return_type_id(
+    TYPEID type_id) {
   int counter = 0;
   shared_ptr<FunctionType> result = nullptr;
   for (auto t : all_functions) {
@@ -326,7 +333,7 @@ shared_ptr<FunctionType> get_function_type_by_return_type_id(TYPEID type_id) {
   return nullptr;
 }
 
-void make_basic_type_add_map(TYPEID id, const string &s) {
+void RealTypeSystem::make_basic_type_add_map(TYPEID id, const string &s) {
   auto res = make_basic_type(id, s);
   type_map[id] = res;
   if (id == ALLCOMPOUNDTYPE) {
@@ -347,7 +354,8 @@ void make_basic_type_add_map(TYPEID id, const string &s) {
   }
 }
 
-shared_ptr<VarType> make_basic_type(TYPEID id, const string &s) {
+shared_ptr<VarType> RealTypeSystem::make_basic_type(TYPEID id,
+                                                    const string &s) {
   auto res = make_shared<VarType>();
   res->type_id_ = id;
   res->type_name_ = s;
@@ -355,20 +363,53 @@ shared_ptr<VarType> make_basic_type(TYPEID id, const string &s) {
   return res;
 }
 
-void forward_add_compound_type(string &structure_name) {
+void RealTypeSystem::forward_add_compound_type(string &structure_name) {
   if (DBG) cout << "pre define compound type" << endl;
   auto res = make_shared<CompoundType>();
   res->type_id_ = gen_type_id();
   res->type_name_ = structure_name;
   type_map[res->type_id_] = res;
-  all_compound_types.insert(res->type_id_);
+  all_compound_types_.insert(res->type_id_);
   auto all_compound_type = get_type_by_type_id(ALLCOMPOUNDTYPE);
   assert(all_compound_type);
   all_compound_type->derived_type_.push_back(res);
   res->base_type_.push_back(all_compound_type);
 }
 
-shared_ptr<CompoundType> make_compound_type_by_scope(
+set<int> RealTypeSystem::get_all_types_from_compound_type(int compound_type,
+                                                          set<int> &visit) {
+  set<int> res;
+  if (visit.find(compound_type) != visit.end()) return res;
+  visit.insert(compound_type);
+
+  auto compound_ptr = get_compound_type_by_type_id(compound_type);
+  for (auto member : compound_ptr->v_members_) {
+    auto member_type = member.first;
+    if (is_compound_type(member_type)) {
+      auto sub_structure_res =
+          get_all_types_from_compound_type(member_type, visit);
+      res.insert(sub_structure_res.begin(), sub_structure_res.end());
+      res.insert(member_type);
+    } else if (is_function_type(member_type)) {
+      // assert(0);
+      if (gen::Configuration::GetInstance().IsWeakType()) {
+        auto pfunc = get_function_type_by_type_id(member_type);
+        res.insert(pfunc->return_type_);
+        res.insert(member_type);
+      }
+    } else if (is_basic_type(member_type)) {
+      res.insert(member_type);
+    } else {
+      if (gen::Configuration::GetInstance().IsWeakType()) {
+        res.insert(member_type);
+      }
+    }
+  }
+
+  return res;
+}
+
+shared_ptr<CompoundType> RealTypeSystem::make_compound_type_by_scope(
     shared_ptr<Scope> scope, std::string structure_name) {
   shared_ptr<CompoundType> res = nullptr;
 
@@ -386,8 +427,8 @@ shared_ptr<CompoundType> make_compound_type_by_scope(
       all_compound_type->derived_type_.push_back(res);
       res->base_type_.push_back(all_compound_type);
     } else {
-      all_compound_types.insert(res->type_id_);  // here
-      type_map[res->type_id_] = res;             // here
+      all_compound_types_.insert(res->type_id_);  // here
+      type_map[res->type_id_] = res;              // here
       auto all_compound_type = get_type_by_type_id(ALLCOMPOUNDTYPE);
       assert(all_compound_type);
       all_compound_type->derived_type_.push_back(res);
@@ -427,9 +468,8 @@ shared_ptr<CompoundType> make_compound_type_by_scope(
   return res;
 }
 
-shared_ptr<FunctionType> make_function_type(string &function_name,
-                                            TYPEID return_type,
-                                            vector<TYPEID> &args) {
+shared_ptr<FunctionType> RealTypeSystem::make_function_type(
+    string &function_name, TYPEID return_type, vector<TYPEID> &args) {
   auto res = make_shared<FunctionType>();
   res->type_id_ = gen_type_id();
   res->type_name_ = function_name;
@@ -456,7 +496,8 @@ shared_ptr<FunctionType> make_function_type(string &function_name,
   return res;
 }
 
-shared_ptr<FunctionType> make_function_type_by_scope(shared_ptr<Scope> scope) {
+shared_ptr<FunctionType> RealTypeSystem::make_function_type_by_scope(
+    shared_ptr<Scope> scope) {
   return nullptr;  // may be useless
   /*
   auto res = make_shared<FunctionType>();
@@ -526,7 +567,7 @@ void Scope::add_definition(int type, const string &var_name, unsigned long id,
   definitions_.AddDefinition({var_name, type, id});
 }
 
-TYPEID least_upper_common_type(TYPEID type1, TYPEID type2) {
+TYPEID RealTypeSystem::least_upper_common_type(TYPEID type1, TYPEID type2) {
   if (type1 == type2) {
     return type1;
   }
@@ -538,7 +579,7 @@ TYPEID least_upper_common_type(TYPEID type1, TYPEID type2) {
   return NOTEXISTS;
 }
 
-TYPEID convert_to_real_type_id(TYPEID type1, TYPEID type2) {
+TYPEID RealTypeSystem::convert_to_real_type_id(TYPEID type1, TYPEID type2) {
   if (type1 > ALLUPPERBOUND) {
     return type1;
   }
@@ -554,11 +595,11 @@ TYPEID convert_to_real_type_id(TYPEID type1, TYPEID type2) {
         auto pick_ptr = random_pick(basic_types_set);
         return *pick_ptr;
       } else if (type2 == ALLCOMPOUNDTYPE) {
-        if (all_compound_types.empty()) {
+        if (all_compound_types_.empty()) {
           if (DBG) cout << "empty me" << endl;
           break;
         }
-        auto res = random_pick(all_compound_types);
+        auto res = random_pick(all_compound_types_);
         return *res;
       } else if (is_basic_type(type2)) {
         return type2;
@@ -580,11 +621,11 @@ TYPEID convert_to_real_type_id(TYPEID type1, TYPEID type2) {
     case ALLCOMPOUNDTYPE: {
       if (type2 == ALLTYPES || type2 == ALLCOMPOUNDTYPE ||
           is_basic_type(type2) || type2 == NOTEXISTS) {
-        if (all_compound_types.empty()) {
+        if (all_compound_types_.empty()) {
           if (DBG) cout << "empty me" << endl;
           break;
         }
-        auto res = random_pick(all_compound_types);
+        auto res = random_pick(all_compound_types_);
         return *res;
       } else {
         assert(is_compound_type(type2));
@@ -618,6 +659,7 @@ string CompoundType::get_member_by_type(TYPEID type) {
   return *random_pick(v_members_[type]);
 }
 
+/*
 void debug_scope_tree(shared_ptr<Scope> cur) {
   if (cur == nullptr) return;
   for (auto &child : cur->children_) {
@@ -625,12 +667,6 @@ void debug_scope_tree(shared_ptr<Scope> cur) {
   }
 
   if (DBG) cout << cur->scope_id_ << ":" << endl;
-  /*
-  if(DBG) cout << "IR set: " << endl;
-  for(auto &ir :cur->v_ir_set_){
-      if(DBG) cout << "\t" << ir->print() << endl;
-  }
-  */
   if (DBG) cout << "Definition set: " << endl;
   for (auto &iter : cur->definitions_.GetTable()) {
     if (DBG) cout << "Type id:" << iter.first << endl;
@@ -643,6 +679,7 @@ void debug_scope_tree(shared_ptr<Scope> cur) {
   }
   if (DBG) cout << "------------------------" << endl;
 }
+*/
 
 void ScopeTree::EnterScope(ScopeType scope_type) {
   // if (get_scope_translation_flag() == false) return;
@@ -709,7 +746,7 @@ std::shared_ptr<ScopeTree> BuildScopeTree(IRPtr root) {
   return scope_tree;
 }
 
-string get_type_name_by_id(TYPEID type_id) {
+string RealTypeSystem::get_type_name_by_id(TYPEID type_id) {
   if (type_id == 0) return "NOEXISTS";
   if (DBG) cout << "get_type name: Type: " << type_id << endl;
   if (DBG)
@@ -725,7 +762,8 @@ string get_type_name_by_id(TYPEID type_id) {
   return "NOEXIST";
 }
 
-int generate_pointer_type(int original_type, int pointer_level) {
+int RealTypeSystem::generate_pointer_type(int original_type,
+                                          int pointer_level) {
   // must be a positive level
   assert(pointer_level);
   if (pointer_map[original_type].count(pointer_level))
@@ -756,7 +794,7 @@ int generate_pointer_type(int original_type, int pointer_level) {
   return cur_type->type_id_;
 }
 
-int get_or_create_pointer_type(int type) {
+int RealTypeSystem::get_or_create_pointer_type(int type) {
   bool is_found = false;
   int orig_type = -1;
   int level = -1;
@@ -831,13 +869,14 @@ int get_or_create_pointer_type(int type) {
   return res;
 }
 
-bool is_pointer_type(int type) {
+bool RealTypeSystem::is_pointer_type(int type) {
   if (DBG) cout << "is_pointer_type: " << type << endl;
   auto type_ptr = get_type_by_type_id(type);
   return type_ptr->is_pointer_type();
 }
 
-shared_ptr<PointerType> get_pointer_type_by_type_id(TYPEID type_id) {
+shared_ptr<PointerType> RealTypeSystem::get_pointer_type_by_type_id(
+    TYPEID type_id) {
   if (type_map.find(type_id) == type_map.end()) return nullptr;
 
   auto res = static_pointer_cast<PointerType>(type_map[type_id]);
@@ -846,7 +885,7 @@ shared_ptr<PointerType> get_pointer_type_by_type_id(TYPEID type_id) {
   return res;
 }
 
-void debug_pointer_type(shared_ptr<PointerType> &p) {
+void RealTypeSystem::debug_pointer_type(shared_ptr<PointerType> &p) {
   if (DBG) cout << "------new_pointer_type-------" << endl;
   if (DBG) cout << "type id: " << p->type_id_ << endl;
   if (DBG) cout << "basic_type: " << p->basic_type_ << endl;
@@ -862,7 +901,7 @@ void reset_scope() {
 }
 
 void clear_definition_all() {
-  clear_type_map();
+  // clear_type_map();
   reset_scope();
 }
 
@@ -895,7 +934,7 @@ bool ScopeTree::create_symbol_table(IRPtr root) {
   // split_to_basic_unit(root, q, m_save);
 
   recursive_counter++;
-  if (is_internal_obj_setup == false) {
+  if (real_type_system_->IsInternalObjectSetup() == false) {
     // limit the number and the length of statements.s
     if (q.size() > 15) {
       // connect_back(m_save);
@@ -910,7 +949,7 @@ bool ScopeTree::create_symbol_table(IRPtr root) {
       int tmp_count = calc_node_num(cur);
       node_count += tmp_count;
       if ((tmp_count > 250 || node_count > 1500) &&
-          is_internal_obj_setup == false) {
+          real_type_system_->IsInternalObjectSetup() == false) {
         // connect_back(m_save);
         recursive_counter--;
         return false;
@@ -1093,7 +1132,8 @@ void ScopeTree::collect_simple_variable_defintion_wt(IRPtr cur) {
 
     spdlog::info("Scope: {}", scope_type);
     spdlog::info("name_ir id: {}", name_ir->id);
-    if (DBG) spdlog::info("Type: {}", get_type_name_by_id(type));
+    if (DBG)
+      spdlog::info("Type: {}", real_type_system_->get_type_name_by_id(type));
     if (cur_scope->scope_type_ == kScopeClass) {
       if (DBG) {
         spdlog::info("Adding in class: {}", name_ir->to_string());
@@ -1128,7 +1168,7 @@ std::optional<SymbolTable> ScopeTree::collect_simple_variable_defintion(
     var_type = var_type.substr(0, var_type.size() - 1);
   }
 
-  int type = get_type_id_by_string(var_type);
+  int type = real_type_system_->get_type_id_by_string(var_type);
 
   if (type == NOTEXIST) {
     // ifdef SOLIDITYFUZZ
@@ -1158,7 +1198,7 @@ std::optional<SymbolTable> ScopeTree::collect_simple_variable_defintion(
     if (!tmp_vec.empty()) {
       spdlog::debug("This is a pointer definition");
       spdlog::debug("Pointer level {}", tmp_vec.size());
-      new_type = generate_pointer_type(type, tmp_vec.size());
+      new_type = real_type_system_->generate_pointer_type(type, tmp_vec.size());
     } else {
       spdlog::debug("This is not a pointer definition");
       // handle other
@@ -1184,7 +1224,7 @@ void ScopeTree::collect_structure_definition_wt(IRPtr cur, IRPtr root) {
     if (structure_name.size() > 0) {
       spdlog::info("not anonymous {}", structure_name[0]->GetString());
       // not anonymous
-      new_compound = make_compound_type_by_scope(
+      new_compound = real_type_system_->make_compound_type_by_scope(
           GetScopeById(struct_body->scope_id), structure_name[0]->GetString());
       current_compound_name = structure_name[0]->GetString();
     } else {
@@ -1192,16 +1232,16 @@ void ScopeTree::collect_structure_definition_wt(IRPtr cur, IRPtr root) {
       // anonymous structure
       static int anonymous_idx = 1;
       string compound_name = string("ano") + std::to_string(anonymous_idx++);
-      new_compound = make_compound_type_by_scope(
+      new_compound = real_type_system_->make_compound_type_by_scope(
           GetScopeById(struct_body->scope_id), compound_name);
       current_compound_name = compound_name;
     }
     spdlog::info("{}", struct_body->to_string());
-    is_in_class = true;
+    real_type_system_->SetInClass(true);
     create_symbol_table(struct_body);
-    is_in_class = false;
+    real_type_system_->SetInClass(false);
     auto compound_id = new_compound->type_id_;
-    new_compound = make_compound_type_by_scope(
+    new_compound = real_type_system_->make_compound_type_by_scope(
         GetScopeById(struct_body->scope_id), current_compound_name);
   } else {
     if (cur->left_child) collect_structure_definition_wt(cur->left_child, root);
@@ -1230,22 +1270,22 @@ void ScopeTree::collect_structure_definition(IRPtr cur, IRPtr root) {
       if (structure_name.size() > 0) {
         if (DBG) cout << "not anonymous" << endl;
         // not anonymous
-        new_compound =
-            make_compound_type_by_scope(GetScopeById(struct_body->scope_id),
-                                        structure_name[0]->GetString());
+        new_compound = real_type_system_->make_compound_type_by_scope(
+            GetScopeById(struct_body->scope_id),
+            structure_name[0]->GetString());
         current_compound_name = structure_name[0]->GetString();
       } else {
         if (DBG) cout << "anonymous" << endl;
         // anonymous structure
         static int anonymous_idx = 1;
         string compound_name = string("ano") + std::to_string(anonymous_idx++);
-        new_compound = make_compound_type_by_scope(
+        new_compound = real_type_system_->make_compound_type_by_scope(
             GetScopeById(struct_body->scope_id), compound_name);
         current_compound_name = compound_name;
       }
       create_symbol_table(struct_body);
       auto compound_id = new_compound->type_id_;
-      new_compound = make_compound_type_by_scope(
+      new_compound = real_type_system_->make_compound_type_by_scope(
           GetScopeById(struct_body->scope_id), current_compound_name);
 
       // get all class variable define unit by finding kDataDeclarator.
@@ -1271,8 +1311,8 @@ void ScopeTree::collect_structure_definition(IRPtr cur, IRPtr root) {
             cout << "[struct]not a pointer, name: " << var_name->GetString()
                  << endl;
         } else {
-          auto new_type =
-              generate_pointer_type(compound_id, structure_pointer_var.size());
+          auto new_type = real_type_system_->generate_pointer_type(
+              compound_id, structure_pointer_var.size());
           cur_scope->add_definition(new_type, var_name->GetString(),
                                     var_name->id);
           if (DBG)
@@ -1290,7 +1330,8 @@ void ScopeTree::collect_structure_definition(IRPtr cur, IRPtr root) {
       // kDataStructBody);
 
       assert(structure_name.size());
-      auto compound_id = get_type_id_by_string(structure_name[0]->GetString());
+      auto compound_id = real_type_system_->get_type_id_by_string(
+          structure_name[0]->GetString());
       if (DBG) {
         cout << structure_name[0]->GetString() << endl;
         cout << "TYpe id: " << compound_id << endl;
@@ -1321,8 +1362,8 @@ void ScopeTree::collect_structure_definition(IRPtr cur, IRPtr root) {
           spdlog::debug("[struct]not a pointer, name: {}",
                         var_name->GetString());
         } else {
-          auto new_type =
-              generate_pointer_type(compound_id, structure_pointer_var.size());
+          auto new_type = real_type_system_->generate_pointer_type(
+              compound_id, structure_pointer_var.size());
           cur_scope->add_definition(new_type, var_name->GetString(),
                                     var_name->id);
           spdlog::debug("[struct]a pointer in level {}, name: {}",
@@ -1366,7 +1407,8 @@ void ScopeTree::collect_function_definition_wt(IRPtr cur) {
 
   auto cur_scope = GetScopeById(cur->scope_id);
   if (function_name.empty()) function_name = "Anoynmous" + to_string(cur->id);
-  auto function_type = make_function_type(function_name, ANYTYPE, arg_types);
+  auto function_type =
+      real_type_system_->make_function_type(function_name, ANYTYPE, arg_types);
   if (DBG) {
     spdlog::info("Collecing function name: {}", function_name);
   }
@@ -1422,7 +1464,8 @@ void ScopeTree::collect_function_definition(IRPtr cur) {
       }
     }
     strip_string(return_value_type_str);
-    return_type = get_type_id_by_string(return_value_type_str);
+    return_type =
+        real_type_system_->get_type_id_by_string(return_value_type_str);
   }
 
 #ifdef SOLIDITYFUZZ
@@ -1474,7 +1517,7 @@ void ScopeTree::collect_function_definition(IRPtr cur) {
       if (DBG) cout << "Type string: " << var_type << endl;
       if (DBG) cout << "Arg name: " << var_name << endl;
       if (!var_type.empty()) {
-        int type = get_basic_type_id_by_string(var_type);
+        int type = real_type_system_->get_basic_type_id_by_string(var_type);
         if (type == 0) {
 #ifdef SOLIDITYFUZZ
           type = ANYTYPE;
@@ -1502,13 +1545,14 @@ void ScopeTree::collect_function_definition(IRPtr cur) {
   if (DBG) cout << "Args type: " << endl;
   for (auto i : arg_types) {
     if (DBG) cout << "typeid" << endl;
-    if (DBG) cout << get_type_by_type_id(i)->type_name_ << endl;
+    if (DBG)
+      cout << real_type_system_->get_type_by_type_id(i)->type_name_ << endl;
   }
 
   auto cur_scope = GetScopeById(cur->scope_id);
   if (return_type) {
-    auto function_ptr =
-        make_function_type(function_name_str, return_type, arg_types);
+    auto function_ptr = real_type_system_->make_function_type(
+        function_name_str, return_type, arg_types);
     if (function_ptr == nullptr || function_name_ir == nullptr) return;
     // if(DBG) cout << cur_scope << ", " << function_ptr << endl;
     cur_scope->add_definition(function_ptr->type_id_, function_ptr->type_name_,
