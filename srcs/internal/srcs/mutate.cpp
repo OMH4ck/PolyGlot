@@ -148,7 +148,7 @@ vector<IRPtr> Mutator::MutateIRs(vector<IRPtr> &irs_to_mutate) {
 void Mutator::AddIRToLibrary(IRPtr cur) {
   extract_struct(cur);
 
-  ir_library2_.SaveIRRecursive(cur);
+  ir_library_.SaveIRRecursive(cur);
   return;
 }
 
@@ -275,7 +275,7 @@ IRPtr Mutator::strategy_replace_with_constraint(IRPtr cur) {
   // if(cur->type_ == kIterationStatement && replace_type ==
   // kSelectionStatement) cout << "try to mutate while: ";
 
-  auto res = ir_library2_.GetRandomIR(replace_type);
+  auto res = ir_library_.GetRandomIR(replace_type);
 
   if (res->left_child && !cur->left_child ||
       cur->left_child && !res->left_child ||
@@ -332,7 +332,7 @@ IRPtr Mutator::strategy_replace(IRPtr cur) {
     case 0:
       if (cur->left_child != nullptr && not_unknown(cur->left_child)) {
         res = deep_copy(cur);
-        auto new_node = ir_library2_.GetRandomIR(res->left_child->type);
+        auto new_node = ir_library_.GetRandomIR(res->left_child->type);
         res->left_child = deep_copy(new_node);
       }
       break;
@@ -340,7 +340,7 @@ IRPtr Mutator::strategy_replace(IRPtr cur) {
     case 1:
       if (cur->right_child != nullptr && not_unknown(cur->right_child)) {
         res = deep_copy(cur);
-        auto new_node = ir_library2_.GetRandomIR(res->right_child->type);
+        auto new_node = ir_library_.GetRandomIR(res->right_child->type);
         res->right_child = deep_copy(new_node);
       }
       break;
@@ -350,8 +350,8 @@ IRPtr Mutator::strategy_replace(IRPtr cur) {
           not_unknown(cur->left_child) && not_unknown(cur->right_child)) {
         res = deep_copy(cur);
 
-        auto new_left = ir_library2_.GetRandomIR(res->left_child->type);
-        auto new_right = ir_library2_.GetRandomIR(res->right_child->type);
+        auto new_left = ir_library_.GetRandomIR(res->left_child->type);
+        auto new_right = ir_library_.GetRandomIR(res->right_child->type);
         ;
         res->right_child = deep_copy(new_right);
 

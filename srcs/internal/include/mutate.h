@@ -72,7 +72,7 @@ class Mutator {
   set<IRTYPE> float_types_;
 
   map<IRTYPE, set<IRTYPE>> m_convertable_map_;
-  IRLibrary ir_library2_;
+  IRLibrary ir_library_;
 };
 
 }  // namespace mutation
