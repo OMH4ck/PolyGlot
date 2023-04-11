@@ -200,12 +200,6 @@ NORMALSTRING
     ;
 
 CHARSTRING
-
-NORMALSTRING
-    : '"' ( EscapeSequence | ~('\\'|'"') )* '"'
-    ;
-
-CHARSTRING
     : '\'' ( EscapeSequence | ~('\''|'\\') )* '\''
     ;
 
