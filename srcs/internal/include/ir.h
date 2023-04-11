@@ -136,7 +136,7 @@ class IR {
   void to_string_core(string& str);
 };
 
-IRPtr deep_copy(const IRPtr root);
+[[deprecated("Avoid as many as we can.")]] IRPtr deep_copy(const IRPtr root);
 
 std::vector<IRPtr> collect_all_ir(IRPtr root);
 int cal_list_num(IRPtr);

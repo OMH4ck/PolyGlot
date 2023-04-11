@@ -5,6 +5,7 @@
 #include "config_misc.h"
 // #include "define.h"
 #include "frontend.h"
+#include "ir.h"
 #include "typesystem.h"
 #include "utils.h"
 #include "var_definition.h"
@@ -38,6 +39,10 @@ size_t PolyGlotMutator::generate(const char *test_case) {
 
   for (auto &ir : mutated_tree) {
     if (polyglot::gen::Configuration::GetInstance().SyntaxOnly()) {
+      // TODO: Replace this with a validator!
+      if (calc_node_num(ir) > 1500) {
+        continue;
+      }
       std::string ir_str = ir->to_string();
       if (g_frontend->Parsable(ir_str)) {
         save_test_cases_.push_back(ir_str);
