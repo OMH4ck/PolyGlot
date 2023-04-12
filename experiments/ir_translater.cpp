@@ -18,14 +18,14 @@
 
 using namespace antlrcpptest;
 
-using IM = std::variant<std::nullopt_t, std::string, IRPtr>;
+using IM = std::variant<std::monostate, std::string, IRPtr>;
 
 struct OneIR {
-  IM op_prefix = std::nullopt;
-  IM op_middle = std::nullopt;
-  IM op_suffix = std::nullopt;
-  IM left = std::nullopt;
-  IM right = std::nullopt;
+  IM op_prefix;
+  IM op_middle;
+  IM op_suffix;
+  IM left;
+  IM right;
 };
 
 // Fill the OneIR struct with the information from the stack
@@ -37,22 +37,22 @@ OneIR ExtractOneIR(std::stack<IM>& stk) {
     auto im = stk.top();
     stk.pop();
     if (std::holds_alternative<std::string>(im)) {
-      if (std::holds_alternative<std::nullopt_t>(one_ir.left) &&
-          std::holds_alternative<std::nullopt_t>(one_ir.op_prefix)) {
+      if (std::holds_alternative<std::monostate>(one_ir.left) &&
+          std::holds_alternative<std::monostate>(one_ir.op_prefix)) {
         one_ir.op_prefix = im;
-      } else if (std::holds_alternative<std::nullopt_t>(one_ir.op_middle) &&
-                 std::holds_alternative<std::nullopt_t>(one_ir.right)) {
+      } else if (std::holds_alternative<std::monostate>(one_ir.op_middle) &&
+                 std::holds_alternative<std::monostate>(one_ir.right)) {
         one_ir.op_middle = im;
-      } else if (std::holds_alternative<std::nullopt_t>(one_ir.op_suffix)) {
+      } else if (std::holds_alternative<std::monostate>(one_ir.op_suffix)) {
         one_ir.op_suffix = im;
       } else {
         stk.push(im);
         break;
       }
     } else if (std::holds_alternative<IRPtr>(im)) {
-      if (std::holds_alternative<std::nullopt_t>(one_ir.left)) {
+      if (std::holds_alternative<std::monostate>(one_ir.left)) {
         one_ir.left = im;
-      } else if (std::holds_alternative<std::nullopt_t>(one_ir.right)) {
+      } else if (std::holds_alternative<std::monostate>(one_ir.right)) {
         one_ir.right = im;
       } else {
         stk.push(im);
