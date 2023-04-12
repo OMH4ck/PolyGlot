@@ -24,6 +24,9 @@ std::string GetRootPath() {
   }
 }
 
+// Just to make the IR size explicit.
+TEST(IRTest, IRSizeTest) { ASSERT_EQ(sizeof(IR), 0x80); }
+
 class ParserTest : public ::testing::TestWithParam<std::string_view> {};
 
 TEST_P(ParserTest, ParseValidTestCaseReturnNotNull) {
