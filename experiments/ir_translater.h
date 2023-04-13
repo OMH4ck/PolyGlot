@@ -8,7 +8,7 @@
 
 using IRTYPE = unsigned int;
 namespace antlr4{
-IRPtr TranslateToIR(std::string input);
+polyglot::IRPtr TranslateToIR(std::string input);
 
 std::string_view GetIRTypeStr(IRTYPE type);
 IRTYPE GetIRTypeByStr(std::string_view type);

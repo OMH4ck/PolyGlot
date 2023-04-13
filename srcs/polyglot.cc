@@ -24,12 +24,12 @@ void PolyGlotMutator::add_to_library(const char *mem) {
 }
 
 size_t PolyGlotMutator::generate(const char *test_case) {
-  vector<IRPtr> mutated_tree;
+  vector<polyglot::IRPtr> mutated_tree;
   auto root = g_frontend->TranslateToIR(test_case);
   if (root == nullptr) {
     return 0;
   }
-  std::vector<IRPtr> ir_set = collect_all_ir(root);
+  std::vector<polyglot::IRPtr> ir_set = CollectAllIRs(root);
   if (ir_set.size() > 1500) {
     return 0;
   }
@@ -40,10 +40,10 @@ size_t PolyGlotMutator::generate(const char *test_case) {
   for (auto &ir : mutated_tree) {
     if (polyglot::gen::Configuration::GetInstance().SyntaxOnly()) {
       // TODO: Replace this with a validator!
-      if (calc_node_num(ir) > 1500) {
+      if (GetChildNum(ir) > 1500) {
         continue;
       }
-      std::string ir_str = ir->to_string();
+      std::string ir_str = ir->ToString();
       if (g_frontend->Parsable(ir_str)) {
         save_test_cases_.push_back(ir_str);
       } else {
@@ -54,7 +54,7 @@ size_t PolyGlotMutator::generate(const char *test_case) {
     } else {
       if (g_validator.Validate(ir) ==
           polyglot::validation::ValidationError::kSuccess) {
-        save_test_cases_.push_back(ir->to_string());
+        save_test_cases_.push_back(ir->ToString());
       }
     }
   }
@@ -80,7 +80,7 @@ PolyGlotMutator *PolyGlotMutator::CreateInstance(
 }
 
 void PolyGlotMutator::initialize(std::string_view config_path) {
-  vector<IRPtr> ir_set;
+  vector<polyglot::IRPtr> ir_set;
 
   std::string init_file_path =
       polyglot::gen::Configuration::GetInstance().GetInitDirPath();

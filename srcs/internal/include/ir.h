@@ -1,7 +1,6 @@
 #ifndef __IR_H__
 #define __IR_H__
 
-#include <concepts>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -12,9 +11,11 @@
 #include <vector>
 
 using namespace std;
-// HEADER_BEGIN
+namespace polyglot {
 
 using IRTYPE = unsigned int;
+using StatementID = unsigned long;
+using ScopeID = unsigned long;
 
 enum DataType {
   kDataWhatever,
@@ -85,65 +86,70 @@ struct IROperator {
 };
 
 class IR;
-typedef shared_ptr<IR> IRPtr;
-typedef shared_ptr<const IR> IRCPtr;
+typedef std::shared_ptr<IR> IRPtr;
+typedef std::shared_ptr<IR const> IRCPtr;
 
 class IR {
  public:
   IR(IRTYPE type, std::shared_ptr<IROperator> op, IRPtr left, IRPtr right);
-
-  IR(IRTYPE type, string str_val);
+  IR(IRTYPE type, std::string str_val);
   IR(IRTYPE type, int int_val);
   IR(IRTYPE type, double f_val);
-
-  IR(const IR& ir) = default;
-
   IR(const IRPtr ir, IRPtr left, IRPtr right);
-
-  std::vector<IRPtr> collect_children();
-
-  std::variant<std::monostate, std::string, int, double> data;
-
-  bool ContainString() const {
-    return std::holds_alternative<std::string>(data);
-  }
-  bool ContainInt() const { return std::holds_alternative<int>(data); }
-  bool ContainFloat() const { return std::holds_alternative<double>(data); }
-  bool ContainData() const {
-    return !std::holds_alternative<std::monostate>(data);
-  }
-
-  std::string GetString() const { return std::get<std::string>(data); }
-  int GetInt() const { return std::get<int>(data); }
-  double GetFloat() const { return std::get<double>(data); }
-
-  ScopeType scope_type = kScopeDefault;
-  unsigned long scope_id;
-  DataFlag data_flag = kUse;
-  DataType data_type = kDataWhatever;
-  IRTYPE type;
+  IR(const IR& ir) = default;
 
   std::shared_ptr<IROperator> op = nullptr;
   IRPtr left_child = nullptr;
   IRPtr right_child = nullptr;
 
-  unsigned long id;
-  string to_string();
-  string print();
+  // Utils.
+  std::vector<IRPtr> GetAllChildren() const;
+  std::string ToString() const;
+
+  // Data related.
+  bool ContainData() const;
+  bool ContainString() const;
+  bool ContainInt() const;
+  bool ContainFloat() const;
+  std::string GetString() const;
+  void SetString(const std::string& str);
+  int GetInt() const;
+  void SetInt(int i);
+  double GetFloat() const;
+  void SetFloat(double f);
+
+  // Semantic related.
+  void SetScopeType(ScopeType type);
+  ScopeType GetScopeType() const;
+  void SetScopeID(ScopeID id);
+  ScopeID GetScopeID() const;
+  void SetDataFlag(DataFlag flag);
+  DataFlag GetDataFlag() const;
+  void SetDataType(DataType type);
+  DataType GetDataType() const;
+  IRTYPE Type() const;  // IRTYPE should not be changed.
+  StatementID GetStatementID() const;
+  void SetStatementID(StatementID id);
 
  private:
-  void collect_children_impl(std::vector<IRPtr>& children);
-  void to_string_core(string& str);
+  ScopeType scope_type_ = kScopeDefault;
+  ScopeID scope_id_;
+  DataFlag data_flag_ = kUse;
+  DataType data_type_ = kDataWhatever;
+  IRTYPE type_;
+  StatementID statement_id_;
+  std::variant<std::monostate, std::string, int, double> data_;
+  void ToStringImpl(std::string& str) const;
 };
 
+std::vector<IRPtr> CollectAllIRs(IRPtr root);
+size_t GetChildNum(IRPtr root);
+bool NeedFixing(const IRPtr&);
+
 [[deprecated("Avoid as many as we can.")]] IRPtr deep_copy(const IRPtr root);
+[[deprecated("Should be not needed.")]] IRPtr locate_parent(IRPtr root,
+                                                            IRPtr old_ir);
 
-std::vector<IRPtr> collect_all_ir(IRPtr root);
-int cal_list_num(IRPtr);
-
-IRPtr locate_parent(IRPtr root, IRPtr old_ir);
-
-unsigned int calc_node_num(IRPtr root);
-bool contain_fixme(IRPtr);
+}  // namespace polyglot
 
 #endif

@@ -32,7 +32,7 @@ unsigned long hash(string &sql) {
 }
 
 unsigned long hash(IRPtr root) {
-  auto tmp_str = root->to_string();
+  auto tmp_str = root->ToString();
   return hash(tmp_str);
 }
 }  // namespace
@@ -46,7 +46,7 @@ namespace mutation {
 #define MUTATE_DBG 0
 
 bool Mutator::not_unknown(IRPtr r) {
-  return r->type != frontend_->GetUnknownType();
+  return r->Type() != frontend_->GetUnknownType();
 }
 
 static inline bool is_leaf(IRPtr r) {
@@ -89,8 +89,8 @@ IRPtr Mutator::deep_copy_with_record(const IRPtr root, const IRPtr record) {
 }
 
 bool Mutator::should_mutate(IRPtr cur) {
-  if (cur->type == frontend_->GetUnknownType()) return false;
-  if (not_mutatable_types_.find(cur->type) != not_mutatable_types_.end())
+  if (cur->Type() == frontend_->GetUnknownType()) return false;
+  if (not_mutatable_types_.find(cur->Type()) != not_mutatable_types_.end())
     return false;
   if (is_leaf(cur)) return false;
   if (!can_be_mutated(cur)) return false;
@@ -102,7 +102,7 @@ vector<IRPtr> Mutator::MutateIRs(vector<IRPtr> &irs_to_mutate) {
   std::unordered_set<unsigned long> res_hash;
   IRPtr root = irs_to_mutate.back();
 
-  auto tmp_str = root->to_string();
+  auto tmp_str = root->ToString();
   res_hash.insert(hash(tmp_str));
   int counter = 0;
 
@@ -116,18 +116,18 @@ vector<IRPtr> Mutator::MutateIRs(vector<IRPtr> &irs_to_mutate) {
     if (ir == root || !should_mutate(ir)) continue;
     // std::cout << "Mutating one, " << irs_to_mutate.size() << ", idx: " <<
     // counter << std::endl;
-    spdlog::debug("Mutating type: {}", frontend_->GetIRTypeStr(ir->type));
+    spdlog::debug("Mutating type: {}", frontend_->GetIRTypeStr(ir->Type()));
     vector<IRPtr> new_variants = MutateIR(ir);
 
     for (IRPtr i : new_variants) {
       IRPtr new_ir_tree = deep_copy_with_record(root, ir);
-      spdlog::debug("NEW type: {}", frontend_->GetIRTypeStr(i->type));
+      spdlog::debug("NEW type: {}", frontend_->GetIRTypeStr(i->Type()));
 
       replace(new_ir_tree, this->record_, i);
 
       IRPtr backup = deep_copy(new_ir_tree);
       extract_struct(new_ir_tree);
-      string tmp = new_ir_tree->to_string();
+      string tmp = new_ir_tree->ToString();
       unsigned tmp_hash = hash(tmp);
       if (res_hash.find(tmp_hash) != res_hash.end()) {
         ;
@@ -153,7 +153,7 @@ void Mutator::AddIRToLibrary(IRPtr cur) {
 }
 
 void IRLibrary::SaveIRRecursive(IRPtr cur) {
-  const auto type = cur->type;
+  const auto type = cur->Type();
   const auto h = hash(cur);
 
   if (ir_library_hash_[type].contains(h)) {
@@ -268,9 +268,9 @@ IRPtr Mutator::strategy_replace_with_constraint(IRPtr cur) {
     return nullptr;
   }
 
-  IRTYPE replace_type = cur->type;
+  IRTYPE replace_type = cur->Type();
   if (m_convertable_map_.find(replace_type) != m_convertable_map_.end()) {
-    replace_type = *(random_pick(m_convertable_map_[cur->type]));
+    replace_type = *(random_pick(m_convertable_map_[cur->Type()]));
   }
   // if(cur->type_ == kIterationStatement && replace_type ==
   // kSelectionStatement) cout << "try to mutate while: ";
@@ -286,15 +286,15 @@ IRPtr Mutator::strategy_replace_with_constraint(IRPtr cur) {
     return nullptr;
   }
 
-  if (res->left_child &&
-      !is_ir_type_connvertable(res->left_child->type, cur->left_child->type)) {
+  if (res->left_child && !is_ir_type_connvertable(res->left_child->Type(),
+                                                  cur->left_child->Type())) {
     // ;
     // if(cur->type_ == kIterationStatement) cout << "failed" << endl;
     return nullptr;
   }
 
-  if (res->right_child && !is_ir_type_connvertable(res->right_child->type,
-                                                   cur->right_child->type)) {
+  if (res->right_child && !is_ir_type_connvertable(res->right_child->Type(),
+                                                   cur->right_child->Type())) {
     // ;
     // if(cur->type_ == kIterationStatement) cout << "failed" << endl;
     return nullptr;
@@ -332,7 +332,7 @@ IRPtr Mutator::strategy_replace(IRPtr cur) {
     case 0:
       if (cur->left_child != nullptr && not_unknown(cur->left_child)) {
         res = deep_copy(cur);
-        auto new_node = ir_library_.GetRandomIR(res->left_child->type);
+        auto new_node = ir_library_.GetRandomIR(res->left_child->Type());
         res->left_child = deep_copy(new_node);
       }
       break;
@@ -340,7 +340,7 @@ IRPtr Mutator::strategy_replace(IRPtr cur) {
     case 1:
       if (cur->right_child != nullptr && not_unknown(cur->right_child)) {
         res = deep_copy(cur);
-        auto new_node = ir_library_.GetRandomIR(res->right_child->type);
+        auto new_node = ir_library_.GetRandomIR(res->right_child->Type());
         res->right_child = deep_copy(new_node);
       }
       break;
@@ -350,8 +350,8 @@ IRPtr Mutator::strategy_replace(IRPtr cur) {
           not_unknown(cur->left_child) && not_unknown(cur->right_child)) {
         res = deep_copy(cur);
 
-        auto new_left = ir_library_.GetRandomIR(res->left_child->type);
-        auto new_right = ir_library_.GetRandomIR(res->right_child->type);
+        auto new_left = ir_library_.GetRandomIR(res->left_child->Type());
+        auto new_right = ir_library_.GetRandomIR(res->right_child->Type());
         ;
         res->right_child = deep_copy(new_right);
 
@@ -382,11 +382,11 @@ IRPtr IRLibrary::GetRandomIR(IRTYPE type) {
 
 void Mutator::extract_struct(IRPtr root) {
   static unsigned long iid = 0;
-  auto type = root->type;
+  auto type = root->Type();
 
 #ifndef SYNTAX_ONLY
   if (root->left_child) {
-    if (root->left_child->data_type == kDataFixUnit) {
+    if (root->left_child->GetDataType() == kDataFixUnit) {
       ;
       root->left_child =
           std::make_shared<IR>(frontend_->GetStringLiteralType(), "FIXME");
@@ -395,7 +395,7 @@ void Mutator::extract_struct(IRPtr root) {
     }
   }
   if (root->right_child) {
-    if (root->right_child->data_type == kDataFixUnit) {
+    if (root->right_child->GetDataType() == kDataFixUnit) {
       ;
       root->right_child =
           std::make_shared<IR>(frontend_->GetStringLiteralType(), "FIXME");
@@ -423,17 +423,17 @@ void Mutator::extract_struct(IRPtr root) {
 #else
 */
   // TODO: Verify whether this should be == or !=.
-  if (root->data_type == kDataWhatever) {
-    root->data = "x";
+  if (root->GetDataType() == kDataWhatever) {
+    root->SetString("x");
     return;
   }
   // #endif
   if (string_types_.find(type) != string_types_.end()) {
-    root->data = "'x'";
+    root->SetString("'x'");
   } else if (int_types_.find(type) != int_types_.end()) {
-    root->data = 1;
+    root->SetInt(1);
   } else if (float_types_.find(type) != float_types_.end()) {
-    root->data = 1.0;
+    root->SetFloat(1.0);
   }
 }
 
@@ -442,8 +442,9 @@ bool Mutator::can_be_mutated(IRPtr cur) {
   // return true;
   // #else
   bool res = true;
-  if (cur->data_type == kDataVarDefine || isDefine(cur->data_flag) ||
-      cur->data_type == kDataVarType || cur->data_type == kDataClassType) {
+  if (cur->GetDataType() == kDataVarDefine || isDefine(cur->GetDataFlag()) ||
+      cur->GetDataType() == kDataVarType ||
+      cur->GetDataType() == kDataClassType) {
     return false;
   }
   if (cur->left_child) res = res && can_be_mutated(cur->left_child);

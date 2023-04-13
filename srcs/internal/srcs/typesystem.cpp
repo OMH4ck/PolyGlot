@@ -150,7 +150,7 @@ void TypeSystem::split_to_basic_unit(IRPtr root, queue<IRPtr> &q,
                                      map<IRPtr *, IRPtr> &m_save,
                                      set<IRTYPE> &s_basic_unit) {
   if (root->left_child &&
-      s_basic_unit.find(root->left_child->type) != s_basic_unit.end()) {
+      s_basic_unit.find(root->left_child->Type()) != s_basic_unit.end()) {
     m_save[&root->left_child] = root->left_child;
     q.push(root->left_child);
     root->left_child = nullptr;
@@ -159,7 +159,7 @@ void TypeSystem::split_to_basic_unit(IRPtr root, queue<IRPtr> &q,
     split_to_basic_unit(root->left_child, q, m_save, s_basic_unit);
 
   if (root->right_child &&
-      s_basic_unit.find(root->right_child->type) != s_basic_unit.end()) {
+      s_basic_unit.find(root->right_child->Type()) != s_basic_unit.end()) {
     m_save[&root->right_child] = root->right_child;
     q.push(root->right_child);
     root->right_child = nullptr;
@@ -199,12 +199,13 @@ bool TypeInferer::is_op_null(std::shared_ptr<IROperator> op) {
 void search_by_data_type(IRPtr cur, DataType type, vector<IRPtr> &result,
                          DataType forbit_type = kDataWhatever,
                          bool go_inside = false) {
-  if (cur->data_type == type) {
+  if (cur->GetDataType() == type) {
     result.push_back(cur);
-  } else if (forbit_type != kDataWhatever && cur->data_type == forbit_type) {
+  } else if (forbit_type != kDataWhatever &&
+             cur->GetDataType() == forbit_type) {
     return;
   }
-  if (cur->data_type != type || go_inside == true) {
+  if (cur->GetDataType() != type || go_inside == true) {
     if (cur->left_child) {
       search_by_data_type(cur->left_child, type, result, forbit_type,
                           go_inside);
@@ -235,27 +236,27 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
   auto cur_type = std::make_shared<CandidateTypes>();
   int res_type = NOTEXIST;
   bool flag;
-  spdlog::debug("Inferring: {}", cur->to_string());
+  spdlog::debug("Inferring: {}", cur->ToString());
   spdlog::debug("Scope type: {}", scope_type);
 
-  if (cur->type == frontend_->GetStringLiteralType()) {
+  if (cur->Type() == frontend_->GetStringLiteralType()) {
     res_type = real_type_system_->get_type_id_by_string("ANYTYPE");
     cur_type->AddCandidate(res_type, 0, 0);
     cache_inference_map_[cur] = cur_type;
     return true;
-  } else if (cur->type == frontend_->GetIntLiteralType()) {
+  } else if (cur->Type() == frontend_->GetIntLiteralType()) {
     res_type = real_type_system_->get_type_id_by_string("ANYTYPE");
     cur_type->AddCandidate(res_type, 0, 0);
     cache_inference_map_[cur] = cur_type;
     return true;
-  } else if (cur->type == frontend_->GetFloatLiteralType()) {
+  } else if (cur->Type() == frontend_->GetFloatLiteralType()) {
     res_type = real_type_system_->get_type_id_by_string("ANYTYPE");
     cur_type->AddCandidate(res_type, 0, 0);
     cache_inference_map_[cur] = cur_type;
     return true;
   }
 
-  if (cur->type == frontend_->GetIdentifierType()) {
+  if (cur->Type() == frontend_->GetIdentifierType()) {
     // handle here
     if (cur->GetString() == "FIXME") {
       spdlog::debug("See a fixme!");
@@ -274,7 +275,7 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
       // match name in cur->scope_
 
       res_type =
-          locate_defined_variable_by_name(cur->GetString(), cur->scope_id);
+          locate_defined_variable_by_name(cur->GetString(), cur->GetScopeID());
       spdlog::debug("Name: {}", cur->GetString());
       spdlog::debug("Type: {}", res_type);
       // auto cur_type = make_shared<map<TYPEID, vector<pair<TYPEID,
@@ -344,11 +345,11 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
       flag = type_inference_new(cur->left_child, scope_type);
       if (!flag || !cache_inference_map_[cur->left_child]->HasCandidate())
         return false;
-      if (DBG) cout << "Left: " << cur->left_child->to_string() << endl;
+      if (DBG) cout << "Left: " << cur->left_child->ToString() << endl;
       assert(cache_inference_map_[cur->left_child]->HasCandidate());
       cache_inference_map_[cur] = cache_inference_map_[cur->left_child];
     } else {
-      if (DBG) cout << cur->to_string() << endl;
+      if (DBG) cout << cur->ToString() << endl;
       return false;
       assert(0);
     }
@@ -359,7 +360,7 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
 
   auto cur_op = get_op_value(cur->op);
   if (cur_op == NOTEXIST) {
-    if (DBG) cout << cur->to_string() << endl;
+    if (DBG) cout << cur->ToString() << endl;
     if (DBG)
       cout << cur->op->prefix << ", " << cur->op->middle << ", "
            << cur->op->suffix << endl;
@@ -501,8 +502,8 @@ int TypeInferer::locate_defined_variable_by_name(const string &var_name,
 
 set<int> TypeInferer::collect_usable_type(IRPtr cur) {
   set<int> result;
-  auto ir_id = cur->id;
-  auto current_scope = scope_tree_->GetScopeById(cur->scope_id);
+  auto ir_id = cur->GetStatementID();
+  auto current_scope = scope_tree_->GetScopeById(cur->GetScopeID());
   while (current_scope) {
     if (DBG)
       cout << "Collecting scope id: " << current_scope->scope_id_ << endl;
@@ -727,31 +728,31 @@ IRPtr TypeSystem::locate_mutated_ir(IRPtr root) {
       return locate_mutated_ir(root->left_child);
     }
 
-    if (contain_fixme(root->right_child) == false) {
+    if (NeedFixing(root->right_child) == false) {
       return locate_mutated_ir(root->left_child);
     }
-    if (contain_fixme(root->left_child) == false) {
+    if (NeedFixing(root->left_child) == false) {
       return locate_mutated_ir(root->right_child);
     }
 
     return root;
   }
 
-  if (contain_fixme(root)) return root;
+  if (NeedFixing(root)) return root;
   return nullptr;
 }
 
 bool TypeSystem::simple_fix(IRPtr ir, int type, TypeInferer &inferer) {
   if (type == NOTEXIST) return false;
 
-  spdlog::debug("NodeType: {}", frontend_->GetIRTypeStr(ir->type));
+  spdlog::debug("NodeType: {}", frontend_->GetIRTypeStr(ir->Type()));
   spdlog::debug("Type: {}", type);
 
   // if (ir->type_ == kIdentifier && ir->str_val_ == "FIXME")
   if (ir->ContainString() && ir->GetString() == "FIXME") {
     spdlog::debug("Reach here");
     validation::ExpressionGenerator generator(scope_tree_);
-    ir->data = generator.GenerateExpression(type, ir);
+    ir->SetString(generator.GenerateExpression(type, ir));
     return true;
   }
 
@@ -772,8 +773,8 @@ bool TypeSystem::simple_fix(IRPtr ir, int type, TypeInferer &inferer) {
       }
 
       type = new_type;
-      spdlog::debug("nothing in cache_inference_map_: {}", ir->to_string());
-      spdlog::debug("NodeType: {}", frontend_->GetIRTypeStr(ir->type));
+      spdlog::debug("nothing in cache_inference_map_: {}", ir->ToString());
+      spdlog::debug("NodeType: {}", frontend_->GetIRTypeStr(ir->Type()));
     }
     if (!inferer.GetCandidateTypes(ir)->HasCandidate(type)) return false;
     if (ir->left_child) {
@@ -794,7 +795,7 @@ bool TypeSystem::simple_fix(IRPtr ir, int type, TypeInferer &inferer) {
 }
 
 bool Fixable(IRPtr root) {
-  return root->type == gen::Configuration::GetInstance().GetFixIRType() ||
+  return root->Type() == gen::Configuration::GetInstance().GetFixIRType() ||
          (root->ContainString() && root->GetString() == "FIXME");
 }
 
@@ -810,7 +811,7 @@ bool TypeSystem::Fix(IRPtr root) {
     root = stk.top();
     stk.pop();
     if (Fixable(root)) {
-      assert(contain_fixme(root));
+      assert(NeedFixing(root));
       int type = ALLTYPES;
       if (!gen::Configuration::GetInstance().IsWeakType()) {
         if (!inferer.Infer(root, 0)) {
@@ -831,7 +832,7 @@ bool TypeSystem::Fix(IRPtr root) {
 }
 
 bool TypeSystem::validate_syntax_only(IRPtr root) {
-  if (frontend_->Parsable(root->to_string()) == false) return false;
+  if (frontend_->Parsable(root->ToString()) == false) return false;
   // ast->deep_delete();
   queue<IRPtr> q;
   map<IRPtr *, IRPtr> m_save;
@@ -847,7 +848,7 @@ bool TypeSystem::validate_syntax_only(IRPtr root) {
   while (!q.empty()) {
     auto cur = q.front();
     q.pop();
-    int tmp_count = calc_node_num(cur);
+    int tmp_count = GetChildNum(cur);
     node_count += tmp_count;
     if (tmp_count > 250 || node_count > 1500) {
       connect_back(m_save);
@@ -862,28 +863,28 @@ bool TypeSystem::validate_syntax_only(IRPtr root) {
 
 void TypeSystem::MarkFixMe(IRPtr root) {
   if (root->left_child) {
-    if (root->left_child->data_type == kDataFixUnit) {
-      if (contain_fixme(root->left_child)) {
-        auto save_ir_id = root->left_child->id;
-        auto save_scope = root->left_child->scope_id;
+    if (root->left_child->GetDataType() == kDataFixUnit) {
+      if (NeedFixing(root->left_child)) {
+        auto save_ir_id = root->left_child->GetStatementID();
+        auto save_scope = root->left_child->GetScopeID();
         root->left_child = std::make_shared<IR>(
             frontend_->GetStringLiteralType(), std::string("FIXME"));
-        root->left_child->scope_id = save_scope;
-        root->left_child->id = save_ir_id;
+        root->left_child->SetScopeID(save_scope);
+        root->left_child->SetStatementID(save_ir_id);
       }
     } else {
       MarkFixMe(root->left_child);
     }
   }
   if (root->right_child) {
-    if (root->right_child->data_type == kDataFixUnit) {
-      if (contain_fixme(root->right_child)) {
-        auto save_ir_id = root->right_child->id;
-        auto save_scope = root->right_child->scope_id;
+    if (root->right_child->GetDataType() == kDataFixUnit) {
+      if (NeedFixing(root->right_child)) {
+        auto save_ir_id = root->right_child->GetStatementID();
+        auto save_scope = root->right_child->GetScopeID();
         root->right_child =
             std::make_shared<IR>(frontend_->GetStringLiteralType(), "FIXME");
-        root->right_child->scope_id = save_scope;
-        root->right_child->id = save_ir_id;
+        root->right_child->SetScopeID(save_scope);
+        root->right_child->SetStatementID(save_ir_id);
       }
     } else {
       MarkFixMe(root->right_child);
@@ -1220,8 +1221,8 @@ string ExpressionGenerator::generate_expression_by_type_core(int type,
   static vector<map<int, vector<string>>> var_maps;
   static map<int, vector<set<int>>> all_satisfiable_types;
   if (gen_counter_ == 0) {
-    if (current_fix_scope_ != ir->scope_id) {
-      current_fix_scope_ = ir->scope_id;
+    if (current_fix_scope_ != ir->GetScopeID()) {
+      current_fix_scope_ = ir->GetScopeID();
       var_maps.clear();
       all_satisfiable_types.clear();
       var_maps = collect_all_var_definition_by_type(ir);
@@ -1560,8 +1561,8 @@ ExpressionGenerator::collect_all_var_definition_by_type(IRPtr cur) {
   map<int, vector<string>> functions;
   map<int, vector<string>> compound_types;
   map<int, vector<string>> pointer_types;
-  auto cur_scope_id = cur->scope_id;
-  auto ir_id = cur->id;
+  auto cur_scope_id = cur->GetScopeID();
+  auto ir_id = cur->GetStatementID();
   // TODO: Fix this.
   auto current_scope = scope_tree_->GetScopeById(cur_scope_id);
   while (current_scope != nullptr) {
