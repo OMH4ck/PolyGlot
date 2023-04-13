@@ -14,25 +14,22 @@ endif()
 set(ANTLR4CPP_JAR_LOCATION
     ${CMAKE_CURRENT_SOURCE_DIR}/antlr-4.12.0-complete.jar)
 
-message("Build command: ${CMAKE_MAKE_PROGRAM}")
-
-# Currently support only one grammar file. TODO: Support multiple grammar files.
-# Compare whether LANG equals to simplelang
-if(LANG STREQUAL "simplelang")
-  set(GRAMMAR_FILE ${CMAKE_CURRENT_SOURCE_DIR}/SimpleLang.g4)
-elseif(LANG STREQUAL "lua")
-  set(GRAMMAR_FILE ${CMAKE_CURRENT_SOURCE_DIR}/Lua.g4)
+# Make sure that the user either defines GRAMMAR_FILE or both PARSER_FILE AND LEXER_FILE
+if(NOT DEFINED GRAMMAR_FILE AND (NOT DEFINED PARSER_FILE OR NOT DEFINED LEXER_FILE))
+  message(FATAL_ERROR "You must either set GRAMMAR_FILE (if you have a single grammar file) or both PARSER_FILE and LEXER_FILE (if you have sperate lexer and parser files) to the path of these files.")
 endif()
 
-file(STRINGS ${GRAMMAR_FILE} file_contents)
-string(REGEX MATCH "grammar ([A-Za-z0-9]+)" search_result "${file_contents}")
-
-if(search_result)
-  message("Search result: ${CMAKE_MATCH_1}")
-  set(GRAMMAR_NAME ${CMAKE_MATCH_1})
+# Extract the grammar name from the grammar file name
+if(DEFINED GRAMMAR_FILE)
+  get_filename_component(LEXER_NAME ${GRAMMAR_FILE} NAME_WE)
+  get_filename_component(PARSER_NAME ${GRAMMAR_FILE} NAME_WE)
 else()
-  message(FATAL_ERROR "Your grammar file has no name for grammar.")
+  get_filename_component(LEXER_NAME ${LEXER_FILE} NAME_WE)
+  get_filename_component(PARSER_NAME ${PARSER_FILE} NAME_WE)
 endif()
+
+message("LEXER_NAME: ${LEXER_NAME}")
+message("PARSER_NAME: ${PARSER_NAME}")
 
 set(GENERATED_DIR ${CMAKE_CURRENT_SOURCE_DIR}/generated)
 file(MAKE_DIRECTORY ${GENERATED_DIR})
@@ -40,27 +37,21 @@ file(MAKE_DIRECTORY ${GENERATED_DIR})
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/generated_header.h.in
                ${CMAKE_CURRENT_SOURCE_DIR}/generated/generated_header.h @ONLY)
 
-execute_process(
-  COMMAND
-    java -jar ${ANTLR4CPP_JAR_LOCATION} -Dlanguage=Cpp -o
-    ${CMAKE_CURRENT_SOURCE_DIR}/generated -visitor -listener -package
-    antlrcpptest ${GRAMMAR_FILE})
-
 set(GENERATED_SRC_FILES
-    ${GENERATED_DIR}/${GRAMMAR_NAME}Parser.cpp
-    ${GENERATED_DIR}/${GRAMMAR_NAME}Lexer.cpp
-    ${GENERATED_DIR}/${GRAMMAR_NAME}BaseListener.cpp
-    ${GENERATED_DIR}/${GRAMMAR_NAME}BaseVisitor.cpp
-    ${GENERATED_DIR}/${GRAMMAR_NAME}Listener.cpp
-    ${GENERATED_DIR}/${GRAMMAR_NAME}Visitor.cpp)
+    ${GENERATED_DIR}/${PARSER_NAME}Parser.cpp
+    ${GENERATED_DIR}/${LEXER_NAME}Lexer.cpp
+    ${GENERATED_DIR}/${PARSER_NAME}BaseListener.cpp
+    ${GENERATED_DIR}/${PARSER_NAME}BaseVisitor.cpp
+    ${GENERATED_DIR}/${PARSER_NAME}Listener.cpp
+    ${GENERATED_DIR}/${PARSER_NAME}Visitor.cpp)
 
 set(GENERATED_HDR_FILES
-    ${GENERATED_DIR}/${GRAMMAR_NAME}Parser.h
-    ${GENERATED_DIR}/${GRAMMAR_NAME}Lexer.h
-    ${GENERATED_DIR}/${GRAMMAR_NAME}BaseListener.h
-    ${GENERATED_DIR}/${GRAMMAR_NAME}BaseVisitor.h
-    ${GENERATED_DIR}/${GRAMMAR_NAME}Listener.h
-    ${GENERATED_DIR}/${GRAMMAR_NAME}Visitor.h)
+    ${GENERATED_DIR}/${PARSER_NAME}Parser.h
+    ${GENERATED_DIR}/${LEXER_NAME}Lexer.h
+    ${GENERATED_DIR}/${PARSER_NAME}BaseListener.h
+    ${GENERATED_DIR}/${PARSER_NAME}BaseVisitor.h
+    ${GENERATED_DIR}/${PARSER_NAME}Listener.h
+    ${GENERATED_DIR}/${PARSER_NAME}Visitor.h)
 
 add_custom_command(
   OUTPUT ${GENERATED_SRC_FILES} ${GENERATED_HDR_FILES}
