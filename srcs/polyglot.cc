@@ -87,7 +87,11 @@ void PolyGlotMutator::initialize(std::string_view config_path) {
   vector<string> file_list = get_all_files_in_dir(init_file_path.c_str());
 
   for (auto &f : file_list) {
-    cerr << "init filename: " << f << endl;
-    g_mutator.init_ir_library_from_a_file(f);
+    if (polyglot::IRPtr root = g_frontend->TranslateToIR(f)) {
+      std::cerr << "init filename: " << f << " Success" << endl;
+      g_mutator.AddIRToLibrary(root);
+    } else {
+      std::cerr << "init filename: " << f << " Failed" << endl;
+    }
   }
 }

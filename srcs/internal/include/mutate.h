@@ -30,15 +30,12 @@ class IRLibrary {
 
 class Mutator {
  public:
-  Mutator(std::shared_ptr<Frontend> frontend = nullptr);
+  Mutator(std::shared_ptr<Frontend> frontend);
   std::vector<IRPtr> MutateIRs(std::vector<IRPtr> &v_ir_collector);
   std::vector<IRPtr> MutateIR(IRPtr input);
   void AddIRToLibrary(IRPtr);
 
-  // This should be long to IR?
-  void extract_struct(IRPtr);
-  [[deprecated("This seems redundant, will be removed soon")]] bool
-  init_ir_library_from_a_file(std::string filename);
+  void ExtractStructure(IRPtr &);
 
  private:
   std::shared_ptr<Frontend> frontend_;
