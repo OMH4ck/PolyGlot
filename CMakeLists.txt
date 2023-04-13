@@ -90,17 +90,6 @@ find_package(absl REQUIRED)
 find_package(antlr4-runtime REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
-# TODO: Add more
-set(SUPPORTED_LANG lua simplelang)
-
-if(NOT DEFINED LANG)
-  message(FATAL_ERROR "Please specify a language to build with -DLANG=...")
-endif()
-
-if(NOT ${LANG} IN_LIST SUPPORTED_LANG)
-  message(FATAL_ERROR "Language ${LANG} is not supported")
-endif()
-
 file(GLOB SRC_FILES ${CMAKE_SOURCE_DIR}/srcs/internal/srcs/*.cpp)
 
 include_directories(${spdlog_INCLUDE_DIRS})
@@ -158,5 +147,9 @@ target_link_options(polyglot_mutator PRIVATE $<$<CONFIG:DEBUG>: ${ASAN_SHARED}>)
 
 add_subdirectory(experiments)
 include(lint.cmake)
-enable_testing()
-add_subdirectory(tests)
+
+option(BUILD_TESTING "Build the testing tree." ON)
+if(BUILD_TESTING AND (PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR))
+  enable_testing()
+  add_subdirectory(tests)
+endif()
