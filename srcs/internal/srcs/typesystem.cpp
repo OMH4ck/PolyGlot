@@ -149,23 +149,23 @@ void TypeSystem::split_to_basic_unit(IRPtr root, queue<IRPtr> &q,
 void TypeSystem::split_to_basic_unit(IRPtr root, queue<IRPtr> &q,
                                      map<IRPtr *, IRPtr> &m_save,
                                      set<IRTYPE> &s_basic_unit) {
-  if (root->left_child &&
-      s_basic_unit.find(root->left_child->Type()) != s_basic_unit.end()) {
-    m_save[&root->left_child] = root->left_child;
-    q.push(root->left_child);
-    root->left_child = nullptr;
+  if (root->HasLeftChild() &&
+      s_basic_unit.find(root->LeftChild()->Type()) != s_basic_unit.end()) {
+    m_save[&root->LeftChild()] = root->LeftChild();
+    q.push(root->LeftChild());
+    root->LeftChild() = nullptr;
   }
-  if (root->left_child)
-    split_to_basic_unit(root->left_child, q, m_save, s_basic_unit);
+  if (root->HasLeftChild())
+    split_to_basic_unit(root->LeftChild(), q, m_save, s_basic_unit);
 
-  if (root->right_child &&
-      s_basic_unit.find(root->right_child->Type()) != s_basic_unit.end()) {
-    m_save[&root->right_child] = root->right_child;
-    q.push(root->right_child);
-    root->right_child = nullptr;
+  if (root->HasRightChild() &&
+      s_basic_unit.find(root->RightChild()->Type()) != s_basic_unit.end()) {
+    m_save[&root->RightChild()] = root->RightChild();
+    q.push(root->RightChild());
+    root->RightChild() = nullptr;
   }
-  if (root->right_child)
-    split_to_basic_unit(root->right_child, q, m_save, s_basic_unit);
+  if (root->HasRightChild())
+    split_to_basic_unit(root->RightChild(), q, m_save, s_basic_unit);
 }
 
 void TypeSystem::connect_back(map<IRPtr *, IRPtr> &m_save) {
@@ -206,12 +206,12 @@ void search_by_data_type(IRPtr cur, DataType type, vector<IRPtr> &result,
     return;
   }
   if (cur->GetDataType() != type || go_inside == true) {
-    if (cur->left_child) {
-      search_by_data_type(cur->left_child, type, result, forbit_type,
+    if (cur->HasLeftChild()) {
+      search_by_data_type(cur->LeftChild(), type, result, forbit_type,
                           go_inside);
     }
-    if (cur->right_child) {
-      search_by_data_type(cur->right_child, type, result, forbit_type,
+    if (cur->HasRightChild()) {
+      search_by_data_type(cur->RightChild(), type, result, forbit_type,
                           go_inside);
     }
   }
@@ -325,29 +325,29 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
     }
   }
 
-  if (is_op_null(cur->op)) {
-    if (cur->left_child && cur->right_child) {
-      flag = type_inference_new(cur->left_child, scope_type);
+  if (is_op_null(cur->OP())) {
+    if (cur->HasLeftChild() && cur->HasRightChild()) {
+      flag = type_inference_new(cur->LeftChild(), scope_type);
       if (!flag) return flag;
-      flag = type_inference_new(cur->right_child, scope_type);
+      flag = type_inference_new(cur->RightChild(), scope_type);
       if (!flag) return flag;
       for (auto &left :
-           cache_inference_map_[cur->left_child]->GetCandidates()) {
+           cache_inference_map_[cur->LeftChild()]->GetCandidates()) {
         for (auto &right :
-             cache_inference_map_[cur->right_child]->GetCandidates()) {
+             cache_inference_map_[cur->RightChild()]->GetCandidates()) {
           auto res_type = real_type_system_->least_upper_common_type(
               left.first, right.first);
           cur_type->AddCandidate(res_type, left.first, right.first);
         }
       }
       cache_inference_map_[cur] = cur_type;
-    } else if (cur->left_child) {
-      flag = type_inference_new(cur->left_child, scope_type);
-      if (!flag || !cache_inference_map_[cur->left_child]->HasCandidate())
+    } else if (cur->HasLeftChild()) {
+      flag = type_inference_new(cur->LeftChild(), scope_type);
+      if (!flag || !cache_inference_map_[cur->LeftChild()]->HasCandidate())
         return false;
-      if (DBG) cout << "Left: " << cur->left_child->ToString() << endl;
-      assert(cache_inference_map_[cur->left_child]->HasCandidate());
-      cache_inference_map_[cur] = cache_inference_map_[cur->left_child];
+      if (DBG) cout << "Left: " << cur->LeftChild()->ToString() << endl;
+      assert(cache_inference_map_[cur->LeftChild()]->HasCandidate());
+      cache_inference_map_[cur] = cache_inference_map_[cur->LeftChild()];
     } else {
       if (DBG) cout << cur->ToString() << endl;
       return false;
@@ -358,12 +358,12 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
 
   // handle by OP
 
-  auto cur_op = get_op_value(cur->op);
+  auto cur_op = get_op_value(cur->OP());
   if (cur_op == NOTEXIST) {
     if (DBG) cout << cur->ToString() << endl;
     if (DBG)
-      cout << cur->op->prefix << ", " << cur->op->middle << ", "
-           << cur->op->suffix << endl;
+      cout << cur->OP()->prefix << ", " << cur->OP()->middle << ", "
+           << cur->OP()->suffix << endl;
     if (DBG) cout << "OP not exist!" << endl;
     return false;
     assert(0);
@@ -371,18 +371,18 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
 
   if (is_op1(cur_op)) {
     // assert(cur->left_); //for test
-    if (cur->left_child == nullptr) {
+    if (cur->HasLeftChild()) {
       return false;
     }
-    flag = type_inference_new(cur->left_child, scope_type);
+    flag = type_inference_new(cur->LeftChild(), scope_type);
     if (!flag) return flag;
     // auto cur_type = make_shared<map<TYPEID, vector<pair<TYPEID, TYPEID>>>>();
-    for (auto &left : cache_inference_map_[cur->left_child]->GetCandidates()) {
+    for (auto &left : cache_inference_map_[cur->LeftChild()]->GetCandidates()) {
       auto left_type = left.first;
       if (DBG) cout << "Reaching op1" << endl;
       if (DBG)
-        cout << cur->op->prefix << ", " << cur->op->middle << ", "
-             << cur->op->suffix << endl;
+        cout << cur->OP()->prefix << ", " << cur->OP()->middle << ", "
+             << cur->OP()->suffix << endl;
       res_type = query_result_type(cur_op, left_type);
       if (DBG) cout << "Result_type: " << res_type << endl;
       if (res_type != NOTEXIST) {
@@ -391,20 +391,20 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
     }
     cache_inference_map_[cur] = cur_type;
   } else if (is_op2(cur_op)) {
-    if (!(cur->left_child && cur->right_child)) return false;
+    if (!(cur->HasLeftChild() && cur->HasRightChild())) return false;
     // auto cur_type = make_shared<map<TYPEID, vector<pair<TYPEID, TYPEID>>>>();
     switch (get_fix_order(cur_op)) {
       case LEFT_TO_RIGHT: {
         // this shouldn't contain "FIXME"
         if (DBG) cout << "Left to right" << endl;
-        flag = type_inference_new(cur->left_child, scope_type);
+        flag = type_inference_new(cur->LeftChild(), scope_type);
         if (!flag) return flag;
-        if (!cache_inference_map_[cur->left_child]->HasCandidate())
+        if (!cache_inference_map_[cur->LeftChild()]->HasCandidate())
           return false;
         auto left_type =
-            cache_inference_map_[cur->left_child]->GetARandomCandidateType();
+            cache_inference_map_[cur->LeftChild()]->GetARandomCandidateType();
         auto new_left_type = left_type;
-        // if(cur->op_->middle_ == "->"){
+        // if(cur->OP()_->middle_ == "->"){
         if (get_op_property(cur_op) == OP_PROP_Dereference) {
           auto tmp_ptr = real_type_system_->get_type_by_type_id(left_type);
           assert(tmp_ptr->is_pointer_type());
@@ -414,10 +414,10 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
           assert(type_ptr);
           new_left_type = type_ptr->orig_type_;
         }
-        flag = type_inference_new(cur->right_child, new_left_type);
+        flag = type_inference_new(cur->RightChild(), new_left_type);
         if (!flag) return flag;
         auto right_type =
-            cache_inference_map_[cur->right_child]->GetARandomCandidateType();
+            cache_inference_map_[cur->RightChild()]->GetARandomCandidateType();
         res_type = right_type;
         cur_type->AddCandidate(res_type, left_type, right_type);
         break;
@@ -429,12 +429,12 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
       }
       default: {
         // handle a + b Here
-        flag = type_inference_new(cur->left_child, scope_type);
+        flag = type_inference_new(cur->LeftChild(), scope_type);
         if (!flag) return flag;
-        flag = type_inference_new(cur->right_child, scope_type);
+        flag = type_inference_new(cur->RightChild(), scope_type);
         if (!flag) return flag;
-        auto left_type = cache_inference_map_[cur->left_child];
-        auto right_type = cache_inference_map_[cur->right_child];
+        auto left_type = cache_inference_map_[cur->LeftChild()];
+        auto right_type = cache_inference_map_[cur->RightChild()];
         // handle function call case-by-case
 
         if (left_type->GetCandidates().size() == 1 &&
@@ -451,9 +451,9 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
 
         // res_type = query_type_dict(cur_op, left_type, right_type);
         for (auto &left_cahce :
-             cache_inference_map_[cur->left_child]->GetCandidates()) {
+             cache_inference_map_[cur->LeftChild()]->GetCandidates()) {
           for (auto &right_cache :
-               cache_inference_map_[cur->right_child]->GetCandidates()) {
+               cache_inference_map_[cur->RightChild()]->GetCandidates()) {
             auto a_left_type = left_cahce.first;
             auto a_right_type = right_cache.first;
             if (DBG)
@@ -723,16 +723,16 @@ string TypeSystem::get_class_member(TYPEID type_id) {
 */
 
 IRPtr TypeSystem::locate_mutated_ir(IRPtr root) {
-  if (root->left_child) {
-    if (root->right_child == nullptr) {
-      return locate_mutated_ir(root->left_child);
+  if (root->HasLeftChild()) {
+    if (!root->HasRightChild()) {
+      return locate_mutated_ir(root->LeftChild());
     }
 
-    if (NeedFixing(root->right_child) == false) {
-      return locate_mutated_ir(root->left_child);
+    if (NeedFixing(root->RightChild()) == false) {
+      return locate_mutated_ir(root->LeftChild());
     }
-    if (NeedFixing(root->left_child) == false) {
-      return locate_mutated_ir(root->right_child);
+    if (NeedFixing(root->LeftChild()) == false) {
+      return locate_mutated_ir(root->RightChild());
     }
 
     return root;
@@ -777,19 +777,19 @@ bool TypeSystem::simple_fix(IRPtr ir, int type, TypeInferer &inferer) {
       spdlog::debug("NodeType: {}", frontend_->GetIRTypeStr(ir->Type()));
     }
     if (!inferer.GetCandidateTypes(ir)->HasCandidate(type)) return false;
-    if (ir->left_child) {
+    if (ir->HasLeftChild()) {
       auto iter =
           *random_pick(inferer.GetCandidateTypes(ir)->GetCandidates(type));
-      if (ir->right_child) {
-        simple_fix(ir->left_child, iter.left, inferer);
-        simple_fix(ir->right_child, iter.right, inferer);
+      if (ir->HasRightChild()) {
+        simple_fix(ir->LeftChild(), iter.left, inferer);
+        simple_fix(ir->RightChild(), iter.right, inferer);
       } else {
-        simple_fix(ir->left_child, iter.left, inferer);
+        simple_fix(ir->LeftChild(), iter.left, inferer);
       }
     }
   } else {
-    if (ir->left_child) simple_fix(ir->left_child, type, inferer);
-    if (ir->right_child) simple_fix(ir->right_child, type, inferer);
+    if (ir->HasLeftChild()) simple_fix(ir->LeftChild(), type, inferer);
+    if (ir->HasRightChild()) simple_fix(ir->RightChild(), type, inferer);
   }
   return true;
 }
@@ -824,8 +824,8 @@ bool TypeSystem::Fix(IRPtr root) {
       }
       res = simple_fix(root, type, inferer);
     } else {
-      if (root->right_child) stk.push(root->right_child);
-      if (root->left_child) stk.push(root->left_child);
+      if (root->HasRightChild()) stk.push(root->RightChild());
+      if (root->HasLeftChild()) stk.push(root->LeftChild());
     }
   }
   return res;
@@ -862,32 +862,32 @@ bool TypeSystem::validate_syntax_only(IRPtr root) {
 }
 
 void TypeSystem::MarkFixMe(IRPtr root) {
-  if (root->left_child) {
-    if (root->left_child->GetDataType() == kDataFixUnit) {
-      if (NeedFixing(root->left_child)) {
-        auto save_ir_id = root->left_child->GetStatementID();
-        auto save_scope = root->left_child->GetScopeID();
-        root->left_child = std::make_shared<IR>(
-            frontend_->GetStringLiteralType(), std::string("FIXME"));
-        root->left_child->SetScopeID(save_scope);
-        root->left_child->SetStatementID(save_ir_id);
+  if (root->HasLeftChild()) {
+    if (root->LeftChild()->GetDataType() == kDataFixUnit) {
+      if (NeedFixing(root->LeftChild())) {
+        auto save_ir_id = root->LeftChild()->GetStatementID();
+        auto save_scope = root->LeftChild()->GetScopeID();
+        root->SetLeftChild(std::make_shared<IR>(
+            frontend_->GetStringLiteralType(), std::string("FIXME")));
+        root->LeftChild()->SetScopeID(save_scope);
+        root->LeftChild()->SetStatementID(save_ir_id);
       }
     } else {
-      MarkFixMe(root->left_child);
+      MarkFixMe(root->LeftChild());
     }
   }
-  if (root->right_child) {
-    if (root->right_child->GetDataType() == kDataFixUnit) {
-      if (NeedFixing(root->right_child)) {
-        auto save_ir_id = root->right_child->GetStatementID();
-        auto save_scope = root->right_child->GetScopeID();
-        root->right_child =
-            std::make_shared<IR>(frontend_->GetStringLiteralType(), "FIXME");
-        root->right_child->SetScopeID(save_scope);
-        root->right_child->SetStatementID(save_ir_id);
+  if (root->HasRightChild()) {
+    if (root->RightChild()->GetDataType() == kDataFixUnit) {
+      if (NeedFixing(root->RightChild())) {
+        auto save_ir_id = root->RightChild()->GetStatementID();
+        auto save_scope = root->RightChild()->GetScopeID();
+        root->SetRightChild(
+            std::make_shared<IR>(frontend_->GetStringLiteralType(), "FIXME"));
+        root->RightChild()->SetScopeID(save_scope);
+        root->RightChild()->SetStatementID(save_ir_id);
       }
     } else {
-      MarkFixMe(root->right_child);
+      MarkFixMe(root->RightChild());
     }
   }
   return;

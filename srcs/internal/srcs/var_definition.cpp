@@ -730,11 +730,11 @@ void BuildScopeTreeImpl(IRPtr root, ScopeTree &scope_tree) {
   if (scope_tree.GetCurrentScope() != nullptr) {
     root->SetScopeID(scope_tree.GetCurrentScopeId());
   }
-  if (root->left_child) {
-    BuildScopeTreeImpl(root->left_child, scope_tree);
+  if (root->HasLeftChild()) {
+    BuildScopeTreeImpl(root->LeftChild(), scope_tree);
   }
-  if (root->right_child) {
-    BuildScopeTreeImpl(root->right_child, scope_tree);
+  if (root->HasRightChild()) {
+    BuildScopeTreeImpl(root->RightChild(), scope_tree);
   }
   if (root->GetScopeType() != kScopeDefault) {
     scope_tree.ExitScope();
@@ -918,8 +918,8 @@ bool ScopeTree::is_contain_definition(IRPtr cur) {
     if (cur->GetDataType() == kDataVarDefine || isDefine(cur->GetDataFlag())) {
       return true;
     }
-    if (cur->right_child) stk.push(cur->right_child);
-    if (cur->left_child) stk.push(cur->left_child);
+    if (cur->HasRightChild()) stk.push(cur->RightChild());
+    if (cur->HasLeftChild()) stk.push(cur->LeftChild());
   }
   return res;
 }
@@ -1011,8 +1011,9 @@ bool ScopeTree::collect_definition(IRPtr cur) {
         break;
     }
   } else {
-    if (cur->left_child) res = collect_definition(cur->left_child) && res;
-    if (cur->right_child) res = collect_definition(cur->right_child) && res;
+    if (cur->HasLeftChild()) res = collect_definition(cur->LeftChild()) && res;
+    if (cur->HasRightChild())
+      res = collect_definition(cur->RightChild()) && res;
   }
 
   return res;
@@ -1024,13 +1025,13 @@ DataType ScopeTree::find_define_type(IRPtr cur) {
       cur->GetDataType() == kDataFunctionType)
     return cur->GetDataType();
 
-  if (cur->left_child) {
-    auto res = find_define_type(cur->left_child);
+  if (cur->HasLeftChild()) {
+    auto res = find_define_type(cur->LeftChild());
     if (res != kDataWhatever) return res;
   }
 
-  if (cur->right_child) {
-    auto res = find_define_type(cur->right_child);
+  if (cur->HasRightChild()) {
+    auto res = find_define_type(cur->RightChild());
     if (res != kDataWhatever) return res;
   }
 
@@ -1045,12 +1046,12 @@ IRPtr search_by_data_type(IRPtr cur, DataType type,
              cur->GetDataType() == forbit_type) {
     return nullptr;
   } else {
-    if (cur->left_child) {
-      auto res = search_by_data_type(cur->left_child, type, forbit_type);
+    if (cur->HasLeftChild()) {
+      auto res = search_by_data_type(cur->LeftChild(), type, forbit_type);
       if (res != nullptr) return res;
     }
-    if (cur->right_child) {
-      auto res = search_by_data_type(cur->right_child, type, forbit_type);
+    if (cur->HasRightChild()) {
+      auto res = search_by_data_type(cur->RightChild(), type, forbit_type);
       if (res != nullptr) return res;
     }
   }
@@ -1067,12 +1068,12 @@ void search_by_data_type(IRPtr cur, DataType type, vector<IRPtr> &result,
     return;
   }
   if (cur->GetDataType() != type || go_inside == true) {
-    if (cur->left_child) {
-      search_by_data_type(cur->left_child, type, result, forbit_type,
+    if (cur->HasLeftChild()) {
+      search_by_data_type(cur->LeftChild(), type, result, forbit_type,
                           go_inside);
     }
-    if (cur->right_child) {
-      search_by_data_type(cur->right_child, type, result, forbit_type,
+    if (cur->HasRightChild()) {
+      search_by_data_type(cur->RightChild(), type, result, forbit_type,
                           go_inside);
     }
   }
@@ -1161,11 +1162,11 @@ std::optional<SymbolTable> ScopeTree::collect_simple_variable_defintion(
 
   if (!ir_vec.empty()) {
     for (auto ir : ir_vec) {
-      if (ir->op == nullptr || ir->op->prefix.empty()) {
+      if (ir->OP() == nullptr || ir->OP()->prefix.empty()) {
         auto tmpp = ir->ToString();
         var_type += tmpp.substr(0, tmpp.size() - 1);
       } else {
-        var_type += ir->op->prefix;
+        var_type += ir->OP()->prefix;
       }
       var_type += " ";
     }
@@ -1251,9 +1252,10 @@ void ScopeTree::collect_structure_definition_wt(IRPtr cur, IRPtr root) {
     new_compound = real_type_system_->make_compound_type_by_scope(
         GetScopeById(struct_body->GetScopeID()), current_compound_name);
   } else {
-    if (cur->left_child) collect_structure_definition_wt(cur->left_child, root);
-    if (cur->right_child)
-      collect_structure_definition_wt(cur->right_child, root);
+    if (cur->HasLeftChild())
+      collect_structure_definition_wt(cur->LeftChild(), root);
+    if (cur->HasRightChild())
+      collect_structure_definition_wt(cur->RightChild(), root);
   }
 }
 
@@ -1380,8 +1382,10 @@ void ScopeTree::collect_structure_definition(IRPtr cur, IRPtr root) {
       structure_pointer_var.clear();
     }
   } else {
-    if (cur->left_child) collect_structure_definition(cur->left_child, root);
-    if (cur->right_child) collect_structure_definition(cur->right_child, root);
+    if (cur->HasLeftChild())
+      collect_structure_definition(cur->LeftChild(), root);
+    if (cur->HasRightChild())
+      collect_structure_definition(cur->RightChild(), root);
   }
 }
 
@@ -1513,11 +1517,11 @@ void ScopeTree::collect_function_definition(IRPtr cur) {
       }
       // handle specially
       for (auto ir : ir_vec) {
-        if (ir->op == nullptr || ir->op->prefix.empty()) {
+        if (ir->OP() == nullptr || ir->OP()->prefix.empty()) {
           auto tmpp = ir->ToString();
           var_type += tmpp.substr(0, tmpp.size() - 1);
         } else {
-          var_type += ir->op->prefix;
+          var_type += ir->OP()->prefix;
         }
         var_type += " ";
       }

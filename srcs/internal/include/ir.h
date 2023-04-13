@@ -98,9 +98,14 @@ class IR {
   IR(const IRPtr ir, IRPtr left, IRPtr right);
   IR(const IR& ir) = default;
 
-  std::shared_ptr<IROperator> op = nullptr;
-  IRPtr left_child = nullptr;
-  IRPtr right_child = nullptr;
+  bool HasLeftChild() const;
+  bool HasRightChild() const;
+  bool HasOP() const;
+  IRPtr& LeftChild();
+  IRPtr& RightChild();
+  void SetLeftChild(IRPtr left);
+  void SetRightChild(IRPtr right);
+  std::shared_ptr<IROperator>& OP();
 
   // Utils.
   std::vector<IRPtr> GetAllChildren() const;
@@ -111,7 +116,7 @@ class IR {
   bool ContainString() const;
   bool ContainInt() const;
   bool ContainFloat() const;
-  std::string GetString() const;
+  const std::string& GetString() const;
   void SetString(const std::string& str);
   int GetInt() const;
   void SetInt(int i);
@@ -132,6 +137,10 @@ class IR {
   void SetStatementID(StatementID id);
 
  private:
+  std::shared_ptr<IROperator> op = nullptr;
+  IRPtr left_child = nullptr;
+  IRPtr right_child = nullptr;
+
   ScopeType scope_type_ = kScopeDefault;
   ScopeID scope_id_;
   DataFlag data_flag_ = kUse;

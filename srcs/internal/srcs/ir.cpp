@@ -85,12 +85,12 @@ IR::IR(const IRPtr ir, IRPtr left, IRPtr right) {
 IRPtr deep_copy(const IRPtr root) {
   IRPtr left = nullptr, right = nullptr, copy_res;
 
-  if (root->left_child)
+  if (root->HasLeftChild())
     left = deep_copy(
-        root->left_child);  // do you have a second version for
-                            // deep_copy that accept only one argument?
-  if (root->right_child)
-    right = deep_copy(root->right_child);  // no I forget to update here
+        root->LeftChild());  // do you have a second version for
+                             // deep_copy that accept only one argument?
+  if (root->HasRightChild())
+    right = deep_copy(root->RightChild());  // no I forget to update here
 
   copy_res = std::make_shared<IR>(root, left, right);
 
@@ -104,7 +104,7 @@ string IR::ToString() const {
   return res;
 }
 
-void IR::ToStringImpl(std::string &res) const {
+void IR::ToStringImpl(std::string& res) const {
   if (ContainData()) {
     if (ContainFloat()) {
       absl::StrAppend(&res, GetFloat());
@@ -149,6 +149,15 @@ std::vector<IRPtr> IR::GetAllChildren() const {
   return res;
 }
 
+bool IR::HasLeftChild() const { return left_child != nullptr; }
+bool IR::HasRightChild() const { return right_child != nullptr; }
+IRPtr& IR::LeftChild() { return left_child; }
+IRPtr& IR::RightChild() { return right_child; }
+bool IR::HasOP() const { return op != nullptr; }
+std::shared_ptr<IROperator>& IR::OP() { return op; }
+void IR::SetLeftChild(IRPtr left) { left_child = left; }
+void IR::SetRightChild(IRPtr right) { right_child = right; }
+
 bool IR::ContainData() const {
   return !std::holds_alternative<std::monostate>(data_);
 }
@@ -158,10 +167,12 @@ bool IR::ContainString() const {
 bool IR::ContainInt() const { return std::holds_alternative<int>(data_); }
 bool IR::ContainFloat() const { return std::holds_alternative<double>(data_); }
 
-std::string IR::GetString() const { return std::get<std::string>(data_); }
+const std::string& IR::GetString() const {
+  return std::get<std::string>(data_);
+}
 int IR::GetInt() const { return std::get<int>(data_); }
 double IR::GetFloat() const { return std::get<double>(data_); }
-void IR::SetString(const std::string &str) { data_ = str; }
+void IR::SetString(const std::string& str) { data_ = str; }
 void IR::SetInt(int i) { data_ = i; }
 void IR::SetFloat(double f) { data_ = f; }
 
@@ -186,32 +197,34 @@ std::vector<IRPtr> CollectAllIRs(IRPtr root) {
 void trim_list_to_num(IRPtr ir, int num) { return; }
 
 IRPtr locate_parent(IRPtr root, IRPtr old_ir) {
-  if (root->left_child == old_ir || root->right_child == old_ir) return root;
+  if ((root->HasLeftChild() && root->LeftChild() == old_ir) ||
+      (root->HasRightChild() && root->RightChild() == old_ir))
+    return root;
 
-  if (root->left_child != nullptr)
-    if (auto res = locate_parent(root->left_child, old_ir)) return res;
-  if (root->right_child != nullptr)
-    if (auto res = locate_parent(root->right_child, old_ir)) return res;
+  if (root->HasLeftChild())
+    if (auto res = locate_parent(root->LeftChild(), old_ir)) return res;
+  if (root->HasRightChild())
+    if (auto res = locate_parent(root->RightChild(), old_ir)) return res;
 
   return nullptr;
 }
 
 size_t GetChildNum(IRPtr root) {
   unsigned int res = 0;
-  if (root->left_child) res += GetChildNum(root->left_child);
-  if (root->right_child) res += GetChildNum(root->right_child);
+  if (root->HasLeftChild()) res += GetChildNum(root->LeftChild());
+  if (root->HasRightChild()) res += GetChildNum(root->RightChild());
 
   return res + 1;
 }
 
-bool NeedFixing(const IRPtr &ir) {
+bool NeedFixing(const IRPtr& ir) {
   bool res = false;
-  if (ir->left_child || ir->right_child) {
-    if (ir->left_child) {
-      res = res || NeedFixing(ir->left_child);
+  if (ir->HasLeftChild() || ir->HasRightChild()) {
+    if (ir->HasLeftChild()) {
+      res = res || NeedFixing(ir->LeftChild());
     }
-    if (ir->right_child) {
-      res = res || NeedFixing(ir->right_child);
+    if (ir->HasRightChild()) {
+      res = res || NeedFixing(ir->RightChild());
     }
     return res;
   }
