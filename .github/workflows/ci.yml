@@ -30,7 +30,7 @@ jobs:
       - name: build
         run: mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DGRAMMAR_FILE=$POLYGLOT_ROOT/experiments/SimpleLang.g4 -DCODE_COVERAGE=ON && make -j
       - name: unittest
-        run: cd build && ctest
+        run: cd build && ctest --repeat until-fail:3
       - name: Generate Coverage Report
         run: cd build && lcov --directory . --capture --output-file coverage.info && lcov --remove coverage.info '/usr/*' --output-file coverage.info && lcov --remove coverage.info '/*/experiments/generated/*' --output-file coverage.info && lcov --remove coverage.info  '/*/.conan2/*' --output-file coverage.info && lcov --list coverage.info
       - name: Upload coverage reports to Codecov
