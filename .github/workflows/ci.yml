@@ -28,7 +28,7 @@ jobs:
       - name: install conan profile
         run: conan profile detect
       - name: build
-        run: mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DLANG=simplelang -DCODE_COVERAGE=ON && make -j
+        run: mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DGRAMMAR_FILE=`pwd`/experiments/SimpleLang.g4 -DCODE_COVERAGE=ON && make -j
       - name: unittest
         run: cd build && ctest
       - name: Generate Coverage Report
