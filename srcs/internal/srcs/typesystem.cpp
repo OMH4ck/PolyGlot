@@ -60,7 +60,7 @@ unsigned long type_fix_framework_fail_counter = 0;
 unsigned long top_fix_fail_counter = 0;
 unsigned long top_fix_success_counter = 0;
 
-static set<TYPEID> current_define_types;
+static set<TypeID> current_define_types;
 
 /*
 void TypeSystem::debug() {
@@ -234,23 +234,26 @@ bool TypeInferer::Infer(IRPtr &cur, int scope_type) {
 
 bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
   auto cur_type = std::make_shared<CandidateTypes>();
-  int res_type = NOTEXIST;
+  int res_type = SpecialType::kNotExist;
   bool flag;
   spdlog::debug("Inferring: {}", cur->ToString());
   spdlog::debug("Scope type: {}", scope_type);
 
   if (cur->Type() == frontend_->GetStringLiteralType()) {
-    res_type = real_type_system_->get_type_id_by_string("ANYTYPE");
+    res_type =
+        real_type_system_->get_type_id_by_string("SpecialType::kAnyType");
     cur_type->AddCandidate(res_type, 0, 0);
     cache_inference_map_[cur] = cur_type;
     return true;
   } else if (cur->Type() == frontend_->GetIntLiteralType()) {
-    res_type = real_type_system_->get_type_id_by_string("ANYTYPE");
+    res_type =
+        real_type_system_->get_type_id_by_string("SpecialType::kAnyType");
     cur_type->AddCandidate(res_type, 0, 0);
     cache_inference_map_[cur] = cur_type;
     return true;
   } else if (cur->Type() == frontend_->GetFloatLiteralType()) {
-    res_type = real_type_system_->get_type_id_by_string("ANYTYPE");
+    res_type =
+        real_type_system_->get_type_id_by_string("SpecialType::kAnyType");
     cur_type->AddCandidate(res_type, 0, 0);
     cache_inference_map_[cur] = cur_type;
     return true;
@@ -271,7 +274,7 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
       return cur_type->HasCandidate();
     }
 
-    if (scope_type == NOTEXIST) {
+    if (scope_type == SpecialType::kNotExist) {
       // match name in cur->scope_
 
       res_type =
@@ -280,7 +283,7 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
       spdlog::debug("Type: {}", res_type);
       // auto cur_type = make_shared<map<TYPEID, vector<pair<TYPEID,
       // TYPEID>>>>();
-      if (!res_type) res_type = ANYTYPE;  // should fix
+      if (!res_type) res_type = SpecialType::kAnyType;  // should fix
       cur_type->AddCandidate(res_type, res_type, 0);
       cache_inference_map_[cur] = cur_type;
       return true;
@@ -359,7 +362,7 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
   // handle by OP
 
   auto cur_op = get_op_value(cur->OP());
-  if (cur_op == NOTEXIST) {
+  if (cur_op == SpecialType::kNotExist) {
     if (DBG) cout << cur->ToString() << endl;
     if (DBG)
       cout << cur->OP()->prefix << ", " << cur->OP()->middle << ", "
@@ -385,7 +388,7 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
              << cur->OP()->suffix << endl;
       res_type = query_result_type(cur_op, left_type);
       if (DBG) cout << "Result_type: " << res_type << endl;
-      if (res_type != NOTEXIST) {
+      if (res_type != SpecialType::kNotExist) {
         cur_type->AddCandidate(res_type, left_type, 0);
       }
     }
@@ -464,12 +467,14 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
                    << ", op = " << cur_op << endl;
             if (DBG)
               cout << "Left to alltype: "
-                   << real_type_system_->is_derived_type(a_left_type, ALLTYPES)
+                   << real_type_system_->is_derived_type(a_left_type,
+                                                         SpecialType::kAllTypes)
                    << ", right to alltype: "
-                   << real_type_system_->is_derived_type(a_right_type, ALLTYPES)
+                   << real_type_system_->is_derived_type(a_right_type,
+                                                         SpecialType::kAllTypes)
                    << endl;
             auto t = query_result_type(cur_op, a_left_type, a_right_type);
-            if (t != NOTEXIST) {
+            if (t != SpecialType::kNotExist) {
               if (DBG) cout << "Adding" << endl;
               cur_type->AddCandidate(t, a_left_type, a_right_type);
             }
@@ -486,15 +491,15 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
 
 int TypeInferer::locate_defined_variable_by_name(const string &var_name,
                                                  int scope_id) {
-  int result = NOTEXIST;
+  int result = SpecialType::kNotExist;
   auto current_scope = scope_tree_->GetScopeById(scope_id);
   while (current_scope) {
     // if(DBG) cout <<"Searching scope "<< current_scope->scope_id_ << endl;
-    auto def = current_scope->definitions_.GetDefinition(var_name);
+    auto def = current_scope->GetSymbolTable().GetDefinition(var_name);
     if (def.has_value()) {
       return def->type;
     }
-    current_scope = current_scope->parent_.lock();
+    current_scope = current_scope->GetParent();
   }
 
   return result;
@@ -506,9 +511,9 @@ set<int> TypeInferer::collect_usable_type(IRPtr cur) {
   auto current_scope = scope_tree_->GetScopeById(cur->GetScopeID());
   while (current_scope) {
     if (DBG)
-      cout << "Collecting scope id: " << current_scope->scope_id_ << endl;
-    if (current_scope->definitions_.GetTable().size()) {
-      for (auto &iter : current_scope->definitions_.GetTable()) {
+      cout << "Collecting scope id: " << current_scope->GetScopeID() << endl;
+    if (current_scope->GetSymbolTable().GetTable().size()) {
+      for (auto &iter : current_scope->GetSymbolTable().GetTable()) {
         auto tmp_type = iter.first;
         bool flag = false;
         /*
@@ -546,7 +551,7 @@ set<int> TypeInferer::collect_usable_type(IRPtr cur) {
         }
       }
     }
-    current_scope = current_scope->parent_.lock();
+    current_scope = current_scope->GetParent();
   }
 
   return result;
@@ -580,19 +585,19 @@ pair<OPTYPE, vector<int>> TypeInferer::collect_sat_op_by_result_type(
     if (real_type_system->is_derived_type(type, iter.first)) {
       for (auto &v : iter.second) {
         int left = 0, right = 0;
-        if (v[1] > ALLUPPERBOUND &&
+        if (v[1] > SpecialType::kAllUpperBound &&
             all_satisfiable_types.find(v[1]) == all_satisfiable_types.end()) {
           continue;
         }
         switch (v[1]) {
-          case ALLTYPES:
+          case SpecialType::kAllTypes:
             left = type;
             break;
-          case ALLFUNCTION:
+          case SpecialType::kAllFunction:
             if (function_map.empty()) continue;
             left = random_pick(function_map)->first;
             break;
-          case ALLCOMPOUNDTYPE:
+          case SpecialType::kAllCompoundType:
           //    break;
           default:
             if (all_satisfiable_types.find(v[1]) == all_satisfiable_types.end())
@@ -600,14 +605,14 @@ pair<OPTYPE, vector<int>> TypeInferer::collect_sat_op_by_result_type(
             left = v[1];
             break;
         }
-        // left = v[1] < ALLUPPERBOUND? type: v[1];
+        // left = v[1] < SpecialType::kAllUpperBound? type: v[1];
 
         if (v.size() == 3) {
-          if (v[2] > ALLUPPERBOUND &&
+          if (v[2] > SpecialType::kAllUpperBound &&
               all_satisfiable_types.find(v[2]) == all_satisfiable_types.end()) {
             continue;
           }
-          right = v[2] < ALLUPPERBOUND ? type : v[2];
+          right = v[2] < SpecialType::kAllUpperBound ? type : v[2];
         }
 
         // if(DBG) cout << "Collect one!" << endl;
@@ -743,7 +748,7 @@ IRPtr TypeSystem::locate_mutated_ir(IRPtr root) {
 }
 
 bool TypeSystem::simple_fix(IRPtr ir, int type, TypeInferer &inferer) {
-  if (type == NOTEXIST) return false;
+  if (type == SpecialType::kNotExist) return false;
 
   spdlog::debug("NodeType: {}", frontend_->GetIRTypeStr(ir->Type()));
   spdlog::debug("Type: {}", type);
@@ -761,11 +766,12 @@ bool TypeSystem::simple_fix(IRPtr ir, int type, TypeInferer &inferer) {
   // We should consider the availability of the derived type.
   if (!gen::Configuration::GetInstance().IsWeakType()) {
     if (!inferer.GetCandidateTypes(ir)->HasCandidate(type)) {
-      auto new_type = NOTEXIST;
+      TypeID new_type = SpecialType::kNotExist;
       int counter = 0;
       for (auto &iter : inferer.GetCandidateTypes(ir)->GetCandidates()) {
         if (real_type_system_->is_derived_type(type, iter.first)) {
-          if (new_type == NOTEXIST || get_rand_int(counter) == 0) {
+          if (new_type == SpecialType::kNotExist ||
+              get_rand_int(counter) == 0) {
             new_type = iter.first;
           }
           counter++;
@@ -812,7 +818,7 @@ bool TypeSystem::Fix(IRPtr root) {
     stk.pop();
     if (Fixable(root)) {
       assert(NeedFixing(root));
-      int type = ALLTYPES;
+      int type = SpecialType::kAllTypes;
       if (!gen::Configuration::GetInstance().IsWeakType()) {
         if (!inferer.Infer(root, 0)) {
           res = false;
@@ -957,8 +963,9 @@ bool OPRule::is_op2() { return operand_num_ == 2; }
 
 int OPRule::apply(int arg1, int arg2) {
   // can apply rule here.
-  if (result_ != ALLTYPES && result_ != ALLCOMPOUNDTYPE &&
-      result_ != ALLFUNCTION) {
+  if (result_ != SpecialType::kAllTypes &&
+      result_ != SpecialType::kAllCompoundType &&
+      result_ != SpecialType::kAllFunction) {
     return result_;
   }
   if (is_op1()) {
@@ -966,7 +973,8 @@ int OPRule::apply(int arg1, int arg2) {
       case OP_PROP_Reference:
         return real_type_system_->get_or_create_pointer_type(arg1);
       case OP_PROP_Dereference:
-        if (real_type_system_->is_pointer_type(arg1) == false) return NOTEXIST;
+        if (real_type_system_->is_pointer_type(arg1) == false)
+          return SpecialType::kNotExist;
         return real_type_system_->get_pointer_type_by_type_id(arg1)->orig_type_;
       case OP_PROP_FunctionCall:
         if (real_type_system_->is_function_type(arg1) == false) {
@@ -1022,7 +1030,7 @@ int TypeInferer::query_result_type(int op, int arg1, int arg2) {
   }
 
   if (DBG) cout << "Here , no exist" << endl;
-  return NOTEXIST;
+  return SpecialType::kNotExist;
 }
 
 int TypeInferer::get_op_property(int op_id) {
@@ -1141,7 +1149,7 @@ bool TypeSystem::insert_definition(int scope_id, int type_id, string var_name) {
   root_ir->scope_id_ = def_ir->scope_id_ = scope_id;
   insert_target->left_ = root_ir;
 
-  scope_ptr->add_definition(type_id, var_name, def_ir->id_);
+  scope_ptr->AddDefinition(type_id, var_name, def_ir->id_);
   scope_ptr->v_ir_set_.push_back(root_ir);
   scope_ptr->v_ir_set_.push_back(def_ir);
 
@@ -1168,7 +1176,7 @@ ValidationError SemanticValidator::Validate(IRPtr &root) {
   }
 }
 
-std::string ExpressionGenerator::GenerateExpression(TYPEID type, IRPtr &ir) {
+std::string ExpressionGenerator::GenerateExpression(TypeID type, IRPtr &ir) {
   return generate_expression_by_type(type, ir);
 }
 
@@ -1252,7 +1260,7 @@ string ExpressionGenerator::generate_expression_by_type_core(int type,
     update_pointer_var(pointer_var_map, simple_var_map, compound_var_map);
   }
 
-  if (type == ALLTYPES && all_satisfiable_types.size()) {
+  if (type == SpecialType::kAllTypes && all_satisfiable_types.size()) {
     type = random_pick(all_satisfiable_types)->first;
     if (DBG)
       cout << "Type becomes: " << real_type_system_->get_type_name_by_id(type)
@@ -1567,8 +1575,8 @@ ExpressionGenerator::collect_all_var_definition_by_type(IRPtr cur) {
   auto current_scope = scope_tree_->GetScopeById(cur_scope_id);
   while (current_scope != nullptr) {
     // if(DBG) cout <<"Searching scope "<< current_scope->scope_id_ << endl;
-    if (current_scope->definitions_.GetTable().size()) {
-      for (auto &iter : current_scope->definitions_.GetTable()) {
+    if (current_scope->GetSymbolTable().GetTable().size()) {
+      for (auto &iter : current_scope->GetSymbolTable().GetTable()) {
         auto tmp_type = iter.first;
         auto type_ptr = real_type_system_->get_type_by_type_id(tmp_type);
         if (type_ptr == nullptr) continue;
@@ -1605,7 +1613,7 @@ ExpressionGenerator::collect_all_var_definition_by_type(IRPtr cur) {
         }
       }
     }
-    current_scope = current_scope->parent_.lock();
+    current_scope = current_scope->GetParent();
   }
 
   // add builtin types

@@ -33,7 +33,7 @@ class ExpressionGenerator {
         real_type_system_(scope_tree->GetRealTypeSystem()) {
     assert(real_type_system_ != nullptr);
   }
-  std::string GenerateExpression(TYPEID type, IRPtr &ir);
+  std::string GenerateExpression(TypeID type, IRPtr &ir);
 
  private:
   std::shared_ptr<RealTypeSystem> real_type_system_;
@@ -77,9 +77,6 @@ using std::set;
 using std::shared_ptr;
 using std::string;
 using std::vector;
-#define NOTEXIST 0
-typedef int VALUETYPE;
-using TYPEID = int;
 class Scope;
 
 enum FIXORDER {
@@ -128,18 +125,18 @@ class OPRule {
 };
 
 struct InferenceType {
-  TYPEID result;
-  TYPEID left;
-  TYPEID right;
+  TypeID result;
+  TypeID left;
+  TypeID right;
 };
 
 class CandidateTypes {
  public:
-  std::unordered_map<TYPEID, std::vector<InferenceType>> &GetCandidates() {
+  std::unordered_map<TypeID, std::vector<InferenceType>> &GetCandidates() {
     return candidates_;
   }
 
-  void AddCandidate(TYPEID result, TYPEID left, TYPEID right) {
+  void AddCandidate(TypeID result, TypeID left, TypeID right) {
     candidates_[result].push_back({result, left, right});
   }
 
@@ -156,25 +153,25 @@ class CandidateTypes {
     return false;
   }
 
-  bool HasCandidate(TYPEID result) {
+  bool HasCandidate(TypeID result) {
     return candidates_.find(result) != candidates_.end();
   }
 
-  std::vector<InferenceType> &GetCandidates(TYPEID result) {
+  std::vector<InferenceType> &GetCandidates(TypeID result) {
     return candidates_[result];
   }
 
-  TYPEID GetARandomCandidateType() {
+  TypeID GetARandomCandidateType() {
     for (auto &c : candidates_) {
       if (c.second.size() > 0) {
         return c.first;
       }
     }
-    return NOTEXIST;
+    return SpecialType::kNotExist;
   }
 
  private:
-  std::unordered_map<TYPEID /* result type*/, std::vector<InferenceType>>
+  std::unordered_map<TypeID /* result type*/, std::vector<InferenceType>>
       candidates_;
 };
 
@@ -185,7 +182,7 @@ class TypeInferer {
       : frontend_(frontend),
         scope_tree_(scope_tree),
         real_type_system_(scope_tree_->GetRealTypeSystem()) {}
-  bool Infer(IRPtr &root, int scope_type = NOTEXIST);
+  bool Infer(IRPtr &root, int scope_type = SpecialType::kNotExist);
   std::shared_ptr<CandidateTypes> GetCandidateTypes(IRPtr &root) {
     if (cache_inference_map_.find(root) == cache_inference_map_.end())
       return nullptr;
@@ -216,7 +213,7 @@ class TypeInferer {
   std::shared_ptr<ScopeTree> scope_tree_;
   static map<string, map<string, map<string, int>>> op_id_map_;
   static map<int, vector<OPRule>> op_rules_;
-  bool type_inference_new(IRPtr cur, int scope_type = NOTEXIST);
+  bool type_inference_new(IRPtr cur, int scope_type = SpecialType::kNotExist);
   int locate_defined_variable_by_name(const string &var_name, int scope_id);
   set<int> collect_usable_type(IRPtr cur);
   std::map<IRPtr, std::shared_ptr<CandidateTypes>> cache_inference_map_;
@@ -298,7 +295,7 @@ class InferenceResult {};
 
 class TypeSystemRefactor {
  public:
-  TypePtr GetTypeById(TYPEID id);
+  TypePtr GetTypeById(TypeID id);
   TypePtr CreateVarType(std::string name, ScopePtr scope);
   TypePtr CreateFunctionType(std::string name, std::span<TypePtr> args,
                              TypePtr ret, ScopePtr scope);
