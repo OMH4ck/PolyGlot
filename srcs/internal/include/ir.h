@@ -95,7 +95,7 @@ class IR {
   IR(IRTYPE type, std::string str_val);
   IR(IRTYPE type, int int_val);
   IR(IRTYPE type, double f_val);
-  IR(const IRPtr ir, IRPtr left, IRPtr right);
+  IR(IRPtr ir, IRPtr left, IRPtr right);
   IR(const IR& ir) = default;
 
   bool HasLeftChild() const;

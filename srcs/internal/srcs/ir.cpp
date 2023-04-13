@@ -65,7 +65,7 @@ IR::IR(IRTYPE type, std::shared_ptr<IROperator> op, IRPtr left, IRPtr right,
       data_flag(flag) {}
 */
 
-IR::IR(const IRPtr ir, IRPtr left, IRPtr right) {
+IR::IR(IRPtr ir, IRPtr left, IRPtr right) {
   // STORE_IR_SCOPE();
   this->type_ = ir->type_;
   if (ir->op != nullptr)
