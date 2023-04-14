@@ -399,7 +399,7 @@ void Mutator::ExtractStructure(IRPtr &root) {
   } else if (int_types_.find(type) != int_types_.end()) {
     root->SetInt(1);
   } else if (float_types_.find(type) != float_types_.end()) {
-    root->SetFloat(1.0);
+    root->SetFloat(1.1);
   }
 }
 

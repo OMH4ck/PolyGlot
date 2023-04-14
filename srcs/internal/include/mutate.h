@@ -3,6 +3,7 @@
 
 // #include <queue>
 #include <map>
+#include <memory>
 #include <set>
 
 #include "frontend.h"

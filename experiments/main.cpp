@@ -94,7 +94,10 @@ int main(int, const char**) {
   )V0G0N";
   */
   std::string a = R"V0G0N(
-    local o1 = setmetatable({}, {__close=function() closed = true end})
+  f=load(function() end)
+  interesting={}
+  interesting[0]=string.rep("A",512)
+  debug.upvaluejoin(f,1.1,f,1)
   )V0G0N";
   ANTLRInputStream input(a);
   PolyGlotGrammarLexer lexer(&input);
