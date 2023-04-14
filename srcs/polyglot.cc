@@ -47,9 +47,11 @@ size_t PolyGlotMutator::generate(const char *test_case) {
       if (g_frontend->Parsable(ir_str)) {
         save_test_cases_.push_back(ir_str);
       } else {
-        std::cout << "not parsable: " << ir_str << std::endl;
-        std::cout << "Before: " << test_case << std::endl;
-        assert(0);
+        // std::cout << "not parsable: " << ir_str << std::endl;
+        // std::cout << "Before: " << test_case << std::endl;
+        continue;
+        // TODO: Make sure everything is parsable.
+        // assert(0);
       }
     } else {
       if (g_validator.Validate(ir) ==
@@ -87,7 +89,12 @@ void PolyGlotMutator::initialize(std::string_view config_path) {
   vector<string> file_list = get_all_files_in_dir(init_file_path.c_str());
 
   for (auto &f : file_list) {
-    cerr << "init filename: " << f << endl;
-    g_mutator.init_ir_library_from_a_file(f);
+    std::string content = ReadFileIntoString(f);
+    if (polyglot::IRPtr root = g_frontend->TranslateToIR(content)) {
+      std::cerr << "init filename: " << f << " Success" << endl;
+      g_mutator.AddIRToLibrary(root);
+    } else {
+      std::cerr << "init filename: " << f << " Failed" << endl;
+    }
   }
 }

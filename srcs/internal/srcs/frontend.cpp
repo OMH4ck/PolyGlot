@@ -34,7 +34,9 @@ return p1;
 */
 }  // namespace
 namespace polyglot {
-bool AntlrFrontend::Parsable(std::string input) { return true; }
+bool AntlrFrontend::Parsable(std::string input) {
+  return antlr4::TranslateToIR(input) != nullptr;
+}
 
 IRPtr AntlrFrontend::TranslateToIR(std::string input) {
   return antlr4::TranslateToIR(input);

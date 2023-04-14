@@ -37,8 +37,8 @@ uint64_t ducking_hash(const void *key, int len);
 std::vector<std::string> get_all_files_in_dir(const char *dir_name);
 
 template <typename T>
-typename T::iterator random_pick(T &cc) {
-  typename T::iterator iter = cc.begin();
+typename T::const_iterator random_pick(T &cc) {
+  typename T::const_iterator iter = cc.cbegin();
   advance(iter, rand() % (cc.size()));
   return iter;
 }

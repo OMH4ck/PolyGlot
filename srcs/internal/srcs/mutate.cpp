@@ -55,11 +55,7 @@ static inline bool is_leaf(IRPtr r) {
 
 Mutator::Mutator(std::shared_ptr<Frontend> frontend) {
   srand(time(nullptr));
-  if (frontend == nullptr) {
-    frontend_ = std::make_shared<AntlrFrontend>();
-  } else {
-    frontend_ = frontend;
-  }
+  frontend_ = frontend;
   float_types_.insert(frontend_->GetFloatLiteralType());
   int_types_.insert(frontend_->GetIntLiteralType());
   string_types_.insert(frontend_->GetStringLiteralType());
@@ -126,7 +122,8 @@ vector<IRPtr> Mutator::MutateIRs(vector<IRPtr> &irs_to_mutate) {
       replace(new_ir_tree, this->record_, i);
 
       IRPtr backup = deep_copy(new_ir_tree);
-      extract_struct(new_ir_tree);
+      ExtractStructure(new_ir_tree);
+
       string tmp = new_ir_tree->ToString();
       unsigned tmp_hash = hash(tmp);
       if (res_hash.find(tmp_hash) != res_hash.end()) {
@@ -146,7 +143,7 @@ vector<IRPtr> Mutator::MutateIRs(vector<IRPtr> &irs_to_mutate) {
 }
 
 void Mutator::AddIRToLibrary(IRPtr cur) {
-  extract_struct(cur);
+  ExtractStructure(cur);
 
   ir_library_.SaveIRRecursive(cur);
   return;
@@ -189,20 +186,6 @@ void Mutator::init_convertable_ir_type_map() {
     m_convertable_map_[frontend_->GetIRTypeByStr(p.first)].insert(
         frontend_->GetIRTypeByStr(p.second));
   }
-}
-
-bool Mutator::init_ir_library_from_a_file(string filename) {
-  std::string content = ReadFileIntoString(filename);
-
-  auto res = frontend_->TranslateToIR(content);
-  if (res == nullptr) {
-    std::cout << "Failed to init " << filename << std::endl;
-    return false;
-  }
-
-  AddIRToLibrary(res);
-  cout << "init " << filename << " success" << endl;
-  return true;
 }
 
 vector<IRPtr> Mutator::MutateIR(IRPtr input) {
@@ -380,18 +363,17 @@ IRPtr IRLibrary::GetRandomIR(IRTYPE type) {
   return vector_rand_ele(ir_library_[type]);
 }
 
-void Mutator::extract_struct(IRPtr root) {
+void Mutator::ExtractStructure(IRPtr &root) {
   static unsigned long iid = 0;
   auto type = root->Type();
 
-#ifndef SYNTAX_ONLY
   if (root->HasLeftChild()) {
     if (root->LeftChild()->GetDataType() == kDataFixUnit) {
       ;
       root->SetLeftChild(
           std::make_shared<IR>(frontend_->GetStringLiteralType(), "FIXME"));
     } else {
-      extract_struct(root->LeftChild());
+      ExtractStructure(root->LeftChild());
     }
   }
   if (root->HasRightChild()) {
@@ -400,28 +382,12 @@ void Mutator::extract_struct(IRPtr root) {
       root->SetRightChild(
           std::make_shared<IR>(frontend_->GetStringLiteralType(), "FIXME"));
     } else {
-      extract_struct(root->RightChild());
+      ExtractStructure(root->RightChild());
     }
   }
-#else
-  if (root->left_) {
-    extract_struct(root->left_);
-  }
-  if (root->right_) {
-    extract_struct(root->right_);
-  }
-#endif
 
   if (root->HasLeftChild() || root->HasRightChild()) return;
 
-  /*
-#ifdef SYNTAX_ONLY
-  if(root->str_val_.empty() == false){
-      root->str_val_ = "x" + to_string(iid++);
-      return ;
-  }
-#else
-*/
   // TODO: Verify whether this should be == or !=.
   if (root->GetDataType() == kDataWhatever) {
     root->SetString("x");

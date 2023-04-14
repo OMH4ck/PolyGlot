@@ -73,7 +73,8 @@ INSTANTIATE_TEST_SUITE_P(ValidTestCase, ParserTest,
 TEST(MutatorTest, MutateInitGoodTestCasesOnly) {
   std::string_view test_case = "INT a = 1;";
 
-  mutation::Mutator mutator;
+  auto frontend = std::make_shared<AntlrFrontend>();
+  mutation::Mutator mutator(frontend);
 
   std::string init_file_path =
       gen::Configuration::GetInstance().GetInitDirPath();
@@ -82,9 +83,11 @@ TEST(MutatorTest, MutateInitGoodTestCasesOnly) {
   size_t valid_test_case_count = 0;
 
   for (auto& f : file_list) {
-    if (mutator.init_ir_library_from_a_file(f)) {
-      ++valid_test_case_count;
+    std::string content = ReadFileIntoString(f);
+    if (frontend->Parsable(content) == false) {
+      continue;
     }
+    ++valid_test_case_count;
   }
 
   // Put an bad test case in the init dir.
@@ -95,16 +98,19 @@ class MutatorTestF : public testing::Test {
  protected:
   void SetUp() override {
     frontend = std::make_shared<AntlrFrontend>();
-    mutator = mutation::Mutator(frontend);
+    mutator = std::make_unique<mutation::Mutator>(frontend);
     std::string init_file_path =
         gen::Configuration::GetInstance().GetInitDirPath();
     vector<string> file_list = get_all_files_in_dir(init_file_path.c_str());
     for (auto& f : file_list) {
-      mutator.init_ir_library_from_a_file(f);
+      std::string content = ReadFileIntoString(f);
+      if (auto root = frontend->TranslateToIR(content)) {
+        mutator->AddIRToLibrary(root);
+      }
     }
   }
 
-  mutation::Mutator mutator;
+  std::unique_ptr<mutation::Mutator> mutator;
   std::shared_ptr<AntlrFrontend> frontend;
 };
 
@@ -119,7 +125,7 @@ TEST_F(MutatorTestF, MutateGenerateDifferentTestCases) {
     // program_root->deep_delete();
     vector<IRPtr> ir_set = CollectAllIRs(root);
 
-    auto mutated_irs = mutator.MutateIRs(ir_set);
+    auto mutated_irs = mutator->MutateIRs(ir_set);
     for (auto& ir : mutated_irs) {
       unique_test_cases.insert(ir->ToString());
     }
@@ -135,7 +141,7 @@ TEST_F(MutatorTestF, MutateGenerateParsableTestCases) {
     auto root = frontend->TranslateToIR(test_case.data());
     std::vector<IRPtr> ir_set = CollectAllIRs(root);
 
-    auto mutated_irs = mutator.MutateIRs(ir_set);
+    auto mutated_irs = mutator->MutateIRs(ir_set);
     for (auto& ir : mutated_irs) {
       ASSERT_TRUE(frontend->Parsable(ir->ToString()));
     }
@@ -157,7 +163,7 @@ TEST(TypeSystemTest, ValidateFixDefineUse) {
   auto root = frontend->TranslateToIR(test_case.data());
   std::cerr << "Before extract: " << root->ToString() << std::endl;
   mutation::Mutator mutator(frontend);
-  mutator.extract_struct(root);
+  mutator.ExtractStructure(root);
 
   std::cerr << "After extract: " << root->ToString() << std::endl;
   validation::SemanticValidator validator(frontend);

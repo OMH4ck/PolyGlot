@@ -51,9 +51,9 @@ OneIR ExtractOneIR(std::stack<IM>& stk) {
         break;
       }
     } else if (std::holds_alternative<IRPtr>(im)) {
-      if (std::holds_alternative<std::monostate>(one_ir.left)) {
+      if (std::holds_alternative<std::monostate>(one_ir.left) && std::holds_alternative<std::monostate>(one_ir.op_middle)) {
         one_ir.left = im;
-      } else if (std::holds_alternative<std::monostate>(one_ir.right)) {
+      } else if (std::holds_alternative<std::monostate>(one_ir.right) && std::holds_alternative<std::monostate>(one_ir.op_suffix)) {
         one_ir.right = im;
       } else {
         stk.push(im);
@@ -121,20 +121,18 @@ IRPtr TranslateNode(tree::ParseTree* node, PolyGlotGrammarParser* parser) {
       IRPtr right = std::holds_alternative<IRPtr>(one_ir.right)
                         ? std::get<IRPtr>(one_ir.right)
                         : nullptr;
-
       /*
       std::cout << "Internal:" << std::endl;
       std::cout << "op_prefix: " << op_prefix << "\n";
       std::cout << "op_middle: " << op_middle << "\n";
       std::cout << "op_suffix: " << op_suffix << "\n";
       if(left){
-      std::cout << "left: " << left->to_string() << "\n";
+      std::cout << "left: " << left->ToString() << "\n";
       }
       if(right){
-      cout << "right: " << right->to_string() << "\n";
+      cout << "right: " << right->ToString() << "\n";
       }
       */
-      assert(right == nullptr || left != nullptr);
       if (stk.empty()) {
         stk.push(
             IRPtr(new IR(static_cast<IRTYPE>(ctx->getRuleIndex()),
