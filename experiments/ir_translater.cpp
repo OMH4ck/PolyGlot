@@ -16,6 +16,7 @@
 #include "ir.h"
 //#include "var_definition.h"
 
+using namespace polyglot;
 using namespace antlrcpptest;
 
 using IM = std::variant<std::monostate, std::string, IRPtr>;
@@ -151,13 +152,13 @@ IRPtr TranslateNode(tree::ParseTree* node, PolyGlotGrammarParser* parser) {
   IRPtr new_ir = std::get<IRPtr>(stk.top());
   if (ctx && ctx->GetDataType() != kDataDefault) {
     // std::cout << "IR special: " << new_ir->to_string() << std::endl;
-    new_ir->data_flag = ctx->GetDataFlag();
-    new_ir->data_type = ctx->GetDataType();
+    new_ir->SetDataFlag(ctx->GetDataFlag());
+    new_ir->SetDataType(ctx->GetDataType());
   }else{
-    new_ir->data_type = kDataDefault;
+    new_ir->SetDataType(kDataDefault);
   }
   if (ctx->GetScopeType() != kScopeDefault) {
-    new_ir->scope_type = ctx->GetScopeType();
+    new_ir->SetScopeType(ctx->GetScopeType());
   }
   /*
   std::cout << "visiting node: " << node->toStringTree(parser) << "\n";

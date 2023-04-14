@@ -2,9 +2,11 @@
 #define __CUS__H__
 #include "antlr4-runtime.h"
 
+#include "ir.h"
 #include "var_definition.h"
 #include <variant>
 
+using namespace polyglot;
 class CustomRuleContext : public antlr4::ParserRuleContext {
 public:
     CustomRuleContext(antlr4::ParserRuleContext *parent, size_t invokingState)

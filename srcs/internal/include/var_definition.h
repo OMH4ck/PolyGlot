@@ -12,9 +12,9 @@
 #include "ir.h"
 #include "utils.h"
 
+namespace polyglot {
 using TYPEID = int;
 using ORDERID = unsigned long;
-using ScopeID = int;
 
 class Scope;
 class VarType;
@@ -246,4 +246,5 @@ class ScopeTree {
 void reset_scope();
 
 std::shared_ptr<ScopeTree> BuildScopeTree(IRPtr root);
+}  // namespace polyglot
 #endif

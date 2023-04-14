@@ -25,7 +25,10 @@ std::string GetRootPath() {
 }
 
 // Just to make the IR size explicit.
-TEST(IRTest, IRSizeTest) { ASSERT_EQ(sizeof(IR), 0x80); }
+TEST(IRTest, IRSizeTest) {
+  ASSERT_EQ(sizeof(std::unique_ptr<IR>), 0x8);
+  ASSERT_EQ(sizeof(IR), 0x80);
+}
 
 class ParserTest : public ::testing::TestWithParam<std::string_view> {};
 
@@ -114,11 +117,11 @@ TEST_F(MutatorTestF, MutateGenerateDifferentTestCases) {
     // Avoid mutated_times_ too large, so we make it clean every time.
     auto root = frontend->TranslateToIR(test_case.data());
     // program_root->deep_delete();
-    vector<IRPtr> ir_set = collect_all_ir(root);
+    vector<IRPtr> ir_set = CollectAllIRs(root);
 
     auto mutated_irs = mutator.MutateIRs(ir_set);
     for (auto& ir : mutated_irs) {
-      unique_test_cases.insert(ir->to_string());
+      unique_test_cases.insert(ir->ToString());
     }
   }
 
@@ -130,11 +133,11 @@ TEST_F(MutatorTestF, MutateGenerateParsableTestCases) {
 
   for (size_t i = 0; i < 1000; ++i) {
     auto root = frontend->TranslateToIR(test_case.data());
-    std::vector<IRPtr> ir_set = collect_all_ir(root);
+    std::vector<IRPtr> ir_set = CollectAllIRs(root);
 
     auto mutated_irs = mutator.MutateIRs(ir_set);
     for (auto& ir : mutated_irs) {
-      ASSERT_TRUE(frontend->Parsable(ir->to_string()));
+      ASSERT_TRUE(frontend->Parsable(ir->ToString()));
     }
   }
 }
@@ -152,16 +155,16 @@ TEST(TypeSystemTest, ValidateFixDefineUse) {
 
   std::shared_ptr<Frontend> frontend = std::make_shared<AntlrFrontend>();
   auto root = frontend->TranslateToIR(test_case.data());
-  std::cerr << "Before extract: " << root->to_string() << std::endl;
+  std::cerr << "Before extract: " << root->ToString() << std::endl;
   mutation::Mutator mutator(frontend);
   mutator.extract_struct(root);
 
-  std::cerr << "After extract: " << root->to_string() << std::endl;
+  std::cerr << "After extract: " << root->ToString() << std::endl;
   validation::SemanticValidator validator(frontend);
   ASSERT_TRUE(validator.Validate(root) ==
               validation::ValidationError::kSuccess);
   ASSERT_TRUE(root != nullptr);
-  EXPECT_EQ(root->to_string(), validated_test_case);
+  EXPECT_EQ(root->ToString(), validated_test_case);
 }
 
 int main(int argc, char** argv) {

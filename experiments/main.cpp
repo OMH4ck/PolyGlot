@@ -119,8 +119,8 @@ int main(int, const char**) {
 
   std::cout << "Test translation" << std::endl;
   IRPtr ir = TranslateToIR(a);
-  std::cout << ir->to_string() << std::endl;
-  ir = TranslateToIR(ir->to_string());
+  std::cout << ir->ToString() << std::endl;
+  ir = TranslateToIR(ir->ToString());
   assert(ir);
   return 0;
 }
