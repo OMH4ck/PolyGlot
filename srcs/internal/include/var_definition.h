@@ -147,53 +147,42 @@ class RealTypeSystem {
   const std::map<TypeID, std::vector<std::string>> &GetBuiltinFunctionTypes()
       const;
   bool IsBuiltinType(TypeID type_id);
-
-  bool is_derived_type(TypeID dtype, TypeID btype);
-
-  set<int> get_all_types_from_compound_type(int compound_type, set<int> &visit);
-  void forward_add_compound_type(std::string &structure_name);
-  std::shared_ptr<CompoundType> make_compound_type_by_scope(
-      std::shared_ptr<Scope> scope, std::string structure_name);
-  std::shared_ptr<FunctionType> make_function_type_by_scope(
-      std::shared_ptr<Scope> scope);
-  std::shared_ptr<FunctionType> make_function_type(std::string &function_name,
+  bool CanDeriveFrom(TypeID dtype, TypeID btype);
+  std::shared_ptr<FunctionType> CreateFunctionType(std::string &function_name,
                                                    TypeID return_type,
                                                    std::vector<TypeID> &args);
-  std::shared_ptr<VarType> get_type_by_type_id(TypeID type_id);
-  std::shared_ptr<CompoundType> get_compound_type_by_type_id(TypeID type_id);
-  std::shared_ptr<FunctionType> get_function_type_by_type_id(TypeID type_id);
-  std::shared_ptr<FunctionType> get_function_type_by_return_type_id(
-      TypeID type_id);
-  void make_basic_type_add_map(TypeID id, const std::string &s);
-  std::shared_ptr<VarType> make_basic_type(TypeID id, const std::string &s);
-  static bool is_basic_type(TypeID type_id);
-  bool is_compound_type(TypeID type_id);
-  bool is_function_type(TypeID type_id);
-  static bool is_basic_type(const std::string &s);
-  static TypeID get_basic_type_id_by_string(const std::string &s);
-  [[deprecated]] static TypeID get_basic_typeid_by_string(const string &s);
-  TypeID get_type_id_by_string(const std::string &s);
-  TypeID get_compound_type_id_by_string(const std::string &s);
-  int gen_type_id();
-  std::string get_type_name_by_id(TypeID type_id);
-  void debug_scope_tree(std::shared_ptr<Scope> cur);
-  std::set<int> get_all_class();
-  TypeID convert_to_real_type_id(TypeID, TypeID);
-  TypeID least_upper_common_type(TypeID, TypeID);
-  void clear_type_map();
+
+  // TODO: Refactor the signature of this function. It should accept a vector of
+  // member types and names along with the name of the structure.
+  std::shared_ptr<CompoundType> CreateCompoundTypeAtScope(
+      std::shared_ptr<Scope> scope, std::string structure_name);
+  std::shared_ptr<VarType> GetTypePtrByID(TypeID type_id);
+  std::shared_ptr<CompoundType> GetCompoundType(TypeID type_id);
+  std::shared_ptr<FunctionType> GetFunctionType(TypeID type_id);
+  std::shared_ptr<PointerType> GetPointerType(TypeID type_id);
+  bool IsCompoundType(TypeID type_id);
+  bool IsFunctionType(TypeID type_id);
+  bool IsPointerType(TypeID type);
+  static bool IsBasicType(TypeID type_id);
+  static TypeID GetBasicTypeIDByStr(const std::string &s);
+  TypeID GetTypeIDByStr(const std::string &s);
+  TypeID GetLeastUpperCommonType(TypeID, TypeID);
   // for pointer
-  int generate_pointer_type(int original_type, int pointer_level);
-  int get_or_create_pointer_type(int type);
-  void debug_pointer_type(std::shared_ptr<PointerType> &p);
-  bool is_pointer_type(int type);
-  void clear_definition_all();
-  std::shared_ptr<PointerType> get_pointer_type_by_type_id(TypeID type_id);
-  void init_internal_type();
-  static bool IsInternalObjectSetup() { return is_internal_obj_setup; }
-  void SetInClass(bool in_class) { is_in_class = in_class; }
-  bool GetInClass() { return is_in_class; }
+  int GeneratePointerType(int original_type, int pointer_level);
+  int GetOrCreatePointerType(int type);
+  static bool HasBuiltinType() { return is_internal_obj_setup; }
+
+  // TODO: Make this an utility function outside of this class.
+  set<int> get_all_types_from_compound_type(int compound_type, set<int> &visit);
 
  private:
+  void init_internal_type();
+  int gen_type_id();
+  void debug_pointer_type(std::shared_ptr<PointerType> &p);
+  TypeID get_compound_type_id_by_string(const std::string &s);
+  static bool is_basic_type(const std::string &s);
+  std::shared_ptr<VarType> make_basic_type(TypeID id, const std::string &s);
+  void make_basic_type_add_map(TypeID id, const std::string &s);
   void init_convert_chain();
   void init_basic_types();
   std::set<int> all_compound_types_;
@@ -201,6 +190,7 @@ class RealTypeSystem {
   // for internal type
   std::set<int> all_internal_compound_types;
   std::set<int> all_internal_functions;
+  // This should be static.
   std::map<TypeID, std::shared_ptr<VarType>> internal_type_map;
   map<TypeID, map<int, TypeID>> pointer_map;  // original_type:<level: typeid>
   bool is_in_class;
@@ -210,7 +200,7 @@ class RealTypeSystem {
   set<int> all_internal_class_methods;
   static bool is_internal_obj_setup;
 };
-// extern std::set<int> all_functions;
+
 class ScopeTree {
  public:
   ScopePtr GetScopeById(ScopeID id);

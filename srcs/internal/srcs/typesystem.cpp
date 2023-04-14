@@ -240,20 +240,17 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
   spdlog::debug("Scope type: {}", scope_type);
 
   if (cur->Type() == frontend_->GetStringLiteralType()) {
-    res_type =
-        real_type_system_->get_type_id_by_string("SpecialType::kAnyType");
+    res_type = real_type_system_->GetTypeIDByStr("SpecialType::kAnyType");
     cur_type->AddCandidate(res_type, 0, 0);
     cache_inference_map_[cur] = cur_type;
     return true;
   } else if (cur->Type() == frontend_->GetIntLiteralType()) {
-    res_type =
-        real_type_system_->get_type_id_by_string("SpecialType::kAnyType");
+    res_type = real_type_system_->GetTypeIDByStr("SpecialType::kAnyType");
     cur_type->AddCandidate(res_type, 0, 0);
     cache_inference_map_[cur] = cur_type;
     return true;
   } else if (cur->Type() == frontend_->GetFloatLiteralType()) {
-    res_type =
-        real_type_system_->get_type_id_by_string("SpecialType::kAnyType");
+    res_type = real_type_system_->GetTypeIDByStr("SpecialType::kAnyType");
     cur_type->AddCandidate(res_type, 0, 0);
     cache_inference_map_[cur] = cur_type;
     return true;
@@ -266,7 +263,6 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
       auto v_usable_type = collect_usable_type(cur);
       spdlog::debug("collect_usable_type.size(): {}", v_usable_type.size());
       for (auto t : v_usable_type) {
-        spdlog::debug("Type: {}", real_type_system_->get_type_name_by_id(t));
         assert(t);
         cur_type->AddCandidate(t, t, 0);
       }
@@ -293,12 +289,11 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
       // match name in scope_type
       // currently only class/struct is possible
       spdlog::debug("Scope type: {}", scope_type);
-      if (real_type_system_->is_compound_type(scope_type) == false) {
-        if (real_type_system_->is_function_type(scope_type)) {
+      if (real_type_system_->IsCompoundType(scope_type) == false) {
+        if (real_type_system_->IsFunctionType(scope_type)) {
           auto ret_type =
-              real_type_system_->get_function_type_by_type_id(scope_type)
-                  ->return_type_;
-          if (real_type_system_->is_compound_type(ret_type)) {
+              real_type_system_->GetFunctionType(scope_type)->return_type_;
+          if (real_type_system_->IsCompoundType(ret_type)) {
             scope_type = ret_type;
           } else {
             return false;
@@ -307,7 +302,7 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
           return false;
       }
       // assert(is_compound_type(scope_type));
-      auto ct = real_type_system_->get_compound_type_by_type_id(scope_type);
+      auto ct = real_type_system_->GetCompoundType(scope_type);
       for (auto &iter : ct->v_members_) {
         for (auto &member : iter.second) {
           if (cur->GetString() == member) {
@@ -338,7 +333,7 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
            cache_inference_map_[cur->LeftChild()]->GetCandidates()) {
         for (auto &right :
              cache_inference_map_[cur->RightChild()]->GetCandidates()) {
-          auto res_type = real_type_system_->least_upper_common_type(
+          auto res_type = real_type_system_->GetLeastUpperCommonType(
               left.first, right.first);
           cur_type->AddCandidate(res_type, left.first, right.first);
         }
@@ -409,7 +404,7 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
         auto new_left_type = left_type;
         // if(cur->OP()_->middle_ == "->"){
         if (get_op_property(cur_op) == OP_PROP_Dereference) {
-          auto tmp_ptr = real_type_system_->get_type_by_type_id(left_type);
+          auto tmp_ptr = real_type_system_->GetTypePtrByID(left_type);
           assert(tmp_ptr->is_pointer_type());
           if (DBG) cout << "left type of -> is : " << left_type << endl;
           auto type_ptr = static_pointer_cast<PointerType>(tmp_ptr);
@@ -441,11 +436,10 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
         // handle function call case-by-case
 
         if (left_type->GetCandidates().size() == 1 &&
-            real_type_system_->is_function_type(
+            real_type_system_->IsFunctionType(
                 left_type->GetARandomCandidateType())) {
           res_type = real_type_system_
-                         ->get_function_type_by_type_id(
-                             left_type->GetARandomCandidateType())
+                         ->GetFunctionType(left_type->GetARandomCandidateType())
                          ->return_type_;
           if (DBG) cout << "get_function_type_by_type_id: " << res_type << endl;
           cur_type->AddCandidate(res_type, 0, 0);
@@ -461,17 +455,15 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
             auto a_right_type = right_cache.first;
             if (DBG)
               cout << "[a+b] left_type = " << a_left_type << ":"
-                   << real_type_system_->get_type_name_by_id(a_left_type)
                    << " ,right_type = " << a_right_type << ":"
-                   << real_type_system_->get_type_name_by_id(a_right_type)
                    << ", op = " << cur_op << endl;
             if (DBG)
               cout << "Left to alltype: "
-                   << real_type_system_->is_derived_type(a_left_type,
-                                                         SpecialType::kAllTypes)
+                   << real_type_system_->CanDeriveFrom(a_left_type,
+                                                       SpecialType::kAllTypes)
                    << ", right to alltype: "
-                   << real_type_system_->is_derived_type(a_right_type,
-                                                         SpecialType::kAllTypes)
+                   << real_type_system_->CanDeriveFrom(a_right_type,
+                                                       SpecialType::kAllTypes)
                    << endl;
             auto t = query_result_type(cur_op, a_left_type, a_right_type);
             if (t != SpecialType::kNotExist) {
@@ -522,7 +514,7 @@ set<int> TypeInferer::collect_usable_type(IRPtr cur) {
             cout << kk.first << endl;
         }
         */
-        auto type_ptr = real_type_system_->get_type_by_type_id(tmp_type);
+        auto type_ptr = real_type_system_->GetTypePtrByID(tmp_type);
         if (type_ptr == nullptr) continue;
         for (auto &kk : iter.second) {
           if (ir_id > kk.order_id) {
@@ -537,10 +529,10 @@ set<int> TypeInferer::collect_usable_type(IRPtr cur) {
 
         if (type_ptr->is_function_type()) {
           // whether to insert the function type it self
-          auto ptr = real_type_system_->get_function_type_by_type_id(tmp_type);
+          auto ptr = real_type_system_->GetFunctionType(tmp_type);
           result.insert(ptr->return_type_);
         } else if (type_ptr->is_compound_type()) {
-          auto ptr = real_type_system_->get_compound_type_by_type_id(tmp_type);
+          auto ptr = real_type_system_->GetCompoundType(tmp_type);
           for (auto &iter : ptr->v_members_) {
             // haven't search deeper right now
             result.insert(iter.first);
@@ -582,7 +574,7 @@ pair<OPTYPE, vector<int>> TypeInferer::collect_sat_op_by_result_type(
   int counter = 0;
   for (auto &iter : cache) {
     if (DBG) cout << "OP result type: " << iter.first << endl;
-    if (real_type_system->is_derived_type(type, iter.first)) {
+    if (real_type_system->CanDeriveFrom(type, iter.first)) {
       for (auto &v : iter.second) {
         int left = 0, right = 0;
         if (v[1] > SpecialType::kAllUpperBound &&
@@ -769,7 +761,7 @@ bool TypeSystem::simple_fix(IRPtr ir, int type, TypeInferer &inferer) {
       TypeID new_type = SpecialType::kNotExist;
       int counter = 0;
       for (auto &iter : inferer.GetCandidateTypes(ir)->GetCandidates()) {
-        if (real_type_system_->is_derived_type(type, iter.first)) {
+        if (real_type_system_->CanDeriveFrom(type, iter.first)) {
           if (new_type == SpecialType::kNotExist ||
               get_rand_int(counter) == 0) {
             new_type = iter.first;
@@ -934,7 +926,7 @@ bool TypeSystem::validate(IRPtr &root) {
 */
 
 string TypeSystem::generate_definition(string &var_name, int type) {
-  auto type_ptr = real_type_system_->get_type_by_type_id(type);
+  auto type_ptr = real_type_system_->GetTypePtrByID(type);
   assert(type_ptr != nullptr);
   auto type_str = type_ptr->type_name_;
   string res = type_str + " " + var_name + ";";
@@ -944,7 +936,7 @@ string TypeSystem::generate_definition(string &var_name, int type) {
 
 string TypeSystem::generate_definition(vector<string> &var_name, int type) {
   if (DBG) cout << "Generating definitions for type: " << type << endl;
-  auto type_ptr = real_type_system_->get_type_by_type_id(type);
+  auto type_ptr = real_type_system_->GetTypePtrByID(type);
   assert(type_ptr != nullptr);
   assert(var_name.size());
   auto type_str = type_ptr->type_name_;
@@ -971,20 +963,19 @@ int OPRule::apply(int arg1, int arg2) {
   if (is_op1()) {
     switch (property_) {
       case OP_PROP_Reference:
-        return real_type_system_->get_or_create_pointer_type(arg1);
+        return real_type_system_->GetOrCreatePointerType(arg1);
       case OP_PROP_Dereference:
-        if (real_type_system_->is_pointer_type(arg1) == false)
+        if (real_type_system_->IsPointerType(arg1) == false)
           return SpecialType::kNotExist;
-        return real_type_system_->get_pointer_type_by_type_id(arg1)->orig_type_;
+        return real_type_system_->GetPointerType(arg1)->orig_type_;
       case OP_PROP_FunctionCall:
-        if (real_type_system_->is_function_type(arg1) == false) {
+        if (real_type_system_->IsFunctionType(arg1) == false) {
           break;
         }
         // cout << get_function_type_by_type_id(arg1)->return_type_ << endl;
         // assert(0);
         // cout << "reach here" << endl;
-        return real_type_system_->get_function_type_by_type_id(arg1)
-            ->return_type_;
+        return real_type_system_->GetFunctionType(arg1)->return_type_;
       case OP_PROP_Default:
         return arg1;
       default:
@@ -992,7 +983,7 @@ int OPRule::apply(int arg1, int arg2) {
     }
   } else {
   }
-  return real_type_system_->least_upper_common_type(arg1, arg2);
+  return real_type_system_->GetLeastUpperCommonType(arg1, arg2);
 }
 
 int TypeInferer::query_result_type(int op, int arg1, int arg2) {
@@ -1020,11 +1011,10 @@ int TypeInferer::query_result_type(int op, int arg1, int arg2) {
     if (r.is_op1() != isop1) continue;
 
     if (isop1) {
-      if (real_type_system_->is_derived_type(arg1, r.left_))
-        return r.apply(arg1);
+      if (real_type_system_->CanDeriveFrom(arg1, r.left_)) return r.apply(arg1);
     } else {
-      if (real_type_system_->is_derived_type(arg1, r.left_) &&
-          real_type_system_->is_derived_type(arg2, r.right_))
+      if (real_type_system_->CanDeriveFrom(arg1, r.left_) &&
+          real_type_system_->CanDeriveFrom(arg2, r.right_))
         return r.apply(arg1, arg2);
     }
   }
@@ -1088,9 +1078,9 @@ OPRule TypeInferer::parse_op_rule(string s) {
 
   if (DBG) cout << s << endl;
   if (v_strbuf[0][0] == '2') {
-    auto left = RealTypeSystem::get_basic_type_id_by_string(v_strbuf[4]);
-    auto right = RealTypeSystem::get_basic_type_id_by_string(v_strbuf[5]);
-    auto result = RealTypeSystem::get_basic_type_id_by_string(v_strbuf[6]);
+    auto left = RealTypeSystem::GetBasicTypeIDByStr(v_strbuf[4]);
+    auto right = RealTypeSystem::GetBasicTypeIDByStr(v_strbuf[5]);
+    auto result = RealTypeSystem::GetBasicTypeIDByStr(v_strbuf[6]);
 
     assert(left && right && result);
 
@@ -1107,8 +1097,8 @@ OPRule TypeInferer::parse_op_rule(string s) {
   } else {
     assert(v_strbuf[0][0] == '1');
     if (DBG) cout << "Here: " << v_strbuf[4] << endl;
-    auto left = RealTypeSystem::get_basic_type_id_by_string(v_strbuf[4]);
-    auto result = RealTypeSystem::get_basic_type_id_by_string(v_strbuf[5]);
+    auto left = RealTypeSystem::GetBasicTypeIDByStr(v_strbuf[4]);
+    auto result = RealTypeSystem::GetBasicTypeIDByStr(v_strbuf[5]);
 
     OPRule res(cur_id, result, left);
     res.add_property(v_strbuf.back());
@@ -1241,8 +1231,6 @@ string ExpressionGenerator::generate_expression_by_type_core(int type,
 
   if (gen_counter_ > 50) return gen_random_num_string();
   gen_counter_++;
-  cout << "Generating type:" << real_type_system_->get_type_name_by_id(type)
-       << ", type id: " << type << endl;
   string res;
 
   // collect all possible types
@@ -1262,15 +1250,8 @@ string ExpressionGenerator::generate_expression_by_type_core(int type,
 
   if (type == SpecialType::kAllTypes && all_satisfiable_types.size()) {
     type = random_pick(all_satisfiable_types)->first;
-    if (DBG)
-      cout << "Type becomes: " << real_type_system_->get_type_name_by_id(type)
-           << ", id: " << type << endl;
-    if (real_type_system_->is_function_type(type) && (get_rand_int(3))) {
-      type =
-          real_type_system_->get_function_type_by_type_id(type)->return_type_;
-      if (DBG)
-        cout << "Type becomes: " << real_type_system_->get_type_name_by_id(type)
-             << ", id: " << type << endl;
+    if (real_type_system_->IsFunctionType(type) && (get_rand_int(3))) {
+      type = real_type_system_->GetFunctionType(type)->return_type_;
     }
 
     /*
@@ -1349,8 +1330,8 @@ string ExpressionGenerator::generate_expression_by_type_core(int type,
   }
 
   if (expression_size == 0) expression_size = 1;
-  if (real_type_system_->is_function_type(type) ||
-      real_type_system_->is_compound_type(type))
+  if (real_type_system_->IsFunctionType(type) ||
+      real_type_system_->IsCompoundType(type))
     expression_size =
         0;  // when meeting a function size, we do not use it in operation.
 
@@ -1418,7 +1399,7 @@ string ExpressionGenerator::function_call_gen_handler(
   auto pick_func = *random_pick(function_map);
   if (DBG) cout << "Function type: " << pick_func.first << endl;
   shared_ptr<FunctionType> choice_ptr =
-      real_type_system_->get_function_type_by_type_id(pick_func.first);
+      real_type_system_->GetFunctionType(pick_func.first);
 
   assert(choice_ptr != nullptr);
 
@@ -1455,8 +1436,7 @@ string ExpressionGenerator::structure_member_gen_handler(
     assert(member_type == compound_type);
     if (gen::Configuration::GetInstance().IsWeakType()) {
       if (real_type_system_->IsBuiltinType(compound_type) && get_rand_int(4)) {
-        auto compound_ptr =
-            real_type_system_->get_type_by_type_id(compound_type);
+        auto compound_ptr = real_type_system_->GetTypePtrByID(compound_type);
         if (compound_ptr != nullptr && compound_var == compound_ptr->type_name_)
           return "(new " + compound_ptr->type_name_ + "())";
         else {
@@ -1478,14 +1458,13 @@ void ExpressionGenerator::update_pointer_var(
   for (auto pointer_type : pointer_var_map) {
     if (pointer_type.second.size() == 0) break;
     auto pointer_id = pointer_type.first;
-    auto pointer_ptr =
-        real_type_system_->get_pointer_type_by_type_id(pointer_id);
-    if (real_type_system_->is_basic_type(pointer_ptr->basic_type_)) {
+    auto pointer_ptr = real_type_system_->GetPointerType(pointer_id);
+    if (real_type_system_->IsBasicType(pointer_ptr->basic_type_)) {
       for (auto var_name : pointer_type.second) {
         string target(pointer_ptr->reference_level_, '*');
         simple_var_map[pointer_ptr->basic_type_].push_back(target + var_name);
       }
-    } else if (real_type_system_->is_compound_type(pointer_ptr->basic_type_)) {
+    } else if (real_type_system_->IsCompoundType(pointer_ptr->basic_type_)) {
       for (auto var_name : pointer_type.second) {
         string target(pointer_ptr->reference_level_, '*');
         compound_var_map[pointer_ptr->basic_type_].push_back(target + var_name);
@@ -1503,7 +1482,7 @@ string ExpressionGenerator::get_class_member_by_type_no_duplicate(
   vector<shared_ptr<FunctionType>> func_sol;
   visit.insert(type);
 
-  auto type_ptr = real_type_system_->get_compound_type_by_type_id(type);
+  auto type_ptr = real_type_system_->GetCompoundType(type);
   for (auto &member : type_ptr->v_members_) {
     if (member.first == target_type) {
       res = member_str + *random_pick(member.second);
@@ -1513,7 +1492,7 @@ string ExpressionGenerator::get_class_member_by_type_no_duplicate(
 
   string res1;
   for (auto &member : type_ptr->v_members_) {
-    if (real_type_system_->is_compound_type(member.first)) {
+    if (real_type_system_->IsCompoundType(member.first)) {
       if (visit.find(member.first) != visit.end()) continue;
       auto tmp_res = get_class_member_by_type_no_duplicate(member.first,
                                                            target_type, visit);
@@ -1522,13 +1501,12 @@ string ExpressionGenerator::get_class_member_by_type_no_duplicate(
                tmp_res;
         all_sol.push_back(res1);
       }
-    } else if (real_type_system_->is_function_type(member.first)) {
+    } else if (real_type_system_->IsFunctionType(member.first)) {
       if (member.first == target_type) {
         res1 = member_str + *random_pick(type_ptr->v_members_[member.first]);
         all_sol.push_back(res1);
       } else {
-        auto pfunc =
-            real_type_system_->get_function_type_by_type_id(member.first);
+        auto pfunc = real_type_system_->GetFunctionType(member.first);
         if (pfunc->return_type_ != target_type) continue;
         func_sol.push_back(pfunc);
       }
@@ -1578,7 +1556,7 @@ ExpressionGenerator::collect_all_var_definition_by_type(IRPtr cur) {
     if (current_scope->GetSymbolTable().GetTable().size()) {
       for (auto &iter : current_scope->GetSymbolTable().GetTable()) {
         auto tmp_type = iter.first;
-        auto type_ptr = real_type_system_->get_type_by_type_id(tmp_type);
+        auto type_ptr = real_type_system_->GetTypePtrByID(tmp_type);
         if (type_ptr == nullptr) continue;
         if (type_ptr->is_function_type()) {
           for (auto &var : iter.second) {
@@ -1722,7 +1700,7 @@ map<int, vector<set<int>>> ExpressionGenerator::collect_satisfiable_types(
   auto satisfiable_functions =
       calc_satisfiable_functions(function_types, current_types);
   for (auto type : satisfiable_functions) {
-    auto func_ptr = real_type_system_->get_function_type_by_type_id(type);
+    auto func_ptr = real_type_system_->GetFunctionType(type);
     auto return_type = func_ptr->return_type_;
     if (res.find(return_type) == res.end()) {
       res[return_type] = vector<set<int>>(HANDLER_CASE_NUM);
@@ -1741,7 +1719,7 @@ set<int> ExpressionGenerator::calc_satisfiable_functions(
 
   // setup function graph into a map
   for (auto &func : function_type_set) {
-    auto func_ptr = real_type_system_->get_function_type_by_type_id(func);
+    auto func_ptr = real_type_system_->GetFunctionType(func);
     func_map[func] =
         set<int>(func_ptr->v_arg_types_.begin(), func_ptr->v_arg_types_.end());
   }
@@ -1753,8 +1731,7 @@ set<int> ExpressionGenerator::calc_satisfiable_functions(
     is_change = false;
     for (auto func_itr = func_map.begin(); func_itr != func_map.end();) {
       auto func = *func_itr;
-      auto func_ptr =
-          real_type_system_->get_function_type_by_type_id(func.first);
+      auto func_ptr = real_type_system_->GetFunctionType(func.first);
       for (auto &t : current_types) {
         func.second.erase(t);
       }
@@ -1781,8 +1758,7 @@ set<int> ExpressionGenerator::calc_possible_types_from_structure(
   static map<int, set<int>> builtin_structure_type_cache;
   set<int> visit;
   if (DBG) {
-    auto type_ptr =
-        real_type_system_->get_compound_type_by_type_id(structure_type);
+    auto type_ptr = real_type_system_->GetCompoundType(structure_type);
     cout << "[calc_possible_types_from_structure] " << type_ptr->type_name_
          << endl;
   }
