@@ -3,3 +3,13 @@
 
 
 NOT READY YET! DON'T USE IT!
+
+## BUILD
+```bash
+mkdir build
+cd build
+cmake .. -DGRAMMAR_FILE=../grammars/simplelang_grammar/SimpleLang.g4 -DCMAKE_BUILD_TYPE=Debug -G Ninja
+ninja
+```
+
+If you build with other grammar files, please turn of the tests with `-DBUILD_TESTING=OFF` because the tests are only for the simplelang grammar.
