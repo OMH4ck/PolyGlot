@@ -27,7 +27,6 @@ export LIB_FUZZING_ENGINE=$AFLPATH/libAFLDriver.a
 
 cd lua && bash ./build_lua.sh
 
-
 # Project root path
 
 export AFL_CUSTOM_MUTATOR_ONLY=1
