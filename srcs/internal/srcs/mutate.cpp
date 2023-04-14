@@ -123,6 +123,7 @@ vector<IRPtr> Mutator::MutateIRs(vector<IRPtr> &irs_to_mutate) {
 
       IRPtr backup = deep_copy(new_ir_tree);
       ExtractStructure(new_ir_tree);
+
       string tmp = new_ir_tree->ToString();
       unsigned tmp_hash = hash(tmp);
       if (res_hash.find(tmp_hash) != res_hash.end()) {

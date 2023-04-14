@@ -240,17 +240,17 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
   spdlog::debug("Scope type: {}", scope_type);
 
   if (cur->Type() == frontend_->GetStringLiteralType()) {
-    res_type = real_type_system_->GetTypeIDByStr("SpecialType::kAnyType");
+    res_type = real_type_system_->GetTypeIDByStr("ANYTYPE");
     cur_type->AddCandidate(res_type, 0, 0);
     cache_inference_map_[cur] = cur_type;
     return true;
   } else if (cur->Type() == frontend_->GetIntLiteralType()) {
-    res_type = real_type_system_->GetTypeIDByStr("SpecialType::kAnyType");
+    res_type = real_type_system_->GetTypeIDByStr("ANYTYPE");
     cur_type->AddCandidate(res_type, 0, 0);
     cache_inference_map_[cur] = cur_type;
     return true;
   } else if (cur->Type() == frontend_->GetFloatLiteralType()) {
-    res_type = real_type_system_->GetTypeIDByStr("SpecialType::kAnyType");
+    res_type = real_type_system_->GetTypeIDByStr("ANYTYPE");
     cur_type->AddCandidate(res_type, 0, 0);
     cache_inference_map_[cur] = cur_type;
     return true;

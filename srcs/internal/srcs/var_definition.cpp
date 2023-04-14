@@ -1157,7 +1157,6 @@ void ScopeTree::collect_structure_definition_wt(IRPtr cur, IRPtr root) {
       current_compound_name = compound_name;
     }
     spdlog::info("{}", struct_body->ToString());
-    // real_type_system_->SetInClass(true);
     create_symbol_table(struct_body);
     // real_type_system_->SetInClass(false);
     auto compound_id = new_compound->type_id_;
