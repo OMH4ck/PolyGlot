@@ -1,1 +1,0 @@
-CREATE TABLE v0 ( v1 INT , v2 INT ) ; INSERT INTO v0 ( v1 , v1 ) VALUES ( 2 , 10 ) ; SELECT * , 'Brand#12' FROM v0 WHERE v2 NOT IN ( v2 , 10 , lower ( '1995-03-15' ) ) ORDER BY v1 DESC ; 

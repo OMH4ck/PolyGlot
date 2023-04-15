@@ -1,1 +1,0 @@
-CREATE TABLE v0 ( v1 INTEGER ) ; SELECT instr ( v1 , v1 ) FROM v0 ORDER BY substr ( v1 , 127 , 10 ) ; SELECT v1 , v1 FROM v0 WHERE v1 IS NOT NULL ; 

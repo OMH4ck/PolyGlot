@@ -1,1 +1,0 @@
-CREATE TABLE v0 ( v2 INT , v1 INT ) ; INSERT INTO v0 ( v1 , v2 ) VALUES ( 10 , 3 ) ; SELECT * , '!INSERT INTO test VALUES (1, 0, 0); !INSERT INTO test VALUES (0, 1, 0); !INSERT INTO test VALUES (0, 0, null);' FROM v0 WHERE ( v1 BETWEEN 10 AND 9 ) + v1 AND ( v1 = 3 OR v1 = 8 ) ORDER BY v2 DESC ; 

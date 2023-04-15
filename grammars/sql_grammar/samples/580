@@ -1,1 +1,0 @@
-CREATE VIEW v0 ( v13 , v11 , v1 , v7 , v2 , v3 , v6 , v10 , v4 , v5 , v9 , v12 , v8 ) AS SELECT COUNT ( * ) , 10 ; SELECT * FROM v0 AS a JOIN v0 ON NULL = 2.100000 NOT LIKE 'LG CASE' ; 

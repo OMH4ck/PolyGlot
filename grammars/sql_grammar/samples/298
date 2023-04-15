@@ -1,1 +1,0 @@
-CREATE TABLE v0 ( v1 INTEGER ) ; SELECT v1 , v1 FROM v0 WHERE ( v1 = 10 AND v1 = 10 ) OR ( v1 = 1 AND v1 = 0 ) ; SELECT v1 , v1 FROM v0 WHERE v1 IS NOT NULL ; 

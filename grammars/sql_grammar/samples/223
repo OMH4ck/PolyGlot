@@ -1,1 +1,0 @@
-SELECT toreal ( zipfile ( 1 ) ) ; INSERT INTO v0 VALUES ( 3 ) ; SELECT quote ( zeroblob ( 9223372036854775807 ) ) ; 

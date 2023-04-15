@@ -1,1 +1,0 @@
-SELECT CAST ( zeroblob ( '1995-03-15' ) AS TEXT ) ; SELECT DISTINCT 10 AS d , 1 , 10 , 1 , 10 LIMIT 10 OFFSET 2 ; 

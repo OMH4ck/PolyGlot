@@ -1,1 +1,0 @@
-SELECT COUNT ( * ) , 10 ; SELECT DISTINCT count () LIMIT 0 OFFSET 1 ; 

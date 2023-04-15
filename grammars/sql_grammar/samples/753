@@ -1,1 +1,0 @@
-UPDATE v0 SET v1 = 'Felix Fürstenberg' , v2 = 'Y' , v3 = '' , v4 = v5 + 0 ; CREATE TABLE v6 AS SELECT v8 FROM v6 ; CREATE TABLE v9 ( v11 INTEGER PRIMARY KEY , v10 INT ) ; INSERT INTO v9 ( v11 ) VALUES ( 10 ) ,( 9223372036854775807 ) ; SELECT * FROM v6 , v6 WHERE v12 = v14 AND v13 = 0 ; 

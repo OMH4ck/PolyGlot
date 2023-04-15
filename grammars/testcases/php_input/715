@@ -1,4 +1,0 @@
-<?php
-if (!extension_loaded("zlib")) die("skip need ext/zlib");
-
-ob_start('ob_gzhandler');

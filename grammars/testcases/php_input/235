@@ -1,6 +1,0 @@
-<?php
-try {
-    var_dump(func_get_arg(0));
-} catch (\Error $e) {
-    echo $e->getMessage() . \PHP_EOL;
-}

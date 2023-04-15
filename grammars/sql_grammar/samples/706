@@ -1,1 +1,0 @@
-SELECT sqlite_compileoption_get ( 10 ) ; SELECT printf ( count ( 10 ) OVER( ) , 10.100000 , '1995-03-15' ) ; SELECT sqlite_compileoption_get ( NULL ) ; 

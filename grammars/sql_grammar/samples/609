@@ -1,1 +1,0 @@
-CREATE TABLE v0 ( v2 INT , v1 INT ) ; INSERT INTO v0 ( v2 , v2 ) VALUES ( 10 , 10 ) ; UPDATE v0 SET v2 = ( SELECT nth_value ( v2 , 10 ) OVER( ORDER BY v1 ) FROM v0 WHERE min ( v1 , v2 ) ) ; 

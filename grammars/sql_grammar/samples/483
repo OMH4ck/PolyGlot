@@ -1,1 +1,0 @@
-CREATE TABLE v0 ( v1 INTEGER ) ; INSERT INTO v0 ( v1 , v1 , v1 ) VALUES ( 10 , 8 , 3 ) ,( 9 , 0 , NULL ) ,( 0.100000 , 'LG BOX' , 3 ) ,( 10 , 0 , NULL ) ,( 1 , 10 , 0 ) ,( 10 , 2 , 3 ) ,( 10 , 0 , 1 ) ; SELECT * FROM v0 AS one , v0 AS two NATURAL JOIN v0 NATURAL JOIN v0 ORDER BY random () ; SELECT min FROM v0 ORDER BY v1 * 99 ; 

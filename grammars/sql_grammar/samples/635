@@ -1,1 +1,0 @@
-CREATE TABLE v0 ( v3 INTEGER , v1 DOUBLE , v2 INTEGER ) ; INSERT INTO v0 ( v3 ) VALUES ( 3.100000 ) ,( 0 ) ,( 1 ) ; SELECT coalesce ( min ( v1 ) , 4294967295 ) FROM v0 ; INSERT INTO v0 ( v1 ) VALUES ( 10 ) ,( 10.100000 ) ; SELECT min ( TYPEOF ( v3 ) ) FROM v0 GROUP BY v1 ORDER BY v3 * 10 ; 

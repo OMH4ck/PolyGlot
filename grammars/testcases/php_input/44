@@ -1,6 +1,0 @@
-<?php
-if (!extension_loaded("session")) die("skip session extension not available");  if (file_exists(__DIR__. '/sess_' .session_id())) unlink(__DIR__. '/sess_' .session_id()); 
-    print "good :)\n";
-    $filename = __DIR__ . '/sess_' . session_id();
-    var_dump(file_exists($filename));
-    @unlink($filename);

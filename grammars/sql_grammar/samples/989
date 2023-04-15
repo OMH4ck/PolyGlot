@@ -1,1 +1,0 @@
-CREATE TABLE v0 ( v2 INT , v1 INT ) ; INSERT INTO v0 ( v1 , v2 ) VALUES ( 0 , 10 ) ; SELECT COALESCE ( max ( lead ( v1 ) OVER( ) ) , 9 ) FROM v0 ; 

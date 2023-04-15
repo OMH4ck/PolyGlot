@@ -1,1 +1,0 @@
-CREATE TABLE v0 ( v1 INTEGER ) ; INSERT INTO v0 ( v1 , v1 , v1 ) VALUES ( 3 , 0 , 10 ) ,( 10 , 1 , NULL ) ,( 10.100000 , 'LG BOX' , 3 ) ,( 10 , 2 , NULL ) ,( 10 , 10 , 1 ) ,( 10 , 2 , 10 ) ,( 3 , 10 , 10 ) ; SELECT DISTINCT zeroblob ( ( SELECT CAST ( zeroblob ( DISTINCT v1 ) AS DOUBLE ) ) ) FROM v0 ORDER BY random () ; SELECT min ( random () ) FROM v0 ORDER BY v1 * 10 ; 

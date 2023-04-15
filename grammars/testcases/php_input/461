@@ -1,5 +1,0 @@
-<?php
-Class C { function f(SomeClass $a) {} }
-
-// Array hint, should be class.
-Class D extends C { function f(array $a) {} }

@@ -1,1 +1,0 @@
-CREATE TABLE v0 ( v1 INTEGER PRIMARY KEY ) ; INSERT INTO v0 VALUES ( 10 ) ; INSERT INTO v0 ( v1 , v1 , v1 , v1 , v1 , v1 , v1 , v1 , v1 , v1 , v1 , v1 , v1 , v1 , v1 , v1 , v1 , v1 , v1 , v1 , v1 , v1 , v1 , v1 , v1 , v1 , v1 , v1 , v1 , v1 , v1 , v1 , v1 , v1 , v1 , v1 , v1 ) VALUES ( 0 , 1 , 10 ) ,( 2 , 10 , 99 ) ; 

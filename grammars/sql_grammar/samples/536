@@ -1,1 +1,0 @@
-SELECT count ( * ) OVER( ) ; SELECT DISTINCT count () OVER( ) ORDER BY count ( * ) OVER( ORDER BY instr ( 'c' , 9 ) ) LIMIT 10 OFFSET 10 ; 

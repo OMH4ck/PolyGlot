@@ -1,3 +1,0 @@
-<?php
-class C {}
-echo C::$p;

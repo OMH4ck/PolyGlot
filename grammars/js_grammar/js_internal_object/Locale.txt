@@ -1,7 +1,0 @@
-	class Locale {
-	getCanonicalLocales(locales){}
-	__proto__;
-	constructor;
-	setPrototypeOf(obj, prototype){}
-	}
-	

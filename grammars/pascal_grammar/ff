@@ -1,5 +1,0 @@
-%nonassoc LOWEST
-%nonassoc ELSE
-%nonassoc FUNCTION
-%nonassoc PROCEDURE
-%nonassoc HIGHEST

@@ -1,1 +1,0 @@
-CREATE TABLE v0 ( v1 INTEGER ) ; INSERT INTO v0 ( v1 , v1 , v1 ) VALUES ( 127 , 2 , 10 ) ,( 0 , 3 , NULL ) ,( 10.100000 , 'LG CASE' , 10 ) ,( 10 , 1 , NULL ) ,( 2 , 10 , 1 ) ,( 0 , 10 , 0 ) ,( 10 , 10 , NULL ) ; SELECT instr ( zeroblob ( 10 ) , v1 ) FROM v0 ; SELECT min ( v1 ) FROM v0 ORDER BY v1 * 10 ; 

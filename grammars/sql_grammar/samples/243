@@ -1,1 +1,0 @@
-SELECT CAST ( zeroblob ( 0 ) AS DOUBLE ) ; SELECT DISTINCT ( SELECT DISTINCT zipfile ( * ) ) GROUP BY printf ( '29' , 1 ) <= 'a' LIMIT 10 OFFSET 8 ; 

@@ -1,1 +1,0 @@
-SELECT v8 , length ( v9 ) , v7 FROM v6 ; ALTER TABLE sqlite1234 RENAME TO User ; SELECT v15 , v16 FROM v14 WHERE v17 IS NOT NULL ; 

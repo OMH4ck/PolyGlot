@@ -1,1 +1,0 @@
-CREATE TABLE item (id int, price int);

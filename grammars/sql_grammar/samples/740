@@ -1,1 +1,0 @@
-SELECT 9 IN ( COUNT ( * ) ) ; SELECT v9 , v7 FROM v4 WHERE ( v5 = 10 AND v8 = 1 ) OR ( v6 = 9 AND v10 = 10 ) ; SELECT v17 , v16 FROM v15 WHERE v18 IS NOT NULL ; 

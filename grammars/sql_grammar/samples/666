@@ -1,1 +1,0 @@
-SELECT count ( * ) OVER( ORDER BY ( SELECT quote ( zeroblob ( 10 ) ) AS VALUE ) NULLS LAST ) ; SELECT DISTINCT count () OVER( ) ORDER BY count ( * ) OVER( ORDER BY 12 NULLS LAST ) LIMIT 2 OFFSET 10 ; 

@@ -1,1 +1,0 @@
-CREATE TABLE v0 ( v1 INT , v2 INT ) ; SELECT * FROM v0 ORDER BY v2 LIMIT 3 ; SELECT COALESCE ( max ( v1 ) , 1 ) FROM v0 ; 

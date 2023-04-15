@@ -1,1 +1,0 @@
-CREATE TABLE v0 ( v1 INT UNIQUE , v2 TEXT UNIQUE ) ; SELECT instr ( v1 , v2 ) FROM v0 ; SELECT DISTINCT 3.100000 , unlikely ( v2 <= 'abc' ) FROM v0 WHERE v2 IS NOT NULL ; 

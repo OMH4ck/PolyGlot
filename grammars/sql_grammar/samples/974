@@ -1,1 +1,0 @@
-CREATE VIEW v0 AS WITH t4 AS ( SELECT julianday ( 1 ) AS VALUE FROM v0 ) SELECT 10 , 9 ; CREATE VIEW v1 ( v2 , v3 , v4 , v5 ) AS WITH y AS ( SELECT Row_Number () OVER( x ) FROM v0 ) SELECT * FROM v0 ; SELECT ( SELECT sum ( v2 ) FROM v1 WHERE v4 = 'SM PKG' ) FROM v0 ; 

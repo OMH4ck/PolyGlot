@@ -1,1 +1,0 @@
-CREATE TABLE v0 ( v1 INTEGER ) ; SELECT instr ( 'MED BAG' , 99 ) FROM v0 ; SELECT sum ( v1 ) OVER( ) AS xyz FROM v0 GROUP BY unlikely ( v1 <= 'EUROPE' ) ; 

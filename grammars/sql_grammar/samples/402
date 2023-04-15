@@ -1,1 +1,0 @@
-CREATE TABLE v0 ( v1 INTEGER ) ; SELECT count ( DISTINCT v1 / 1 ) FROM v0 ; SELECT min ( v1 ) , count ( v1 ) FROM v0 WHERE v1 = '1995-09-01' ; 

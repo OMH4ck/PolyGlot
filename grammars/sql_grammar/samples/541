@@ -1,1 +1,0 @@
-CREATE TABLE v0 ( v1 INT , v2 INT ) ; INSERT INTO v0 SELECT DISTINCT v2 , v1 , v2 , v2 , v2 , v1 FROM v0 WHERE v2 = 10 AND v1 = 0 ; SELECT v2 FROM v0 WHERE v2 IS NULL AND v2 IN ( 9 , 10 , 10 , 3 , 1 ) ; 

@@ -1,1 +1,0 @@
-SELECT tointeger ( 10 + 3 ) ; CREATE TABLE v0 AS SELECT testfunc1 ( 0 , 9223372036854775807 , 1 ) INTERSECT SELECT 2 ; SELECT count ( * ) OVER( ORDER BY 10 + sum ( v3 ) OVER( ORDER BY v4 ) DESC ) FROM v0 ; 

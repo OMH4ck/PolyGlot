@@ -1,1 +1,0 @@
-CREATE TABLE v0 ( v2 INT , v1 INT ) ; INSERT INTO v0 ( v1 , v2 ) VALUES ( 1 , 10 ) ; SELECT zipfile ( * ) IN ( SELECT 10 INTERSECT SELECT 0 ) FROM v0 ; 

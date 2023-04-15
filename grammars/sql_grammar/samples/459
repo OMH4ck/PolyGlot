@@ -1,1 +1,0 @@
-CREATE TABLE v0 ( v1 INTEGER PRIMARY KEY ) ; INSERT INTO v0 VALUES ( 2 ) ; SELECT count ( * ) , substr ( AVG ( v1 ) OVER( ) , 3 ) AS mx FROM v0 ; 

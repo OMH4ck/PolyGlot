@@ -1,1 +1,0 @@
-CREATE VIEW v0 AS SELECT COUNT ( * ) OVER( ORDER BY ( SELECT CAST ( zeroblob ( 0 ) AS DOUBLE ) ) ) , 3 ; SELECT * FROM v0 AS x1 , v0 AS x2 , v0 ; 

@@ -1,1 +1,0 @@
-CREATE TABLE v0 ( v1 CHAR(25) ) ; INSERT INTO v0 VALUES ( 10 ) ; SELECT quote ( zeroblob ( 8 ) ) AS VALUE ; 

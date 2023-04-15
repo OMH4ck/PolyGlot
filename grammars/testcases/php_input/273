@@ -1,2 +1,0 @@
-<?php
-echo "and this is PHP code, 2+2=".(2+2)."";

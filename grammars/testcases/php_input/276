@@ -1,8 +1,0 @@
-<?php
-assert_options(ASSERT_EXCEPTION, true);
-try {
-    $assert = 'assert';
-    $assert(false);
-} catch (AssertionError $assertionError) {
-    echo 'Done' . PHP_EOL;
-}

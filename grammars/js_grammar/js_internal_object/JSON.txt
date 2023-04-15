@@ -1,8 +1,0 @@
-	class JSON {
-	parse(text){}
-	stringify(value){}
-	__proto__;
-	constructor;
-	setPrototypeOf(obj, prototype){}
-	}
-	

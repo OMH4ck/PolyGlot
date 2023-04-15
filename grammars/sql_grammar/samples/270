@@ -1,1 +1,0 @@
-CREATE TABLE v0 ( v1 INTEGER PRIMARY KEY ) ; INSERT INTO v0 VALUES ( 1 ) ; SELECT DISTINCT v1 , v1 , nth_value ( v1 , 2 ) OVER( ) FROM v0 WHERE v1 = 'Felix Fürstenberg' AND v1 = 'DELIVER IN PERSON' ; 

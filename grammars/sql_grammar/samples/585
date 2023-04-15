@@ -1,1 +1,0 @@
-CREATE VIEW v0 AS SELECT COUNT ( * ) , 10 ; SELECT * FROM v0 AS a JOIN v0 ON julianday ( '23' ) > 2 IS NOT NULL NOT LIKE '!INSERT INTO test VALUES (1, 0, 0); !INSERT INTO test VALUES (0, 1, 0); !INSERT INTO test VALUES (0, 0, null);' ; 

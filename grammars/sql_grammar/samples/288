@@ -1,1 +1,0 @@
-CREATE VIEW v0 AS SELECT sqlite_compileoption_used ( NULL ) ; SELECT * FROM v0 AS a JOIN v0 ON ( SELECT 9 ) = 1 NOT LIKE 'AIR REG' ; 

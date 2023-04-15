@@ -1,1 +1,0 @@
-CREATE TABLE v0 ( v1 INT , v2 INT ) ; SELECT v1 , min ( v2 ) FROM v0 GROUP BY v2 HAVING v2 < '!INSERT INTO test VALUES (1, 0, 0); !INSERT INTO test VALUES (0, 1, 0); !INSERT INTO test VALUES (0, 0, null);' ORDER BY v2 DESC ; SELECT COALESCE ( max ( v2 ) , 10.100000 * sum ( v1 ) ) FROM v0 ; 

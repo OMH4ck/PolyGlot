@@ -1,1 +1,0 @@
-SELECT '13' AS a , zeroblob ( 10 ) AS b FROM v0 ORDER BY v2 , v1 ; DROP TABLE v3 ; ALTER TABLE t2 RENAME TO t3 ; 

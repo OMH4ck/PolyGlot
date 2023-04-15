@@ -1,1 +1,0 @@
-CREATE VIEW v0 ( v23 , v3 , v18 , v19 , v1 , v2 , v8 , v15 , v16 , v17 , v4 , v5 , v6 , v7 , v11 , v12 , v13 , v14 , v20 , v21 , v22 , v10 , v9 ) AS SELECT COUNT ( * ) OVER( ) , 2 ; SELECT * FROM v0 AS x , v0 , v0 , v0 , v0 ; 

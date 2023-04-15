@@ -1,1 +1,0 @@
-CREATE TABLE v0 ( v1 INTEGER PRIMARY KEY ) ; SELECT sqlite_compileoption_used ( '31' ) ; CREATE TABLE v2 ( v3 INTEGER PRIMARY KEY , v4 INT ) ; INSERT INTO v2 ( v3 ) VALUES ( 10 ) ,( 9223372036854775807 ) ; SELECT * FROM v2 , v0 WHERE ( 'Max Mustermann' = 'BUILDING' AND v1 = 1 ) < v1 AND v1 = 10 ; 

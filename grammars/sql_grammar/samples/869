@@ -1,1 +1,0 @@
-SELECT count ( * ) OVER( ) ; SELECT DISTINCT count ( * ) OVER( ORDER BY 3 ) ORDER BY count ( * ) OVER( ORDER BY 1 NULLS LAST ) LIMIT 10 OFFSET 3 ; 

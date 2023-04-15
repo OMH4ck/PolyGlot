@@ -1,7 +1,0 @@
-<?php
-$base = 50;
-try {
-    $base[$base] -= 0;
-} catch (Error $e) {
-    echo $e->getMessage(), "\n";
-}

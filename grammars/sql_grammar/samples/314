@@ -1,1 +1,0 @@
-CREATE TABLE v0 ( v1 INTEGER PRIMARY KEY ) ; SELECT sqlite_compileoption_used ( '' ) ; CREATE TABLE v2 ( v4 INTEGER PRIMARY KEY , v3 INT ) ; INSERT INTO v2 ( v3 ) VALUES ( 9223372036854775808 ) ,( 10 ) ; SELECT * FROM v2 , v0 WHERE v1 = 'abc' AND v1 = 2 ; 

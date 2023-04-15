@@ -1,1 +1,0 @@
-CREATE VIEW v0 ( v1 ) AS WITH t4 AS ( SELECT DISTINCT julianday ( '**%s**' ) AS VALUE FROM v0 ) SELECT changes () ; SELECT v1 , v1 FROM v0 WHERE ( v1 = 'GERMANY' AND v1 BETWEEN 10 AND 1 ) OR ( v1 = v1 AND v1 = 2 ) ; SELECT julianday ( 3.100000 ) , v1 FROM v0 WHERE v1 IS NOT NULL ; 

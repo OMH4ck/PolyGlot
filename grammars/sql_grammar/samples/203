@@ -1,1 +1,0 @@
-CREATE TABLE v0 ( v1 INTEGER ) ; SELECT min ( v1 ) OVER( ORDER BY v1 , v1 , v1 DESC , 10 DESC , v1 ) FROM v0 ; INSERT INTO v0 VALUES ( 3 ) ,( 3 ) ,( 9223372036854775807 ) ,( 16 ) ,( 0 ) ,( 2 ) ,( 0 ) ; SELECT count ( * ) OVER( ORDER BY v1 DESC , v1 ASC ) FROM v0 ; SELECT v1 , v1 FROM v0 WHERE v1 IS NOT NULL ; 

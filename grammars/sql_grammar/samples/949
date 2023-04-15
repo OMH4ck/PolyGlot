@@ -1,1 +1,0 @@
-CREATE TABLE v0 ( v1 CHAR(25) ) ; INSERT INTO v0 VALUES ( 1 ) ; SELECT sum ( v1 ) , total ( v1 ) FROM v0 ; 

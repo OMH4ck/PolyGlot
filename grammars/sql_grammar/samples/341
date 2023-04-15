@@ -1,1 +1,0 @@
-SELECT toreal ( tointeger ( 10 ) ) ; INSERT INTO v0 VALUES ( 10 ) ; SELECT quote ( zeroblob ( 10 ) ) ; 

@@ -1,1 +1,0 @@
-CREATE TABLE v0 ( v2 VARCHAR(1) , v1 INT ) ; INSERT INTO v0 ( v1 , v1 ) VALUES ( 0 , 3 ) ; SELECT COALESCE ( datetime ( v1 , 's%' ) , 0 ) FROM v0 ; 

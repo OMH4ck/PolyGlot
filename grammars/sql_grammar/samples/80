@@ -1,1 +1,0 @@
-CREATE VIEW v0 ( v3 , v9 , v7 , v8 , v4 , v1 , v10 , v5 , v2 , v6 , y ) AS SELECT COUNT ( * ) OVER( ) , 9223372036854775807 ; SELECT * FROM v0 AS a JOIN v0 ON NULL = 2.100000 NOT LIKE 'PROMO%%' ; 

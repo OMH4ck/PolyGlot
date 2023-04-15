@@ -1,1 +1,0 @@
-CREATE TABLE v0 ( v2 INT , v1 INT ) ; INSERT INTO v0 ( v2 , v2 ) VALUES ( 10 , 10 ) ; SELECT COALESCE ( quote ( v1 ) , 10 ) FROM v0 ; 

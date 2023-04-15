@@ -1,1 +1,0 @@
-CREATE VIEW v0 ( v2 , v9 , v8 , v4 , v12 , v7 , v15 , v5 , v3 , v16 , v13 , v1 , v10 , v14 , v11 , v6 ) AS SELECT COUNT ( * ) , 1 ; SELECT * FROM v0 AS a JOIN v0 ON ( 1 IN ( 9223372036854775807 , 0 ) ) NOT LIKE 'X' ; 

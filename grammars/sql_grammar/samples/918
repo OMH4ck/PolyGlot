@@ -1,1 +1,0 @@
-CREATE TABLE v0 ( v2 VARCHAR(1) , v1 INT ) ; INSERT INTO v0 ( v2 , v2 ) VALUES ( 10 , 10 ) ; SELECT COALESCE ( max ( v2 ) , 10 ) FROM v0 ; 
