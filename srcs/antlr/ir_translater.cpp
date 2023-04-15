@@ -1,7 +1,7 @@
 #include "ir_translater.h"
 
-#include "generated_header.h"
 #include "antlr4-runtime.h"
+#include "generated_header.h"
 // #include "cus.h"
 #include <iostream>
 #include <optional>
@@ -51,9 +51,11 @@ OneIR ExtractOneIR(std::stack<IM>& stk) {
         break;
       }
     } else if (std::holds_alternative<IRPtr>(im)) {
-      if (std::holds_alternative<std::monostate>(one_ir.left) && std::holds_alternative<std::monostate>(one_ir.op_middle)) {
+      if (std::holds_alternative<std::monostate>(one_ir.left) &&
+          std::holds_alternative<std::monostate>(one_ir.op_middle)) {
         one_ir.left = im;
-      } else if (std::holds_alternative<std::monostate>(one_ir.right) && std::holds_alternative<std::monostate>(one_ir.op_suffix)) {
+      } else if (std::holds_alternative<std::monostate>(one_ir.right) &&
+                 std::holds_alternative<std::monostate>(one_ir.op_suffix)) {
         one_ir.right = im;
       } else {
         stk.push(im);
@@ -71,35 +73,37 @@ IRPtr TranslateNode(tree::ParseTree* node, PolyGlotGrammarParser* parser) {
   std::stack<IM> stk;
   CustomRuleContext* ctx = dynamic_cast<CustomRuleContext*>(node);
   if (ctx->isStringLiteral) {
-    //std::cout << "literal: " << ctx->getText() << "\n";
+    // std::cout << "literal: " << ctx->getText() << "\n";
     stk.push(std::make_shared<IR>((IRTYPE)ctx->getRuleIndex(), ctx->getText()));
-  } else if(ctx->isIntLiteral) {
-    stk.push(std::make_shared<IR>((IRTYPE)ctx->getRuleIndex(), std::stoi(ctx->getText())));
+  } else if (ctx->isIntLiteral) {
+    stk.push(std::make_shared<IR>((IRTYPE)ctx->getRuleIndex(),
+                                  std::stoi(ctx->getText())));
   } else {
-    if(node->children.size() == 0){
+    if (node->children.size() == 0) {
       return nullptr;
     }
     std::stack<IM> tmp_stk;
     for (auto iter = node->children.begin(); iter != node->children.end();
          ++iter) {
       if ((*iter)->getTreeType() == antlr4::tree::ParseTreeType::TERMINAL) {
-        if((*iter)->getText() != "<EOF>"){
+        if ((*iter)->getText() != "<EOF>") {
           // std::cout << "terminal: " << (*iter)->getText() << "\n";
           tmp_stk.push((*iter)->getText());
         }
       } else {
         auto child_ir = TranslateNode(*iter, parser);
-        if(child_ir){
+        if (child_ir) {
           tmp_stk.push(child_ir);
         }
       }
     }
     assert(!tmp_stk.empty());
-    while(!tmp_stk.empty()){
+    while (!tmp_stk.empty()) {
       stk.push(tmp_stk.top());
       tmp_stk.pop();
     }
-    //std::cout << "Visiting node: " << node->toStringTree(parser) << std::endl;
+    // std::cout << "Visiting node: " << node->toStringTree(parser) <<
+    // std::endl;
     assert(!stk.empty());
     do {
       OneIR one_ir = ExtractOneIR(stk);
@@ -134,12 +138,15 @@ IRPtr TranslateNode(tree::ParseTree* node, PolyGlotGrammarParser* parser) {
       }
       */
       if (stk.empty()) {
-        stk.push(
-            IRPtr(new IR(static_cast<IRTYPE>(ctx->getRuleIndex()),
-                         std::make_shared<IROperator>(op_prefix, op_middle, op_suffix), left, right)));
+        stk.push(IRPtr(new IR(
+            static_cast<IRTYPE>(ctx->getRuleIndex()),
+            std::make_shared<IROperator>(op_prefix, op_middle, op_suffix), left,
+            right)));
       } else {
-        stk.push(IRPtr(new IR(kUnknown, std::make_shared<IROperator>(op_prefix, op_middle, op_suffix),
-                              left, right)));
+        stk.push(IRPtr(new IR(
+            kUnknown,
+            std::make_shared<IROperator>(op_prefix, op_middle, op_suffix), left,
+            right)));
       }
     } while (stk.size() > 1);
   }
@@ -152,7 +159,7 @@ IRPtr TranslateNode(tree::ParseTree* node, PolyGlotGrammarParser* parser) {
     // std::cout << "IR special: " << new_ir->to_string() << std::endl;
     new_ir->SetDataFlag(ctx->GetDataFlag());
     new_ir->SetDataType(ctx->GetDataType());
-  }else{
+  } else {
     new_ir->SetDataType(kDataDefault);
   }
   if (ctx->GetScopeType() != kScopeDefault) {
@@ -196,27 +203,27 @@ IRPtr TranslateToIR(std::string input_program) {
   return ir;
 }
 
-std::string_view GetIRTypeStr(IRTYPE type){
+std::string_view GetIRTypeStr(IRTYPE type) {
   static PolyGlotGrammarParser parser(nullptr);
 
   assert(parser.getRuleNames().size() > type);
   return parser.getRuleNames()[type];
 }
 
-IRTYPE GetIRTypeByStr(std::string_view type){
+IRTYPE GetIRTypeByStr(std::string_view type) {
   // TODO: Fix this ugly code.
   static bool init = false;
   static std::map<std::string, IRTYPE> type_map;
   std::string type_str(type);
-  if(!init){
+  if (!init) {
     init = true;
     PolyGlotGrammarParser parser(nullptr);
-    for(int i = 0; i < parser.getRuleNames().size(); ++i){
+    for (int i = 0; i < parser.getRuleNames().size(); ++i) {
       std::string rule_name = parser.getRuleNames()[i];
       type_map[rule_name] = static_cast<IRTYPE>(i);
     }
   }
-  if(type_map.find(type_str) == type_map.end()){
+  if (type_map.find(type_str) == type_map.end()) {
     std::cerr << "type_str: " << type_str << "\n";
   }
   assert(type_map.find(type_str) != type_map.end());
