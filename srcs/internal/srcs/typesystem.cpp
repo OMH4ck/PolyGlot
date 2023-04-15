@@ -537,7 +537,7 @@ set<int> TypeInferer::collect_usable_type(IRPtr cur) {
         auto type_ptr = real_type_system_->GetTypePtrByID(tmp_type);
         if (type_ptr == nullptr) continue;
         for (auto &kk : iter.second) {
-          if (ir_id > kk.order_id) {
+          if (ir_id > kk.statement_id) {
             flag = true;
             break;
           }
@@ -1586,14 +1586,14 @@ ExpressionGenerator::collect_all_var_definition_by_type(IRPtr cur) {
         if (type_ptr == nullptr) continue;
         if (type_ptr->is_function_type()) {
           for (auto &var : iter.second) {
-            if (var.order_id < ir_id) {
+            if (var.statement_id < ir_id) {
               // if(DBG) cout << "Collectingi func: " << var.first << endl;
               functions[tmp_type].push_back(var.name);
             }
           }
         } else if (type_ptr->is_compound_type()) {
           for (auto &var : iter.second) {
-            if (var.order_id < ir_id) {
+            if (var.statement_id < ir_id) {
               if (DBG) cout << "Collecting compound: " << var.name << endl;
               compound_types[tmp_type].push_back(var.name);
             }
@@ -1601,13 +1601,13 @@ ExpressionGenerator::collect_all_var_definition_by_type(IRPtr cur) {
         } else {
           if (type_ptr->is_pointer_type()) {
             for (auto &var : iter.second) {
-              if (var.order_id < ir_id) {
+              if (var.statement_id < ir_id) {
                 pointer_types[tmp_type].push_back(var.name);
               }
             }
           }
           for (auto &var : iter.second) {
-            if (var.order_id < ir_id) {
+            if (var.statement_id < ir_id) {
               cout << "Collecting simple var: " << var.name << endl;
               simple_var[tmp_type].push_back(var.name);
             } else {

@@ -64,7 +64,7 @@ void SymbolTable::AddDefinition(const string &name, TypeID type,
   Definition def;
   def.type = type;
   def.name = name;
-  def.order_id = order;
+  def.statement_id = order;
   AddDefinition(def);
 }
 

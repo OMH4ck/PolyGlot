@@ -54,7 +54,7 @@ enum SpecialType : TypeID {
 struct Definition {
   std::string name;
   TypeID type;
-  StatementID order_id;
+  StatementID statement_id;
 };
 
 // Inside one scope.

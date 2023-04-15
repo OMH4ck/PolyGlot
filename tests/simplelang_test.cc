@@ -189,6 +189,7 @@ TEST(ValidationTest, ScopeTreeBuildCorrectly) {
 
   ASSERT_TRUE(def_a.has_value());
   ASSERT_TRUE(def_b.has_value());
+  ASSERT_LT(def_a.value().statement_id, def_b.value().statement_id);
 }
 
 // TODO: This is a flaky test, we need to fix it.
