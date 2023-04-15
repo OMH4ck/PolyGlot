@@ -18,7 +18,6 @@
 #include <stack>
 #include <variant>
 
-#include "custom_rule_context.h"
 #include "generated_header.h"
 #include "ir_translater.h"
 
@@ -31,7 +30,7 @@ class CustomExprVisitor : public PolyGlotGrammarBaseVisitor {
     std::cout << "Child number: " << node->children.size() << std::endl;
     auto res = PolyGlotGrammarBaseVisitor::visitChildren(node);
     std::cout << "Visiting node: " << node->getText() << std::endl;
-    CustomRuleContext* ctx = (CustomRuleContext*)node;
+    PolyGlotRuleContext* ctx = (PolyGlotRuleContext*)node;
     std::cout << "Atribute: " << ctx->customAttribute << std::endl;
     std::cout << "Alt number: " << ctx->getRuleIndex() << std::endl;
     std::cout << "Child number: " << ctx->children.size() << std::endl;
@@ -53,7 +52,7 @@ class CustomExprVisitor : public PolyGlotGrammarBaseVisitor {
 // DFS visit the parse tree
 void visitParseTree(tree::ParseTree* node, antlr4::Parser* parser) {
   std::cout << "Visiting node: " << node->toStringTree(parser) << std::endl;
-  CustomRuleContext* ctx = (CustomRuleContext*)node;
+  PolyGlotRuleContext* ctx = (PolyGlotRuleContext*)node;
   if (node->getTreeType() == antlr4::tree::ParseTreeType::TERMINAL) {
     std::cout << antlr4::Token::MIN_USER_TOKEN_TYPE << std::endl;
     // check whether the terminal is a charset or literal

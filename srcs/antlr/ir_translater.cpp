@@ -31,7 +31,6 @@
 // #include "absl/container/flat_hash_map.h"
 
 // #include "ast.h"
-#include "custom_rule_context.h"
 // #include "define.h"
 #include "ir.h"
 // #include "var_definition.h"
@@ -91,7 +90,7 @@ IRPtr TranslateNode(tree::ParseTree* node, PolyGlotGrammarParser* parser) {
   assert(node->getTreeType() == antlr4::tree::ParseTreeType::RULE);
 
   std::stack<IM> stk;
-  CustomRuleContext* ctx = dynamic_cast<CustomRuleContext*>(node);
+  PolyGlotRuleContext* ctx = dynamic_cast<PolyGlotRuleContext*>(node);
   if (ctx->isStringLiteral) {
     // std::cout << "literal: " << ctx->getText() << "\n";
     stk.push(std::make_shared<IR>((IRTYPE)ctx->getRuleIndex(), ctx->getText()));

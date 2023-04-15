@@ -20,8 +20,8 @@
  * SOFTWARE.
  */
 
-#ifndef __CUS__H__
-#define __CUS__H__
+#ifndef __POLYGLOT_RULE_CONTEXT__H__
+#define __POLYGLOT_RULE_CONTEXT__H__
 #include <variant>
 
 #include "antlr4-runtime.h"
@@ -29,11 +29,11 @@
 #include "var_definition.h"
 
 using namespace polyglot;
-class CustomRuleContext : public antlr4::ParserRuleContext {
+class PolyGlotRuleContext : public antlr4::ParserRuleContext {
  public:
-  CustomRuleContext(antlr4::ParserRuleContext *parent, size_t invokingState)
+  PolyGlotRuleContext(antlr4::ParserRuleContext *parent, size_t invokingState)
       : antlr4::ParserRuleContext(parent, invokingState) {}
-  CustomRuleContext()
+  PolyGlotRuleContext()
       : antlr4::ParserRuleContext() {}  // Add this default constructor
 
   int customAttribute = 0;

@@ -1,12 +1,12 @@
 grammar SimpleLang;
 
 options {
-  contextSuperClass = CustomRuleContext;
+  contextSuperClass = PolyGlotRuleContext;
 }
 
 @parser::header {
 /* parser/listener/visitor header section */
-#include "custom_rule_context.h"
+#include "polyglot_rule_context.h"
 }
 
 program : stmtlist {$ctx->SetScopeType(kScopeGlobal);};
