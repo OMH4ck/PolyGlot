@@ -229,6 +229,10 @@ std::string_view GetIRTypeStr(IRTYPE type) {
   return parser.getRuleNames()[type];
 }
 
+size_t GetRuleNum() {
+  return PolyGlotGrammarParser(nullptr).getRuleNames().size();
+}
+
 IRTYPE GetIRTypeByStr(std::string_view type) {
   // TODO: Fix this ugly code.
   static bool init = false;
