@@ -537,7 +537,7 @@ set<int> TypeInferer::collect_usable_type(IRPtr cur) {
         auto type_ptr = real_type_system_->GetTypePtrByID(tmp_type);
         if (type_ptr == nullptr) continue;
         for (auto &kk : iter.second) {
-          if (ir_id > kk.order_id) {
+          if (ir_id > kk.statement_id) {
             flag = true;
             break;
           }
@@ -1172,8 +1172,7 @@ bool TypeSystem::insert_definition(int scope_id, int type_id, string var_name) {
 namespace validation {
 ValidationError SemanticValidator::Validate(IRPtr &root) {
   old_type_system_.MarkFixMe(root);
-  std::shared_ptr<ScopeTree> scope_tree = BuildScopeTree(root);
-  scope_tree->BuildSymbolTables(root);
+  std::shared_ptr<ScopeTree> scope_tree = BuildScopeTreeWithSymbolTable(root);
   old_type_system_.SetScopeTree(scope_tree);
   // TODO: Fix this super ugly code.
   old_type_system_.SetRealTypeSystem(scope_tree->GetRealTypeSystem());
@@ -1184,6 +1183,13 @@ ValidationError SemanticValidator::Validate(IRPtr &root) {
     // TODO: return the correct error code
     return ValidationError::kNoSymbolToUse;
   }
+}
+
+std::shared_ptr<ScopeTree> SemanticValidator::BuildScopeTreeWithSymbolTable(
+    IRPtr &root) {
+  auto scope_tree = ScopeTree::BuildTree(root);
+  scope_tree->BuildSymbolTables(root);
+  return scope_tree;
 }
 
 std::string ExpressionGenerator::GenerateExpression(TypeID type, IRPtr &ir) {
@@ -1580,14 +1586,14 @@ ExpressionGenerator::collect_all_var_definition_by_type(IRPtr cur) {
         if (type_ptr == nullptr) continue;
         if (type_ptr->is_function_type()) {
           for (auto &var : iter.second) {
-            if (var.order_id < ir_id) {
+            if (var.statement_id < ir_id) {
               // if(DBG) cout << "Collectingi func: " << var.first << endl;
               functions[tmp_type].push_back(var.name);
             }
           }
         } else if (type_ptr->is_compound_type()) {
           for (auto &var : iter.second) {
-            if (var.order_id < ir_id) {
+            if (var.statement_id < ir_id) {
               if (DBG) cout << "Collecting compound: " << var.name << endl;
               compound_types[tmp_type].push_back(var.name);
             }
@@ -1595,13 +1601,13 @@ ExpressionGenerator::collect_all_var_definition_by_type(IRPtr cur) {
         } else {
           if (type_ptr->is_pointer_type()) {
             for (auto &var : iter.second) {
-              if (var.order_id < ir_id) {
+              if (var.statement_id < ir_id) {
                 pointer_types[tmp_type].push_back(var.name);
               }
             }
           }
           for (auto &var : iter.second) {
-            if (var.order_id < ir_id) {
+            if (var.statement_id < ir_id) {
               cout << "Collecting simple var: " << var.name << endl;
               simple_var[tmp_type].push_back(var.name);
             } else {

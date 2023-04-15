@@ -31,6 +31,7 @@
 #include "mutate.h"
 #include "typesystem.h"
 #include "utils.h"
+#include "var_definition.h"
 
 using namespace polyglot;
 
@@ -166,6 +167,29 @@ TEST_F(MutatorTestF, MutateGenerateParsableTestCases) {
       ASSERT_TRUE(frontend->Parsable(ir->ToString()));
     }
   }
+}
+
+TEST(ValidationTest, ScopeTreeBuildCorrectly) {
+  std::string_view test_case = "INT a = 1;\n c + c;\n INT b = 2;";
+
+  auto frontend = std::make_shared<AntlrFrontend>();
+  auto root = frontend->TranslateToIR(test_case.data());
+  // program_root->deep_delete();
+
+  validation::SemanticValidator validator(frontend);
+  auto scope_tree = validator.BuildScopeTreeWithSymbolTable(root);
+
+  ScopePtr global_scope = scope_tree->GetScopeRoot();
+  ASSERT_NE(global_scope, nullptr);
+  ASSERT_EQ(global_scope->GetScopeType(), ScopeType::kScopeGlobal);
+
+  const SymbolTable& global_symbol_table = global_scope->GetSymbolTable();
+  auto def_a = global_symbol_table.GetDefinition("a");
+  auto def_b = global_symbol_table.GetDefinition("b");
+
+  ASSERT_TRUE(def_a.has_value());
+  ASSERT_TRUE(def_b.has_value());
+  ASSERT_LT(def_a.value().statement_id, def_b.value().statement_id);
 }
 
 // TODO: This is a flaky test, we need to fix it.

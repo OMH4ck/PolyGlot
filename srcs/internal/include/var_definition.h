@@ -54,7 +54,7 @@ enum SpecialType : TypeID {
 struct Definition {
   std::string name;
   TypeID type;
-  StatementID order_id;
+  StatementID statement_id;
 };
 
 // Inside one scope.
@@ -226,7 +226,7 @@ class RealTypeSystem {
 class ScopeTree {
  public:
   ScopePtr GetScopeById(ScopeID id);
-  ScopePtr GetScopeRoot();
+  ScopePtr GetScopeRoot() { return g_scope_root_; }
   void EnterScope(ScopeType scope_type);
   void ExitScope();
   ScopePtr GenScope(ScopeType scope_type);
@@ -239,6 +239,7 @@ class ScopeTree {
     return real_type_system_;
   }
   ScopeTree() { real_type_system_ = std::make_shared<RealTypeSystem>(); }
+  static std::shared_ptr<ScopeTree> BuildTree(IRPtr root);
 
  private:
   int g_scope_id_counter_ = 0;
@@ -263,6 +264,5 @@ class ScopeTree {
 };
 void reset_scope();
 
-std::shared_ptr<ScopeTree> BuildScopeTree(IRPtr root);
 }  // namespace polyglot
 #endif

@@ -346,7 +346,7 @@ class SemanticValidator : public Validator {
   // 2. It infers the types of the IRs that need fixing, which needs the help of
   // the symbol table.
   // 3. Fix the IRs.
-  std::shared_ptr<ScopeTree> BuildSymbolTable(IRCPtr &root);
+  std::shared_ptr<ScopeTree> BuildScopeTreeWithSymbolTable(IRPtr &root);
   std::shared_ptr<InferenceResult> InferType(
       IRPtr &root, std::shared_ptr<ScopeTree> scope_tree);
   bool Fix(IRPtr &root, std::shared_ptr<InferenceResult> inference_result,
