@@ -21,8 +21,10 @@
 // #include "ast.h"
 #include "typesystem.h"
 
+#include <cstddef>
 #include <memory>
 #include <optional>
+#include <string_view>
 
 #include "config_misc.h"
 // #include "define.h"
@@ -52,7 +54,7 @@ void filter_element(map<int, vector<string>> &vars,
   vars = std::move(filtered);
 }
 
-namespace typesystem {
+namespace validation {
 
 #define DBG 0
 #define SOLIDITYFUZZ
@@ -248,8 +250,12 @@ ScopeType scope_js(const string &s) {
 
 // map<IR*, shared_ptr<map<TYPEID, vector<pair<TYPEID, TYPEID>>>>>
 // TypeSystem::cache_inference_map_;
-bool TypeInferer::Infer(IRPtr &cur, int scope_type) {
-  return type_inference_new(cur, scope_type);
+std::shared_ptr<InferenceResult> TypeInferer::Infer(IRPtr &cur,
+                                                    int scope_type) {
+  if (type_inference_new(cur, scope_type))
+    return std::make_shared<InferenceResult>(inference_result_);
+  else
+    return nullptr;
 }
 
 bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
@@ -262,17 +268,17 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
   if (cur->Type() == frontend_->GetStringLiteralType()) {
     res_type = real_type_system_->GetTypeIDByStr("ANYTYPE");
     cur_type->AddCandidate(res_type, 0, 0);
-    cache_inference_map_[cur] = cur_type;
+    inference_result_.GetCandidateTypes(cur) = cur_type;
     return true;
   } else if (cur->Type() == frontend_->GetIntLiteralType()) {
     res_type = real_type_system_->GetTypeIDByStr("ANYTYPE");
     cur_type->AddCandidate(res_type, 0, 0);
-    cache_inference_map_[cur] = cur_type;
+    inference_result_.GetCandidateTypes(cur) = cur_type;
     return true;
   } else if (cur->Type() == frontend_->GetFloatLiteralType()) {
     res_type = real_type_system_->GetTypeIDByStr("ANYTYPE");
     cur_type->AddCandidate(res_type, 0, 0);
-    cache_inference_map_[cur] = cur_type;
+    inference_result_.GetCandidateTypes(cur) = cur_type;
     return true;
   }
 
@@ -286,7 +292,7 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
         assert(t);
         cur_type->AddCandidate(t, t, 0);
       }
-      cache_inference_map_[cur] = cur_type;
+      inference_result_.GetCandidateTypes(cur) = cur_type;
       return cur_type->HasCandidate();
     }
 
@@ -301,7 +307,7 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
       // TYPEID>>>>();
       if (!res_type) res_type = SpecialType::kAnyType;  // should fix
       cur_type->AddCandidate(res_type, res_type, 0);
-      cache_inference_map_[cur] = cur_type;
+      inference_result_.GetCandidateTypes(cur) = cur_type;
       return true;
 
       // return cur->value_type_ = res_type;
@@ -332,7 +338,7 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
             // TYPEID>>>>();
             assert(iter.first);
             cur_type->AddCandidate(iter.first, iter.first, 0);
-            cache_inference_map_[cur] = cur_type;
+            inference_result_.GetCandidateTypes(cur) = cur_type;
             return true;
 
             // return cur->value_type_ = iter.first;
@@ -349,23 +355,27 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
       if (!flag) return flag;
       flag = type_inference_new(cur->RightChild(), scope_type);
       if (!flag) return flag;
-      for (auto &left :
-           cache_inference_map_[cur->LeftChild()]->GetCandidates()) {
+      for (auto &left : inference_result_.GetCandidateTypes(cur->LeftChild())
+                            ->GetCandidates()) {
         for (auto &right :
-             cache_inference_map_[cur->RightChild()]->GetCandidates()) {
+             inference_result_.GetCandidateTypes(cur->RightChild())
+                 ->GetCandidates()) {
           auto res_type = real_type_system_->GetLeastUpperCommonType(
               left.first, right.first);
           cur_type->AddCandidate(res_type, left.first, right.first);
         }
       }
-      cache_inference_map_[cur] = cur_type;
+      inference_result_.GetCandidateTypes(cur) = cur_type;
     } else if (cur->HasLeftChild()) {
       flag = type_inference_new(cur->LeftChild(), scope_type);
-      if (!flag || !cache_inference_map_[cur->LeftChild()]->HasCandidate())
+      if (!flag || !inference_result_.GetCandidateTypes(cur->LeftChild())
+                        ->HasCandidate())
         return false;
       if (DBG) cout << "Left: " << cur->LeftChild()->ToString() << endl;
-      assert(cache_inference_map_[cur->LeftChild()]->HasCandidate());
-      cache_inference_map_[cur] = cache_inference_map_[cur->LeftChild()];
+      assert(inference_result_.GetCandidateTypes(cur->LeftChild())
+                 ->HasCandidate());
+      inference_result_.AddCandidateTypes(
+          cur, inference_result_.GetCandidateTypes(cur->LeftChild()));
     } else {
       if (DBG) cout << cur->ToString() << endl;
       return false;
@@ -395,7 +405,8 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
     flag = type_inference_new(cur->LeftChild(), scope_type);
     if (!flag) return flag;
     // auto cur_type = make_shared<map<TYPEID, vector<pair<TYPEID, TYPEID>>>>();
-    for (auto &left : cache_inference_map_[cur->LeftChild()]->GetCandidates()) {
+    for (auto &left : inference_result_.GetCandidateTypes(cur->LeftChild())
+                          ->GetCandidates()) {
       auto left_type = left.first;
       if (DBG) cout << "Reaching op1" << endl;
       if (DBG)
@@ -407,7 +418,7 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
         cur_type->AddCandidate(res_type, left_type, 0);
       }
     }
-    cache_inference_map_[cur] = cur_type;
+    inference_result_.GetCandidateTypes(cur) = cur_type;
   } else if (is_op2(cur_op)) {
     if (!(cur->HasLeftChild() && cur->HasRightChild())) return false;
     // auto cur_type = make_shared<map<TYPEID, vector<pair<TYPEID, TYPEID>>>>();
@@ -417,10 +428,11 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
         if (DBG) cout << "Left to right" << endl;
         flag = type_inference_new(cur->LeftChild(), scope_type);
         if (!flag) return flag;
-        if (!cache_inference_map_[cur->LeftChild()]->HasCandidate())
+        if (!inference_result_.GetCandidateTypes(cur->LeftChild())
+                 ->HasCandidate())
           return false;
-        auto left_type =
-            cache_inference_map_[cur->LeftChild()]->GetARandomCandidateType();
+        auto left_type = inference_result_.GetCandidateTypes(cur->LeftChild())
+                             ->GetARandomCandidateType();
         auto new_left_type = left_type;
         // if(cur->OP()_->middle_ == "->"){
         if (get_op_property(cur_op) == OP_PROP_Dereference) {
@@ -435,7 +447,8 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
         flag = type_inference_new(cur->RightChild(), new_left_type);
         if (!flag) return flag;
         auto right_type =
-            cache_inference_map_[cur->RightChild()]->GetARandomCandidateType();
+            inference_result_.GetCandidateTypes(cur->RightChild())
+                ->GetARandomCandidateType();
         res_type = right_type;
         cur_type->AddCandidate(res_type, left_type, right_type);
         break;
@@ -451,8 +464,9 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
         if (!flag) return flag;
         flag = type_inference_new(cur->RightChild(), scope_type);
         if (!flag) return flag;
-        auto left_type = cache_inference_map_[cur->LeftChild()];
-        auto right_type = cache_inference_map_[cur->RightChild()];
+        auto left_type = inference_result_.GetCandidateTypes(cur->LeftChild());
+        auto right_type =
+            inference_result_.GetCandidateTypes(cur->RightChild());
         // handle function call case-by-case
 
         if (left_type->GetCandidates().size() == 1 &&
@@ -468,9 +482,11 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
 
         // res_type = query_type_dict(cur_op, left_type, right_type);
         for (auto &left_cahce :
-             cache_inference_map_[cur->LeftChild()]->GetCandidates()) {
+             inference_result_.GetCandidateTypes(cur->LeftChild())
+                 ->GetCandidates()) {
           for (auto &right_cache :
-               cache_inference_map_[cur->RightChild()]->GetCandidates()) {
+               inference_result_.GetCandidateTypes(cur->RightChild())
+                   ->GetCandidates()) {
             auto a_left_type = left_cahce.first;
             auto a_right_type = right_cache.first;
             if (DBG)
@@ -497,7 +513,7 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
   } else {
     assert(0);
   }
-  cache_inference_map_[cur] = cur_type;
+  inference_result_.GetCandidateTypes(cur) = cur_type;
   return cur_type->HasCandidate();
 }
 
@@ -759,14 +775,14 @@ IRPtr TypeSystem::locate_mutated_ir(IRPtr root) {
   return nullptr;
 }
 
-bool TypeSystem::simple_fix(IRPtr ir, int type, TypeInferer &inferer) {
+bool TypeSystem::simple_fix(IRPtr ir, int type, InferenceResult &inferer) {
   if (type == SpecialType::kNotExist) return false;
 
   spdlog::debug("NodeType: {}", frontend_->GetIRTypeStr(ir->Type()));
   spdlog::debug("Type: {}", type);
 
   // if (ir->type_ == kIdentifier && ir->str_val_ == "FIXME")
-  if (ir->ContainString() && ir->GetString() == "FIXME") {
+  if (ir->ContainString() && ir->GetString() == kFixMe) {
     spdlog::debug("Reach here");
     validation::ExpressionGenerator generator(scope_tree_);
     ir->SetString(generator.GenerateExpression(type, ir));
@@ -777,10 +793,10 @@ bool TypeSystem::simple_fix(IRPtr ir, int type, TypeInferer &inferer) {
   // This checks whether we can find a derived type from `type`.
   // We should consider the availability of the derived type.
   if (!gen::Configuration::GetInstance().IsWeakType()) {
-    if (!inferer.GetCandidateTypes(ir)->HasCandidate(type)) {
+    if (!inferer.HasCandidateAtType(ir, type)) {
       TypeID new_type = SpecialType::kNotExist;
       int counter = 0;
-      for (auto &iter : inferer.GetCandidateTypes(ir)->GetCandidates()) {
+      for (auto &iter : inferer.GetCandidates(ir)) {
         if (real_type_system_->CanDeriveFrom(type, iter.first)) {
           if (new_type == SpecialType::kNotExist ||
               get_rand_int(counter) == 0) {
@@ -794,10 +810,9 @@ bool TypeSystem::simple_fix(IRPtr ir, int type, TypeInferer &inferer) {
       spdlog::debug("nothing in cache_inference_map_: {}", ir->ToString());
       spdlog::debug("NodeType: {}", frontend_->GetIRTypeStr(ir->Type()));
     }
-    if (!inferer.GetCandidateTypes(ir)->HasCandidate(type)) return false;
+    if (!inferer.HasCandidateAtType(ir, type)) return false;
     if (ir->HasLeftChild()) {
-      auto iter =
-          *random_pick(inferer.GetCandidateTypes(ir)->GetCandidates(type));
+      auto iter = *random_pick(inferer.GetCandidatesAtType(ir, type));
       if (ir->HasRightChild()) {
         simple_fix(ir->LeftChild(), iter.left, inferer);
         simple_fix(ir->RightChild(), iter.right, inferer);
@@ -831,16 +846,18 @@ bool TypeSystem::Fix(IRPtr root) {
     if (Fixable(root)) {
       assert(NeedFixing(root));
       int type = SpecialType::kAllTypes;
+      std::shared_ptr<InferenceResult> inference_result =
+          std::make_shared<InferenceResult>();
       if (!gen::Configuration::GetInstance().IsWeakType()) {
-        if (!inferer.Infer(root, 0)) {
+        inference_result = inferer.Infer(root, 0);
+        if (inference_result == nullptr) {
           res = false;
           break;
         }
-        auto iter =
-            random_pick(inferer.GetCandidateTypes(root)->GetCandidates());
+        auto iter = random_pick(inference_result->GetCandidates(root));
         type = iter->first;
       }
-      res = simple_fix(root, type, inferer);
+      res = simple_fix(root, type, *inference_result);
     } else {
       if (root->HasRightChild()) stk.push(root->RightChild());
       if (root->HasLeftChild()) stk.push(root->LeftChild());
@@ -1167,7 +1184,7 @@ bool TypeSystem::insert_definition(int scope_id, int type_id, string var_name) {
 }
 */
 
-}  // namespace typesystem
+}  // namespace validation
 
 namespace validation {
 ValidationError SemanticValidator::Validate(IRPtr &root) {
@@ -1176,7 +1193,7 @@ ValidationError SemanticValidator::Validate(IRPtr &root) {
   old_type_system_.SetScopeTree(scope_tree);
   // TODO: Fix this super ugly code.
   old_type_system_.SetRealTypeSystem(scope_tree->GetRealTypeSystem());
-  typesystem::OPRule::SetRealTypeSystem(scope_tree->GetRealTypeSystem());
+  validation::OPRule::SetRealTypeSystem(scope_tree->GetRealTypeSystem());
   if (old_type_system_.Fix(root)) {
     return ValidationError::kSuccess;
   } else {
@@ -1211,7 +1228,7 @@ string ExpressionGenerator::expression_gen_handler(
     map<int, vector<string>> &function_map,
     map<int, vector<string>> &compound_var_map, IRPtr ir) {
   string res;
-  auto sat_op = typesystem::TypeInferer::collect_sat_op_by_result_type(
+  auto sat_op = validation::TypeInferer::collect_sat_op_by_result_type(
       type, all_satisfiable_types, function_map, compound_var_map,
       real_type_system_);  // map<OPTYPE, vector<typeid>>
   if (DBG) cout << "OP id: " << sat_op.first << endl;
@@ -1220,10 +1237,10 @@ string ExpressionGenerator::expression_gen_handler(
   }
   assert(sat_op.first);
 
-  auto op = typesystem::TypeInferer::get_op_by_optype(
+  auto op = validation::TypeInferer::get_op_by_optype(
       sat_op.first);  // vector<string> for prefix, middle, suffix
   assert(op.size());  // should not be an empty operator
-  if (typesystem::TypeInferer::is_op1(sat_op.first)) {
+  if (validation::TypeInferer::is_op1(sat_op.first)) {
     auto arg1_type = sat_op.second[0];
     auto arg1 = generate_expression_by_type_core(arg1_type, ir);
     assert(arg1.size());

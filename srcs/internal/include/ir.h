@@ -29,12 +29,14 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <variant>
 #include <vector>
 
 using namespace std;
 namespace polyglot {
 
+constexpr std::string_view kFixMe = "FIXME";
 using IRTYPE = unsigned int;
 using StatementID = unsigned long;
 using ScopeID = unsigned long;
