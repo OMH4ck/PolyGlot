@@ -30,6 +30,7 @@
 #include <iterator>
 #include <map>
 #include <memory>
+#include <optional>
 #include <queue>
 #include <set>
 #include <span>
@@ -92,7 +93,7 @@ class ExpressionGenerator {
 };
 }  // namespace validation
 
-namespace typesystem {
+namespace validation {
 
 using std::map;
 using std::set;
@@ -146,7 +147,7 @@ class OPRule {
   static std::shared_ptr<RealTypeSystem> real_type_system_;
 };
 
-struct InferenceType {
+struct InferenceRule {
   TypeID result;
   TypeID left;
   TypeID right;
@@ -154,7 +155,7 @@ struct InferenceType {
 
 class CandidateTypes {
  public:
-  std::unordered_map<TypeID, std::vector<InferenceType>> &GetCandidates() {
+  std::unordered_map<TypeID, std::vector<InferenceRule>> &GetCandidates() {
     return candidates_;
   }
 
@@ -162,7 +163,7 @@ class CandidateTypes {
     candidates_[result].push_back({result, left, right});
   }
 
-  void AddCandidate(InferenceType inference_type) {
+  void AddCandidate(InferenceRule inference_type) {
     candidates_[inference_type.result].push_back(inference_type);
   }
 
@@ -179,7 +180,7 @@ class CandidateTypes {
     return candidates_.find(result) != candidates_.end();
   }
 
-  std::vector<InferenceType> &GetCandidates(TypeID result) {
+  std::vector<InferenceRule> &GetCandidates(TypeID result) {
     return candidates_[result];
   }
 
@@ -193,8 +194,49 @@ class CandidateTypes {
   }
 
  private:
-  std::unordered_map<TypeID /* result type*/, std::vector<InferenceType>>
+  std::unordered_map<TypeID /* result type*/, std::vector<InferenceRule>>
       candidates_;
+};
+
+class InferenceResult {
+ public:
+  std::shared_ptr<const validation::CandidateTypes> GetCandidateTypes(
+      const IRPtr &root) const {
+    auto it = cache_inference_map_.find(root);
+    return (it == cache_inference_map_.end()) ? nullptr : it->second;
+  }
+
+  std::shared_ptr<validation::CandidateTypes> GetCandidateTypes(
+      const IRPtr &root) {
+    auto it = cache_inference_map_.find(root);
+    return (it == cache_inference_map_.end()) ? nullptr : it->second;
+  }
+
+  std::unordered_map<TypeID, std::vector<InferenceRule>> &GetCandidates(
+      const IRPtr &root) {
+    assert(cache_inference_map_.find(root) != cache_inference_map_.end());
+    return cache_inference_map_[root]->GetCandidates();
+  }
+
+  std::vector<InferenceRule> &GetCandidatesAtType(const IRPtr &root,
+                                                  TypeID result) {
+    assert(cache_inference_map_.find(root) != cache_inference_map_.end());
+    return cache_inference_map_[root]->GetCandidates(result);
+  }
+
+  bool HasCandidateAtType(const IRPtr &root, TypeID result) {
+    return cache_inference_map_.find(root) != cache_inference_map_.end() &&
+           cache_inference_map_[root]->HasCandidate(result);
+  }
+
+  void AddCandidateTypes(const IRPtr &root,
+                         std::shared_ptr<validation::CandidateTypes> types) {
+    cache_inference_map_[root] = types;
+  }
+
+ private:
+  std::unordered_map<IRPtr, std::shared_ptr<validation::CandidateTypes>>
+      cache_inference_map_;
 };
 
 class TypeInferer {
@@ -204,13 +246,12 @@ class TypeInferer {
       : frontend_(frontend),
         scope_tree_(scope_tree),
         real_type_system_(scope_tree_->GetRealTypeSystem()) {}
-  bool Infer(IRPtr &root, int scope_type = SpecialType::kNotExist);
+  std::shared_ptr<InferenceResult> Infer(
+      IRPtr &root, int scope_type = SpecialType::kNotExist);
   std::shared_ptr<CandidateTypes> GetCandidateTypes(IRPtr &root) {
-    if (cache_inference_map_.find(root) == cache_inference_map_.end())
-      return nullptr;
-    else
-      return cache_inference_map_[root];
+    return inference_result_.GetCandidateTypes(root);
   }
+
   // Operator related functions, since they are configuration so they are
   // static.
   // TODO: Mark them as const if possible
@@ -238,7 +279,7 @@ class TypeInferer {
   bool type_inference_new(IRPtr cur, int scope_type = SpecialType::kNotExist);
   int locate_defined_variable_by_name(const string &var_name, int scope_id);
   set<int> collect_usable_type(IRPtr cur);
-  std::map<IRPtr, std::shared_ptr<CandidateTypes>> cache_inference_map_;
+  InferenceResult inference_result_;
   std::shared_ptr<RealTypeSystem> real_type_system_;
 };
 
@@ -288,7 +329,7 @@ class TypeSystem {
   [[deprecated("Should be removed")]] void connect_back(
       map<IRPtr *, IRPtr> &m_save);
 
-  bool simple_fix(IRPtr ir, int type, TypeInferer &inferer);
+  bool simple_fix(IRPtr ir, int type, InferenceResult &inferer);
   bool validate_syntax_only(IRPtr root);
   IRPtr locate_mutated_ir(IRPtr root);
 
@@ -302,7 +343,7 @@ class TypeSystem {
   void init();
 };
 
-}  // namespace typesystem
+}  // namespace validation
 
 namespace validation {
 
@@ -312,8 +353,6 @@ enum class ValidationError {
   kNoSymbolToUse,
   // And others.
 };
-
-class InferenceResult {};
 
 class TypeSystemRefactor {
  public:
@@ -353,7 +392,7 @@ class SemanticValidator : public Validator {
            std::shared_ptr<ScopeTree> scope_tree);
 
  private:
-  typesystem::TypeSystem old_type_system_;
+  TypeSystem old_type_system_;
 };
 }  // namespace validation
 }  // namespace polyglot
