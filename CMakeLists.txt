@@ -165,6 +165,7 @@ target_link_libraries(polyglot_mutator PRIVATE polyglot_lib)
 target_link_options(polyglot_mutator PRIVATE $<$<CONFIG:DEBUG>: ${ASAN_SHARED}>)
 
 add_subdirectory(srcs/antlr)
+add_subdirectory(srcs/utils)
 include(lint.cmake)
 
 option(BUILD_TESTING "Build the testing tree." ON)

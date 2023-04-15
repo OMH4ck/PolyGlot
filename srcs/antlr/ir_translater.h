@@ -34,6 +34,7 @@ polyglot::IRPtr TranslateToIR(std::string input);
 
 std::string_view GetIRTypeStr(IRTYPE type);
 IRTYPE GetIRTypeByStr(std::string_view type);
+size_t GetRuleNum();
 constexpr IRTYPE kUnknown = 0xdeadbeef;
 }  // namespace antlr4
 

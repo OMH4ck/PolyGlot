@@ -85,6 +85,7 @@ IRTYPE AntlrFrontend::GetIdentifierType() {
 
 IRTYPE AntlrFrontend::GetUnknownType() { return antlr4::kUnknown; }
 
+size_t AntlrFrontend::GetIRTypeNum() { return antlr4::GetRuleNum(); }
 /*
 IRTYPE BisonFrontend::GetStringLiteralType() { return kStringLiteral; }
 IRTYPE BisonFrontend::GetIntLiteralType() { return kIntLiteral; }

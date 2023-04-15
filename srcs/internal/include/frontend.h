@@ -45,6 +45,7 @@ class Frontend {
   virtual IRTYPE GetIdentifierType() = 0;
   virtual IRTYPE GetUnknownType() = 0;
   virtual FrontendType GetFrontendType() = 0;
+  virtual size_t GetIRTypeNum() = 0;
 };
 
 class AntlrFrontend : public Frontend {
@@ -59,6 +60,7 @@ class AntlrFrontend : public Frontend {
   IRTYPE GetIdentifierType() override;
   IRTYPE GetUnknownType() override;
   FrontendType GetFrontendType() override { return FrontendType::kANTLR; }
+  size_t GetIRTypeNum() override;
 
  private:
 };
