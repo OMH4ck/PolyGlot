@@ -1172,8 +1172,7 @@ bool TypeSystem::insert_definition(int scope_id, int type_id, string var_name) {
 namespace validation {
 ValidationError SemanticValidator::Validate(IRPtr &root) {
   old_type_system_.MarkFixMe(root);
-  std::shared_ptr<ScopeTree> scope_tree = BuildScopeTree(root);
-  scope_tree->BuildSymbolTables(root);
+  std::shared_ptr<ScopeTree> scope_tree = BuildScopeTreeWithSymbolTable(root);
   old_type_system_.SetScopeTree(scope_tree);
   // TODO: Fix this super ugly code.
   old_type_system_.SetRealTypeSystem(scope_tree->GetRealTypeSystem());
@@ -1184,6 +1183,13 @@ ValidationError SemanticValidator::Validate(IRPtr &root) {
     // TODO: return the correct error code
     return ValidationError::kNoSymbolToUse;
   }
+}
+
+std::shared_ptr<ScopeTree> SemanticValidator::BuildScopeTreeWithSymbolTable(
+    IRPtr &root) {
+  auto scope_tree = ScopeTree::BuildTree(root);
+  scope_tree->BuildSymbolTables(root);
+  return scope_tree;
 }
 
 std::string ExpressionGenerator::GenerateExpression(TypeID type, IRPtr &ir) {

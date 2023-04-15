@@ -693,7 +693,7 @@ void BuildScopeTreeImpl(IRPtr root, ScopeTree &scope_tree) {
   }
 }
 
-std::shared_ptr<ScopeTree> BuildScopeTree(IRPtr root) {
+std::shared_ptr<ScopeTree> ScopeTree::BuildTree(IRPtr root) {
   auto scope_tree = std::make_shared<ScopeTree>();
   BuildScopeTreeImpl(root, *scope_tree);
   return scope_tree;
