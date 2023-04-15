@@ -30,20 +30,20 @@
 #include "utils.h"
 #include "var_definition.h"
 
-std::string_view PolyGlotMutator::get_next_test_case() {
+std::string_view PolyGlotMutator::GetNextMutatedTestCase() {
   assert(!save_test_cases_.empty());
   current_input_ = save_test_cases_.back();
   save_test_cases_.pop_back();
   return current_input_;
 }
 
-void PolyGlotMutator::add_to_library(const char *mem) {
+void PolyGlotMutator::AddToIRLibrary(const char *mem) {
   if (auto ir = g_frontend->TranslateToIR(mem)) {
     g_mutator.AddIRToLibrary(ir);
   }
 }
 
-size_t PolyGlotMutator::generate(const char *test_case) {
+size_t PolyGlotMutator::Mutate(const char *test_case) {
   vector<polyglot::IRPtr> mutated_tree;
   auto root = g_frontend->TranslateToIR(test_case);
   if (root == nullptr) {
@@ -84,24 +84,19 @@ size_t PolyGlotMutator::generate(const char *test_case) {
   return save_test_cases_.size();
 }
 
-PolyGlotMutator *PolyGlotMutator::CreateInstance(
-    std::string_view config, polyglot::FrontendType frontend_type) {
-  std::shared_ptr<polyglot::Frontend> frontend = nullptr;
-  if (frontend_type == polyglot::FrontendType::kANTLR) {
-    frontend = std::make_shared<polyglot::AntlrFrontend>();
-  } else {
-    assert(false && "unknown frontend type");
-  }
+PolyGlotMutator *PolyGlotMutator::CreateInstance(std::string_view config) {
+  std::shared_ptr<polyglot::Frontend> frontend =
+      std::make_shared<polyglot::AntlrFrontend>();
 
   assert(polyglot::gen::Configuration::Initialize(config) &&
          "config file contains some errors!");
 
   PolyGlotMutator *mutator = new PolyGlotMutator(frontend);
-  mutator->initialize(config);
+  mutator->Initialize(config);
   return mutator;
 }
 
-void PolyGlotMutator::initialize(std::string_view config_path) {
+void PolyGlotMutator::Initialize(std::string_view config_path) {
   vector<polyglot::IRPtr> ir_set;
 
   std::string init_file_path =

@@ -33,8 +33,7 @@ extern "C" {
 
 void *afl_custom_init(afl_state_t *afl, unsigned int seed) {
   assert(getenv("POLYGLOT_CONFIG"));
-  auto result = PolyGlotMutator::CreateInstance(getenv("POLYGLOT_CONFIG"),
-                                                polyglot::FrontendType::kANTLR);
+  auto result = PolyGlotMutator::CreateInstance(getenv("POLYGLOT_CONFIG"));
   return result;
 }
 
@@ -47,22 +46,22 @@ u8 afl_custom_queue_new_entry(PolyGlotMutator *mutator,
   std::ifstream ifs((const char *)filename_new_queue);
   std::string content((std::istreambuf_iterator<char>(ifs)),
                       (std::istreambuf_iterator<char>()));
-  mutator->add_to_library(content.c_str());
+  mutator->AddToIRLibrary(content.c_str());
   return false;
 }
 
 unsigned int afl_custom_fuzz_count(PolyGlotMutator *mutator,
                                    const unsigned char *buf, size_t buf_size) {
   std::string test_case((const char *)buf, buf_size);
-  assert(!mutator->has_next_test_case());
-  return mutator->generate(test_case.c_str());
+  assert(!mutator->HasMutatedTextCase());
+  return mutator->Mutate(test_case.c_str());
 }
 
 size_t afl_custom_fuzz(PolyGlotMutator *mutator, uint8_t *buf, size_t buf_size,
                        u8 **out_buf, uint8_t *add_buf,
                        size_t add_buf_size,  // add_buf can be nullptr
                        size_t max_size) {
-  std::string_view current_input = mutator->get_next_test_case();
+  std::string_view current_input = mutator->GetNextMutatedTestCase();
   *out_buf = (u8 *)current_input.data();
   return current_input.size();
 }

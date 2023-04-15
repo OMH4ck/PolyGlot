@@ -32,19 +32,18 @@
 #include "typesystem.h"
 class PolyGlotMutator {
  public:
-  void add_to_library(const char *mem);
-  size_t generate(const char *test_case);
-  std::string_view get_next_test_case();
-  bool has_next_test_case() const { return !save_test_cases_.empty(); }
+  void AddToIRLibrary(const char *mem);
+  size_t Mutate(const char *test_case);
+  std::string_view GetNextMutatedTestCase();
+  bool HasMutatedTextCase() const { return !save_test_cases_.empty(); }
   // const std::string &current_input() const { return current_input_; }
 
-  static PolyGlotMutator *CreateInstance(std::string_view config,
-                                         polyglot::FrontendType frontend_type);
+  static PolyGlotMutator *CreateInstance(std::string_view config);
 
  private:
   PolyGlotMutator(std::shared_ptr<polyglot::Frontend> frontend)
       : g_frontend(frontend), g_mutator(frontend), g_validator(frontend){};
-  void initialize(std::string_view);
+  void Initialize(std::string_view);
   std::shared_ptr<polyglot::Frontend> g_frontend;
   polyglot::mutation::Mutator g_mutator;
   std::string current_input_;
