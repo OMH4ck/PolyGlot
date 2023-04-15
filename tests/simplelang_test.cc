@@ -219,8 +219,8 @@ TEST(TypeSystemTest, ValidateFixDefineUse) {
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
-  if (!gen::Configuration::Initialize(
-          GetRootPath() + "/grammars/simplelang_grammar/semantic.yml")) {
+  if (!gen::Configuration::Initialize(GetRootPath() +
+                                      "/grammars/simplelang/semantic.yml")) {
     std::cerr << "Failed to initialize configuration.\n";
     exit(-1);
   }

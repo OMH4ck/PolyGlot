@@ -1,3 +1,6 @@
 [submodule "AFLplusplus"]
 	path = AFLplusplus
 	url = https://github.com/AFLplusplus/AFLplusplus.git
+[submodule "grammars"]
+	path = grammars
+	url = https://github.com/OMH4ck/PolyGlot-Grammar
