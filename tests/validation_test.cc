@@ -72,6 +72,38 @@ TEST(ValidationTest, ScopeTreeBuildCorrectly) {
   ASSERT_LT(def_a.value().statement_id, def_b.value().statement_id);
 }
 
+TEST(ValidationTest, CollectFunctionDefintionCorrectly) {
+  std::string_view test_case =
+      "INT FUNCTION myfunc(INT a, FLOAT b) { INT c = a + b; }";
+
+  auto frontend = std::make_shared<AntlrFrontend>();
+  auto root = frontend->TranslateToIR(test_case.data());
+  // program_root->deep_delete();
+
+  validation::SemanticValidator validator(frontend);
+  auto scope_tree = validator.BuildScopeTreeWithSymbolTable(root);
+
+  ScopePtr global_scope = scope_tree->GetScopeRoot();
+
+  const SymbolTable& global_symbol_table = global_scope->GetSymbolTable();
+  auto func_def = global_symbol_table.GetDefinition("myfunc");
+
+  auto type_system = scope_tree->GetRealTypeSystem();
+
+  ASSERT_TRUE(func_def.has_value());
+  ASSERT_TRUE(type_system->IsFunctionType(func_def.value().type));
+
+  auto function_type = type_system->GetFunctionType(func_def.value().type);
+  ASSERT_TRUE(function_type->return_type_ ==
+              type_system->GetTypeIDByStr("INT"));
+  ASSERT_EQ(function_type->arg_num(), 2);
+  ASSERT_EQ(function_type->v_arg_types_[0], type_system->GetTypeIDByStr("INT"));
+  ASSERT_EQ(function_type->v_arg_types_[1],
+            type_system->GetTypeIDByStr("FLOAT"));
+  ASSERT_EQ(function_type->v_arg_names_[0], "a");
+  ASSERT_EQ(function_type->v_arg_names_[1], "b");
+}
+
 /*
 // TODO: This is a flaky test, we need to fix it.
 TEST(TypeSystemTest, ValidateFixDefineUse) {

@@ -118,9 +118,10 @@ class FunctionType : public VarType {
   TypeID return_type_;
   // map<int, std::vector<std::string>> arguments_; // Should be IR*?
   // std::vector<pair<TYPEID, std::string>> v_arguments_;
-  std::vector<IRPtr> v_arguments_;
+  // std::vector<IRPtr> v_arguments_;
+  std::vector<std::string> v_arg_names_;
   std::vector<TypeID> v_arg_types_;
-  int arg_num();
+  int arg_num() const { return v_arg_types_.size(); }
   std::string get_arg_by_order(int);
   std::string get_arg_by_type(TypeID);
   virtual bool is_pointer_type() { return false; }
@@ -170,9 +171,9 @@ class RealTypeSystem {
       const;
   bool IsBuiltinType(TypeID type_id);
   bool CanDeriveFrom(TypeID dtype, TypeID btype);
-  std::shared_ptr<FunctionType> CreateFunctionType(std::string &function_name,
-                                                   TypeID return_type,
-                                                   std::vector<TypeID> &args);
+  std::shared_ptr<FunctionType> CreateFunctionType(
+      std::string &function_name, TypeID return_type, std::vector<TypeID> &args,
+      std::vector<std::string> &arg_names);
 
   // TODO: Refactor the signature of this function. It should accept a vector of
   // member types and names along with the name of the structure.
