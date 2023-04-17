@@ -104,6 +104,39 @@ TEST(ValidationTest, CollectFunctionDefintionCorrectly) {
   ASSERT_EQ(function_type->v_arg_names_[1], "b");
 }
 
+TEST(ValidationTest, CollectSimpleClassDefintionCorrectly) {
+  std::string_view test_case = "STRUCT myclass { INT a; FLOAT b; }; ";
+
+  auto frontend = std::make_shared<AntlrFrontend>();
+  auto root = frontend->TranslateToIR(test_case.data());
+  ASSERT_TRUE(root != nullptr);
+  // program_root->deep_delete();
+
+  validation::SemanticValidator validator(frontend);
+  auto scope_tree = validator.BuildScopeTreeWithSymbolTable(root);
+
+  ScopePtr global_scope = scope_tree->GetScopeRoot();
+
+  const SymbolTable& global_symbol_table = global_scope->GetSymbolTable();
+  auto class_def = global_symbol_table.GetDefinition("myclass");
+
+  auto type_system = scope_tree->GetRealTypeSystem();
+  ASSERT_TRUE(class_def.has_value());
+  ASSERT_TRUE(type_system->IsCompoundType(class_def.value().type));
+
+  auto compound_type = type_system->GetCompoundType(class_def.value().type);
+
+  TypeID float_type = type_system->GetTypeIDByStr("FLOAT");
+  TypeID int_type = type_system->GetTypeIDByStr("INT");
+  ASSERT_EQ(compound_type->v_members_.size(), 2);
+  ASSERT_TRUE(compound_type->v_members_.contains(float_type));
+  ASSERT_TRUE(compound_type->v_members_.contains(int_type));
+  ASSERT_EQ(compound_type->v_members_[float_type].size(), 1);
+  ASSERT_EQ(compound_type->v_members_[int_type].size(), 1);
+  ASSERT_EQ(compound_type->v_members_[float_type][0], "b");
+  ASSERT_EQ(compound_type->v_members_[int_type][0], "a");
+}
+
 /*
 // TODO: This is a flaky test, we need to fix it.
 TEST(TypeSystemTest, ValidateFixDefineUse) {

@@ -27,6 +27,7 @@
 #include <stack>
 
 #include "config_misc.h"
+#include "gsl/assert"
 #include "ir.h"
 #include "spdlog/spdlog.h"
 #include "typesystem.h"
@@ -180,7 +181,7 @@ void RealTypeSystem::init_basic_types() {
     auto new_id = gen_type_id();
     auto ptr = make_shared<VarType>();
     ptr->type_id_ = new_id;
-    ptr->type_name_ = line;
+    ptr->name = line;
     basic_types[line] = ptr;
     basic_types_set.insert(new_id);
     type_map[new_id] = ptr;
@@ -291,11 +292,11 @@ bool RealTypeSystem::IsCompoundType(TypeID type_id) {
 
 TypeID RealTypeSystem::get_compound_type_id_by_string(const string &s) {
   for (auto k : all_compound_types_) {
-    if (type_map[k]->type_name_ == s) return k;
+    if (type_map[k]->name == s) return k;
   }
 
   for (auto k : all_internal_compound_types) {
-    if (internal_type_map[k]->type_name_ == s) return k;
+    if (internal_type_map[k]->name == s) return k;
   }
 
   return SpecialType::kNotExist;
@@ -327,11 +328,11 @@ TypeID RealTypeSystem::GetBasicTypeIDByStr(const string &s) {
 
 TypeID RealTypeSystem::GetTypeIDByStr(const string &s) {
   for (auto iter : type_map) {
-    if (iter.second->type_name_ == s) return iter.first;
+    if (iter.second->name == s) return iter.first;
   }
 
   for (auto iter : internal_type_map) {
-    if (iter.second->type_name_ == s) return iter.first;
+    if (iter.second->name == s) return iter.first;
   }
   return SpecialType::kNotExist;
 }
@@ -361,7 +362,7 @@ shared_ptr<VarType> RealTypeSystem::make_basic_type(TypeID id,
                                                     const string &s) {
   auto res = make_shared<VarType>();
   res->type_id_ = id;
-  res->type_name_ = s;
+  res->name = s;
 
   return res;
 }
@@ -408,7 +409,7 @@ shared_ptr<CompoundType> RealTypeSystem::CreateCompoundTypeAtScope(
   if (res == nullptr) {
     res = make_shared<CompoundType>();
     res->type_id_ = gen_type_id();
-    res->type_name_ = structure_name;
+    res->name = structure_name;
     if (is_internal_obj_setup == true) {
       all_internal_compound_types.insert(res->type_id_);
       internal_type_map[res->type_id_] = res;
@@ -450,8 +451,7 @@ shared_ptr<CompoundType> RealTypeSystem::CreateCompoundTypeAtScope(
       res->v_members_[var_type].push_back(var_name);
       if (DBG)
         cout << "[struct member] add member: " << var_name
-             << " type: " << var_type << " to structure " << res->type_name_
-             << endl;
+             << " type: " << var_type << " to structure " << res->name << endl;
     }
   }
 
@@ -463,7 +463,7 @@ shared_ptr<FunctionType> RealTypeSystem::CreateFunctionType(
     std::vector<std::string> &arg_names) {
   auto res = make_shared<FunctionType>();
   res->type_id_ = gen_type_id();
-  res->type_name_ = function_name;
+  res->name = function_name;
   res->v_arg_names_ = arg_names;
 
   res->return_type_ = return_type;
@@ -710,7 +710,7 @@ int RealTypeSystem::GeneratePointerType(int original_type, int pointer_level) {
 
   auto cur_type = make_shared<PointerType>();
   cur_type->type_id_ = gen_type_id();
-  cur_type->type_name_ = "pointer_typeid_" + std::to_string(cur_type->type_id_);
+  cur_type->name = "pointer_typeid_" + std::to_string(cur_type->type_id_);
 
   int base_type = -1;
   if (pointer_level == 1)
@@ -771,8 +771,7 @@ int RealTypeSystem::GetOrCreatePointerType(int type) {
     // found original type but no this level reference
     auto cur_type = make_shared<PointerType>();
     cur_type->type_id_ = gen_type_id();
-    cur_type->type_name_ =
-        "pointer_typeid_" + std::to_string(cur_type->type_id_);
+    cur_type->name = "pointer_typeid_" + std::to_string(cur_type->type_id_);
     cur_type->orig_type_ = type;
     cur_type->reference_level_ = level + 1;
     cur_type->basic_type_ = orig_type;
@@ -789,8 +788,7 @@ int RealTypeSystem::GetOrCreatePointerType(int type) {
     // new original type
     auto cur_type = make_shared<PointerType>();
     cur_type->type_id_ = gen_type_id();
-    cur_type->type_name_ =
-        "pointer_typeid_" + std::to_string(cur_type->type_id_);
+    cur_type->name = "pointer_typeid_" + std::to_string(cur_type->type_id_);
     cur_type->orig_type_ = type;
     cur_type->reference_level_ = 1;
     cur_type->basic_type_ = type;
@@ -907,7 +905,8 @@ bool ScopeTree::create_symbol_table(IRPtr root) {
 bool ScopeTree::collect_definition(IRPtr cur) {
   bool res = false;
   if (cur->GetDataType() == kDataVarDefine ||
-      cur->GetDataType() == kDataFunctionType) {
+      cur->GetDataType() == kDataFunctionType ||
+      cur->GetDataType() == kDataClassType) {
     auto define_type = find_define_type(cur);
 
     switch (define_type) {
@@ -918,16 +917,12 @@ bool ScopeTree::collect_definition(IRPtr cur) {
 
       case kDataClassType:
         if (DBG) cout << "kDataClassType" << endl;
-        if (gen::Configuration::GetInstance().IsWeakType()) {
-          collect_structure_definition_wt(cur, cur);
-        } else {
-          collect_structure_definition(cur, cur);
-        }
+        CollectStructureDefinition(cur, cur);
         return true;
 
       case kDataFunctionType:
         SPDLOG_INFO("function definition: {}", cur->ToString());
-        collect_function_definition(cur);
+        CollectFunctionDefinition(cur);
         return true;
       default:
         CollectSimpleVariableDefinition(cur);
@@ -1124,6 +1119,7 @@ std::optional<SymbolTable> ScopeTree::collect_simple_variable_defintion(
 }
 */
 
+/*
 void ScopeTree::collect_structure_definition_wt(IRPtr cur, IRPtr root) {
   auto cur_scope = GetScopeById(cur->GetScopeID());
 
@@ -1164,135 +1160,163 @@ void ScopeTree::collect_structure_definition_wt(IRPtr cur, IRPtr root) {
       collect_structure_definition_wt(cur->RightChild(), root);
   }
 }
+*/
 
-void ScopeTree::collect_structure_definition(IRPtr cur, IRPtr root) {
-  if (cur->GetDataType() == kDataClassType) {
-    SPDLOG_DEBUG("to_string: {}", cur->ToString());
-    SPDLOG_DEBUG("[collect_structure_definition] data_type_ = kDataClassType");
-    auto cur_scope = GetScopeById(cur->GetScopeID());
-
-    if (isDefine(cur->GetDataFlag())) {  // with structure define
-      if (DBG) cout << "data_flag = Define" << endl;
-      vector<IRPtr> structure_name, strucutre_variable_name, structure_body;
-      search_by_data_type(cur, kDataClassName, structure_name);
-
-      auto struct_body = search_by_data_type(cur, kDataStructBody);
-      assert(struct_body);
-
-      shared_ptr<CompoundType> new_compound;
-      // type_fix_framework(struct_body);
-      string current_compound_name;
-      if (structure_name.size() > 0) {
-        if (DBG) cout << "not anonymous" << endl;
-        // not anonymous
-        new_compound = real_type_system_->CreateCompoundTypeAtScope(
-            GetScopeById(struct_body->GetScopeID()),
-            structure_name[0]->GetString());
-        current_compound_name = structure_name[0]->GetString();
-      } else {
-        if (DBG) cout << "anonymous" << endl;
-        // anonymous structure
-        static int anonymous_idx = 1;
-        string compound_name = string("ano") + std::to_string(anonymous_idx++);
-        new_compound = real_type_system_->CreateCompoundTypeAtScope(
-            GetScopeById(struct_body->GetScopeID()), compound_name);
-        current_compound_name = compound_name;
-      }
-      create_symbol_table(struct_body);
-      auto compound_id = new_compound->type_id_;
-      new_compound = real_type_system_->CreateCompoundTypeAtScope(
-          GetScopeById(struct_body->GetScopeID()), current_compound_name);
-
-      // get all class variable define unit by finding kDataDeclarator.
-      vector<IRPtr> strucutre_variable_unit;
-      vector<IRPtr> structure_pointer_var;
-      search_by_data_type(root, kDataDeclarator, strucutre_variable_unit,
-                          kDataStructBody);
-      if (DBG) cout << strucutre_variable_unit.size() << endl;
-      if (DBG) cout << root->ToString() << endl;
-      // if (DBG) cout << frontend_->GetIRTypeStr(root->type) << endl;
-
-      // for each class variable define unit, collect all kDataPointer.
-      // it will be the reference level, if empty, it is not a pointer
-      for (auto var_define_unit : strucutre_variable_unit) {
-        search_by_data_type(var_define_unit, kDataPointer,
-                            structure_pointer_var, kDataWhatever, true);
-        auto var_name = search_by_data_type(var_define_unit, kDataVarName);
-        assert(var_name);
-        if (structure_pointer_var.size() == 0) {  // not a pointer
-          cur_scope->AddDefinition(var_name->GetString(), compound_id,
-                                   var_name->GetStatementID());
-          if (DBG)
-            cout << "[struct]not a pointer, name: " << var_name->GetString()
-                 << endl;
-        } else {
-          auto new_type = real_type_system_->GeneratePointerType(
-              compound_id, structure_pointer_var.size());
-          cur_scope->AddDefinition(var_name->GetString(), new_type,
-                                   var_name->GetStatementID());
-          if (DBG)
-            cout << "[struct]a pointer in level "
-                 << structure_pointer_var.size()
-                 << ", name: " << var_name->GetString() << endl;
-        }
-        structure_pointer_var.clear();
-      }
-    } else if (isUse(cur->GetDataFlag())) {  // only strucutre variable define
-      if (DBG) cout << "data_flag = Use" << endl;
-      vector<IRPtr> structure_name, strucutre_variable_name;
-      search_by_data_type(cur, kDataClassName, structure_name);
-      // search_by_data_type(root, kDataVarName, strucutre_variable_name,
-      // kDataStructBody);
-
-      assert(structure_name.size());
-      auto compound_id =
-          real_type_system_->GetTypeIDByStr(structure_name[0]->GetString());
-      if (DBG) {
-        cout << structure_name[0]->GetString() << endl;
-        cout << "TYpe id: " << compound_id << endl;
-      }
-      if (compound_id == 0) return;
-      // if(compound_id == 0)
-      // forward_add_compound_type(structure_name[0]->str_val_);
-
-      // get all class variable define unit by finding kDataDeclarator.
-      vector<IRPtr> strucutre_variable_unit;
-      vector<IRPtr> structure_pointer_var;
-      search_by_data_type(root, kDataDeclarator, strucutre_variable_unit,
-                          kDataStructBody);
-      if (DBG) cout << strucutre_variable_unit.size() << endl;
-      if (DBG) cout << root->ToString() << endl;
-      // if (DBG) cout << frontend_->GetIRTypeStr(root->type) << endl;
-
-      // for each class variable define unit, collect all kDataPointer.
-      // it will be the reference level, if empty, it is not a pointer
-      for (auto var_define_unit : strucutre_variable_unit) {
-        search_by_data_type(var_define_unit, kDataPointer,
-                            structure_pointer_var, kDataWhatever, true);
-        auto var_name = search_by_data_type(var_define_unit, kDataVarName);
-        assert(var_name);
-        if (structure_pointer_var.size() == 0) {  // not a pointer
-          cur_scope->AddDefinition(var_name->GetString(), compound_id,
-                                   var_name->GetStatementID());
-          SPDLOG_DEBUG("[struct]not a pointer, name: {}",
-                       var_name->GetString());
-        } else {
-          auto new_type = real_type_system_->GeneratePointerType(
-              compound_id, structure_pointer_var.size());
-          cur_scope->AddDefinition(var_name->GetString(), new_type,
-                                   var_name->GetStatementID());
-          SPDLOG_DEBUG("[struct]a pointer in level {}, name: {}",
-                       structure_pointer_var.size(), var_name->GetString());
-        }
-      }
-      structure_pointer_var.clear();
-    }
-  } else {
-    if (cur->HasLeftChild())
-      collect_structure_definition(cur->LeftChild(), root);
-    if (cur->HasRightChild())
-      collect_structure_definition(cur->RightChild(), root);
+std::shared_ptr<CompoundType> RealTypeSystem::CreateCompoundType(
+    std::string &structure_name, std::vector<TypeID> &members,
+    std::vector<std::string> &member_names) {
+  Ensures(members.size() == member_names.size());
+  auto new_compound = std::make_shared<CompoundType>();
+  new_compound->type_id_ = gen_type_id();
+  new_compound->name = structure_name;
+  for (size_t i = 0; i < members.size(); i++) {
+    new_compound->v_members_[members[i]].push_back(member_names[i]);
   }
+  type_map[new_compound->type_id_] = new_compound;
+  all_compound_types_.insert(new_compound->type_id_);
+  return new_compound;
+}
+
+void ScopeTree::CollectStructureDefinition(IRPtr &cur, IRPtr &root) {
+  Ensures(cur->GetDataType() == kDataClassType);
+  Ensures(isDefine(cur->GetDataFlag()));
+  SPDLOG_DEBUG("to_string: {}", cur->ToString());
+  SPDLOG_DEBUG("[collect_structure_definition] data_type_ = kDataClassType");
+  auto cur_scope = GetScopeById(cur->GetScopeID());
+
+  vector<IRPtr> structure_body;
+  IRPtr stucture_name = search_by_data_type(cur, kDataClassName);
+
+  auto struct_body = search_by_data_type(cur, kDataStructBody);
+  assert(struct_body && "A structure definition should have body");
+
+  // type_fix_framework(struct_body);
+  string current_compound_name;
+  if (stucture_name) {
+    // not anonymous
+    std::string structure_name_str = stucture_name->GetString();
+    Trim(structure_name_str);
+    SPDLOG_INFO("not anonymous {}", structure_name_str);
+    current_compound_name = structure_name_str;
+  } else {
+    assert(false && "anonymous structure not supported yet");
+    // TODO: Handle anonymous structure
+    /*
+    if (DBG) cout << "anonymous" << endl;
+    // anonymous structure
+    static int anonymous_idx = 1;
+    string compound_name = string("ano") + std::to_string(anonymous_idx++);
+    new_compound = real_type_system_->CreateCompoundTypeAtScope(
+        GetScopeById(struct_body->GetScopeID()), compound_name);
+    current_compound_name = compound_name;
+    */
+  }
+
+  // TODO: Handle self-reference in definition
+  // For example: struct A { struct A *a; };
+  create_symbol_table(struct_body);
+  auto scope_ptr = GetScopeById(struct_body->GetScopeID());
+  std::vector<std::string> member_names;
+  std::vector<TypeID> member_types;
+  for (const auto &member : scope_ptr->GetSymbolTable().GetTable()) {
+    for (const auto &def : member.second) {
+      member_names.push_back(def.name);
+      member_types.push_back(def.type);
+      SPDLOG_INFO("member name: {}, type: {}", def.name, def.type);
+    }
+  }
+  auto new_class = real_type_system_->CreateCompoundType(
+      current_compound_name, member_types, member_names);
+  auto current_scope = GetScopeById(cur->GetScopeID());
+  current_scope->AddDefinition(current_compound_name, new_class->type_id_,
+                               cur->GetStatementID());
+
+  /*
+  // get all class variable define unit by finding kDataDeclarator.
+  vector<IRPtr> strucutre_variable_unit;
+  vector<IRPtr> structure_pointer_var;
+  search_by_data_type(root, kDataDeclarator, strucutre_variable_unit,
+                      kDataStructBody);
+  if (DBG) cout << strucutre_variable_unit.size() << endl;
+  if (DBG) cout << root->ToString() << endl;
+  // if (DBG) cout << frontend_->GetIRTypeStr(root->type) << endl;
+
+  // for each class variable define unit, collect all kDataPointer.
+  // it will be the reference level, if empty, it is not a pointer
+  for (auto var_define_unit : strucutre_variable_unit) {
+    search_by_data_type(var_define_unit, kDataPointer, structure_pointer_var,
+                        kDataWhatever, true);
+    auto var_name = search_by_data_type(var_define_unit, kDataVarName);
+    assert(var_name);
+    if (structure_pointer_var.size() == 0) {  // not a pointer
+      cur_scope->AddDefinition(var_name->GetString(), compound_id,
+                               var_name->GetStatementID());
+      if (DBG)
+        cout << "[struct]not a pointer, name: " << var_name->GetString()
+             << endl;
+    } else {
+      auto new_type = real_type_system_->GeneratePointerType(
+          compound_id, structure_pointer_var.size());
+      cur_scope->AddDefinition(var_name->GetString(), new_type,
+                               var_name->GetStatementID());
+      if (DBG)
+        cout << "[struct]a pointer in level " << structure_pointer_var.size()
+             << ", name: " << var_name->GetString() << endl;
+    }
+    structure_pointer_var.clear();
+  }
+  */
+  /*
+  else if (isUse(cur->GetDataFlag())) {  // only strucutre variable define
+    if (DBG) cout << "data_flag = Use" << endl;
+    vector<IRPtr> structure_name, strucutre_variable_name;
+    search_by_data_type(cur, kDataClassName, structure_name);
+    // search_by_data_type(root, kDataVarName, strucutre_variable_name,
+    // kDataStructBody);
+
+    assert(structure_name.size());
+    auto compound_id =
+        real_type_system_->GetTypeIDByStr(structure_name[0]->GetString());
+    if (DBG) {
+      cout << structure_name[0]->GetString() << endl;
+      cout << "TYpe id: " << compound_id << endl;
+    }
+    if (compound_id == 0) return;
+    // if(compound_id == 0)
+    // forward_add_compound_type(structure_name[0]->str_val_);
+
+    // get all class variable define unit by finding kDataDeclarator.
+    vector<IRPtr> strucutre_variable_unit;
+    vector<IRPtr> structure_pointer_var;
+    search_by_data_type(root, kDataDeclarator, strucutre_variable_unit,
+                        kDataStructBody);
+    if (DBG) cout << strucutre_variable_unit.size() << endl;
+    if (DBG) cout << root->ToString() << endl;
+    // if (DBG) cout << frontend_->GetIRTypeStr(root->type) << endl;
+
+    // for each class variable define unit, collect all kDataPointer.
+    // it will be the reference level, if empty, it is not a pointer
+    for (auto var_define_unit : strucutre_variable_unit) {
+      search_by_data_type(var_define_unit, kDataPointer, structure_pointer_var,
+                          kDataWhatever, true);
+      auto var_name = search_by_data_type(var_define_unit, kDataVarName);
+      assert(var_name);
+      if (structure_pointer_var.size() == 0) {  // not a pointer
+        cur_scope->AddDefinition(var_name->GetString(), compound_id,
+                                 var_name->GetStatementID());
+        SPDLOG_DEBUG("[struct]not a pointer, name: {}", var_name->GetString());
+      } else {
+        auto new_type = real_type_system_->GeneratePointerType(
+            compound_id, structure_pointer_var.size());
+        cur_scope->AddDefinition(var_name->GetString(), new_type,
+                                 var_name->GetStatementID());
+        SPDLOG_DEBUG("[struct]a pointer in level {}, name: {}",
+                     structure_pointer_var.size(), var_name->GetString());
+      }
+    }
+    structure_pointer_var.clear();
+  }
+  */
 }
 
 /*
@@ -1354,7 +1378,7 @@ void ScopeTree::collect_function_definition_wt(IRPtr cur) {
 }
 */
 
-void ScopeTree::collect_function_definition(IRPtr cur) {
+void ScopeTree::CollectFunctionDefinition(IRPtr &cur) {
   auto return_value_type_ir =
       search_by_data_type(cur, kDataFunctionReturnValue, kDataFunctionBody);
   auto function_name_ir =
@@ -1424,7 +1448,7 @@ void ScopeTree::collect_function_definition(IRPtr cur) {
   for (size_t i = 0; i < arguments.size(); i++) {
     SPDLOG_INFO("Function arg: {}", arg_names[i]);
     SPDLOG_INFO("Function arg type: {}",
-                real_type_system_->GetTypePtrByID(arg_types[i])->type_name_);
+                real_type_system_->GetTypePtrByID(arg_types[i])->name);
   }
 
   auto cur_scope = GetScopeById(cur->GetScopeID());
@@ -1433,7 +1457,7 @@ void ScopeTree::collect_function_definition(IRPtr cur) {
         function_name_str, return_type, arg_types, arg_names);
     if (function_ptr == nullptr || function_name_ir == nullptr) return;
     // if(DBG) cout << cur_scope << ", " << function_ptr << endl;
-    cur_scope->AddDefinition(function_ptr->type_name_, function_ptr->type_id_,
+    cur_scope->AddDefinition(function_ptr->name, function_ptr->type_id_,
                              function_name_ir->GetStatementID());
   }
 
