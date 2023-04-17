@@ -24,6 +24,7 @@
 #include "generated_header.h"
 // #include "cus.h"
 #include <iostream>
+#include <memory>
 #include <optional>
 #include <stack>
 #include <string_view>
@@ -206,18 +207,41 @@ IRPtr TranslateNode(tree::ParseTree* node, PolyGlotGrammarParser* parser) {
 }
 
 IRPtr TranslateToIR(std::string input_program) {
+  static size_t s_counter = 0;
+  static PolyGlotGrammarParser s_parser(nullptr);
+  static atn::ParserATNSimulator* s_parser_interpreter;
+  static std::vector<antlr4::dfa::DFA>* s_decision_to_dfa;
+  static std::unique_ptr<antlr4::atn::PredictionContextCache> s_cache;
+  static bool init = false;
+  if (!init) {
+    init = true;
+    s_cache = std::make_unique<antlr4::atn::PredictionContextCache>();
+    auto parser_interpreter =
+        s_parser.getInterpreter<atn::ParserATNSimulator>();
+    s_decision_to_dfa = &parser_interpreter->decisionToDFA;
+    s_parser_interpreter = new atn::ParserATNSimulator(
+        &s_parser, s_parser.getATN(), *s_decision_to_dfa, *s_cache);
+    s_parser.setInterpreter(s_parser_interpreter);
+  }
   ANTLRInputStream input(input_program);
   PolyGlotGrammarLexer lexer(&input);
   CommonTokenStream tokens(&lexer);
-
   tokens.fill();
+  s_parser.setTokenStream(&tokens);
 
-  PolyGlotGrammarParser parser(&tokens);
-  tree::ParseTree* tree = parser.program();
-  if (parser.getNumberOfSyntaxErrors() > 0) {
+  tree::ParseTree* tree = s_parser.program();
+  if (s_parser.getNumberOfSyntaxErrors() > 0) {
     return nullptr;
   }
-  IRPtr ir = TranslateNode(tree, &parser);
+  if (s_counter++ > 10000) {
+    s_counter = 0;
+    s_parser_interpreter->clearDFA();
+    s_cache = std::make_unique<antlr4::atn::PredictionContextCache>();
+    s_parser_interpreter = new atn::ParserATNSimulator(
+        &s_parser, s_parser.getATN(), *s_decision_to_dfa, *s_cache);
+    s_parser.setInterpreter(s_parser_interpreter);
+  }
+  IRPtr ir = TranslateNode(tree, &s_parser);
   // std::cout << ir->to_string() << std::endl;
   return ir;
 }
