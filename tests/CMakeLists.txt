@@ -29,7 +29,12 @@ endif()
 include(GoogleTest)
 
 # if LANG equals "simpletest" then we are testing the simpletest language
-add_executable(simplelang_test simplelang_test.cc)
-target_link_libraries(simplelang_test GTest::gtest_main polyglot_lib)
-target_link_options(simplelang_test PRIVATE -fsanitize=address)
-gtest_discover_tests(simplelang_test)
+add_executable(parse_mutate_test parse_mutate_test.cc)
+target_link_libraries(parse_mutate_test GTest::gtest_main polyglot_lib)
+target_link_options(parse_mutate_test PRIVATE -fsanitize=address)
+gtest_discover_tests(parse_mutate_test)
+
+add_executable(validation_test validation_test.cc)
+target_link_libraries(validation_test GTest::gtest_main polyglot_lib spdlog::spdlog)
+target_link_options(validation_test PRIVATE -fsanitize=address)
+gtest_discover_tests(validation_test)

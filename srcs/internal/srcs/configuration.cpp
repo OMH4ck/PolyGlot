@@ -66,6 +66,7 @@ bool Configuration::Init(std::string_view config_file_path) {
       assert(false);
       return false;
     }
+    /*
     if (config["FixIRType"]) {
       fix_ir_type_ =
           frontend_->GetIRTypeByStr(config["FixIRType"].as<std::string>());
@@ -76,6 +77,7 @@ bool Configuration::Init(std::string_view config_file_path) {
         assert(false);
       }
     }
+    */
     if (config["InitFileDir"]) {
       init_dir_path_ = config["InitFileDir"].as<std::string>();
     } else {

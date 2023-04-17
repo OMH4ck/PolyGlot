@@ -132,12 +132,12 @@ vector<IRPtr> Mutator::MutateIRs(vector<IRPtr> &irs_to_mutate) {
     if (ir == root || !should_mutate(ir)) continue;
     // std::cout << "Mutating one, " << irs_to_mutate.size() << ", idx: " <<
     // counter << std::endl;
-    spdlog::debug("Mutating type: {}", frontend_->GetIRTypeStr(ir->Type()));
+    SPDLOG_DEBUG("Mutating type: {}", frontend_->GetIRTypeStr(ir->Type()));
     vector<IRPtr> new_variants = MutateIR(ir);
 
     for (IRPtr i : new_variants) {
       IRPtr new_ir_tree = deep_copy_with_record(root, ir);
-      spdlog::debug("NEW type: {}", frontend_->GetIRTypeStr(i->Type()));
+      SPDLOG_DEBUG("NEW type: {}", frontend_->GetIRTypeStr(i->Type()));
 
       replace(new_ir_tree, this->record_, i);
 

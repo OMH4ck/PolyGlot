@@ -57,7 +57,9 @@ TEST_P(ParserTest, ParseValidTestCaseReturnNotNull) {
   std::string_view test_case = GetParam();
 
   auto frontend = std::make_shared<AntlrFrontend>();
-  ASSERT_TRUE(frontend->Parsable(test_case.data()));
+  while (true) {
+    ASSERT_TRUE(frontend->Parsable(test_case.data()));
+  }
   // program_root->deep_delete();
 }
 
@@ -219,8 +221,8 @@ TEST(TypeSystemTest, ValidateFixDefineUse) {
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
-  if (!gen::Configuration::Initialize(GetRootPath() +
-                                      "/grammars/simplelang/semantic.yml")) {
+  if (!gen::Configuration::Initialize(
+          GetRootPath() + "/grammars/simplelang/semantic_weak_type.yml")) {
     std::cerr << "Failed to initialize configuration.\n";
     exit(-1);
   }

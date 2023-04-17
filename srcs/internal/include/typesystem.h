@@ -248,6 +248,14 @@ class TypeInferer {
         real_type_system_(scope_tree_->GetRealTypeSystem()) {}
   std::shared_ptr<InferenceResult> Infer(
       IRPtr &root, int scope_type = SpecialType::kNotExist);
+
+  std::shared_ptr<InferenceResult> GetResult() {
+    return std::make_shared<InferenceResult>(inference_result_);
+  }
+  void AddCandidateType(IRPtr &root, TypeID result, TypeID left, TypeID right) {
+    inference_result_.GetCandidates(root)[result].push_back(
+        {result, left, right});
+  }
   std::shared_ptr<CandidateTypes> GetCandidateTypes(IRPtr &root) {
     return inference_result_.GetCandidateTypes(root);
   }
@@ -376,22 +384,33 @@ class Validator {
 class SemanticValidator : public Validator {
  public:
   SemanticValidator(std::shared_ptr<Frontend> frontend)
-      : old_type_system_(frontend) {}
+      : frontend_(frontend), old_type_system_(frontend) {}
   ValidationError Validate(IRPtr &root) override;
+
+  struct FixDecision {
+    IRPtr ir;
+    IRTYPE type;
+  };
 
   // This validation consists of three steps:
   // 1. It builds the sysmbol table in each scope, which are stored in a
   // `ScopeTree`.
   // 2. It infers the types of the IRs that need fixing, which needs the help of
   // the symbol table.
-  // 3. Fix the IRs.
+  // 3. Select a fix strategy for each IR based on its inferred type and symbol.
+  // Assign a usable type to each IR.
+  // 4. Fix the IRs.
   std::shared_ptr<ScopeTree> BuildScopeTreeWithSymbolTable(IRPtr &root);
   std::shared_ptr<InferenceResult> InferType(
       IRPtr &root, std::shared_ptr<ScopeTree> scope_tree);
-  bool Fix(IRPtr &root, std::shared_ptr<InferenceResult> inference_result,
+  std::vector<FixDecision> SelectFixStrategy(
+      IRPtr &root, std::shared_ptr<InferenceResult> inference_result,
+      std::shared_ptr<ScopeTree> scope_tree);
+  bool Fix(IRPtr &root, std::vector<FixDecision> &fix_decisions,
            std::shared_ptr<ScopeTree> scope_tree);
 
  private:
+  std::shared_ptr<Frontend> frontend_;
   TypeSystem old_type_system_;
 };
 }  // namespace validation

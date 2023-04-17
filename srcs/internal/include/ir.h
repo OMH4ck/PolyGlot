@@ -36,7 +36,7 @@
 using namespace std;
 namespace polyglot {
 
-constexpr std::string_view kFixMe = "FIXME";
+constexpr std::string_view FIXMETAG = "FIXME";
 using IRTYPE = unsigned int;
 using StatementID = unsigned long;
 using ScopeID = unsigned long;

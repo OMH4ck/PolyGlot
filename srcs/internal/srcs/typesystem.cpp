@@ -86,20 +86,20 @@ static set<TypeID> current_define_types;
 
 /*
 void TypeSystem::debug() {
-  spdlog::info("---------debug-----------");
-  spdlog::info("all_internal_compound_types: {}",
+  SPDLOG_DEBUG("---------debug-----------");
+  SPDLOG_DEBUG("all_internal_compound_types: {}",
                all_internal_compound_types.size());
   for (auto i : all_internal_compound_types) {
     auto p = get_compound_type_by_type_id(i);
-    spdlog::info("class: {}", p->type_name_);
+    SPDLOG_DEBUG("class: {}", p->type_name_);
     for (auto &i : p->v_members_) {
       for (auto &name : i.second) {
-        spdlog::info("\t{}", name);
+        SPDLOG_DEBUG("\t{}", name);
       }
     }
-    spdlog::info("");
+    SPDLOG_DEBUG("");
   }
-  spdlog::info("---------end------------");
+  SPDLOG_DEBUG("---------end------------");
 }
 */
 
@@ -111,7 +111,7 @@ void TypeSystem::init_internal_obj(string dirname) {
 }
 
 void TypeSystem::init_one_internal_obj(string filename) {
-  spdlog::info("Initting builtin file: {}", filename);
+  SPDLOG_DEBUG("Initting builtin file: {}", filename);
   std::string content = ReadFileIntoString(filename);
   // set_scope_translation_flag(true);
   auto res = frontend_->TranslateToIR(content);
@@ -262,8 +262,8 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
   auto cur_type = std::make_shared<CandidateTypes>();
   int res_type = SpecialType::kNotExist;
   bool flag;
-  spdlog::debug("Inferring: {}", cur->ToString());
-  spdlog::debug("Scope type: {}", scope_type);
+  SPDLOG_DEBUG("Inferring: {}", cur->ToString());
+  SPDLOG_DEBUG("Scope type: {}", scope_type);
 
   if (cur->Type() == frontend_->GetStringLiteralType()) {
     res_type = real_type_system_->GetTypeIDByStr("ANYTYPE");
@@ -285,9 +285,9 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
   if (cur->Type() == frontend_->GetIdentifierType()) {
     // handle here
     if (cur->GetString() == "FIXME") {
-      spdlog::debug("See a fixme!");
+      SPDLOG_DEBUG("See a fixme!");
       auto v_usable_type = collect_usable_type(cur);
-      spdlog::debug("collect_usable_type.size(): {}", v_usable_type.size());
+      SPDLOG_DEBUG("collect_usable_type.size(): {}", v_usable_type.size());
       for (auto t : v_usable_type) {
         assert(t);
         cur_type->AddCandidate(t, t, 0);
@@ -301,8 +301,8 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
 
       res_type =
           locate_defined_variable_by_name(cur->GetString(), cur->GetScopeID());
-      spdlog::debug("Name: {}", cur->GetString());
-      spdlog::debug("Type: {}", res_type);
+      SPDLOG_DEBUG("Name: {}", cur->GetString());
+      SPDLOG_DEBUG("Type: {}", res_type);
       // auto cur_type = make_shared<map<TYPEID, vector<pair<TYPEID,
       // TYPEID>>>>();
       if (!res_type) res_type = SpecialType::kAnyType;  // should fix
@@ -314,7 +314,7 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
     } else {
       // match name in scope_type
       // currently only class/struct is possible
-      spdlog::debug("Scope type: {}", scope_type);
+      SPDLOG_DEBUG("Scope type: {}", scope_type);
       if (real_type_system_->IsCompoundType(scope_type) == false) {
         if (real_type_system_->IsFunctionType(scope_type)) {
           auto ret_type =
@@ -332,7 +332,7 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
       for (auto &iter : ct->v_members_) {
         for (auto &member : iter.second) {
           if (cur->GetString() == member) {
-            spdlog::debug(
+            SPDLOG_DEBUG(
                 "Match member");  // auto cur_type = make_shared<map<TYPEID,
                                   // vector<pair<TYPEID,
             // TYPEID>>>>();
@@ -778,12 +778,12 @@ IRPtr TypeSystem::locate_mutated_ir(IRPtr root) {
 bool TypeSystem::simple_fix(IRPtr ir, int type, InferenceResult &inferer) {
   if (type == SpecialType::kNotExist) return false;
 
-  spdlog::debug("NodeType: {}", frontend_->GetIRTypeStr(ir->Type()));
-  spdlog::debug("Type: {}", type);
+  SPDLOG_DEBUG("NodeType: {}", frontend_->GetIRTypeStr(ir->Type()));
+  SPDLOG_DEBUG("Type: {}", type);
 
   // if (ir->type_ == kIdentifier && ir->str_val_ == "FIXME")
-  if (ir->ContainString() && ir->GetString() == kFixMe) {
-    spdlog::debug("Reach here");
+  if (ir->ContainString() && ir->GetString() == FIXMETAG) {
+    SPDLOG_DEBUG("Reach here");
     validation::ExpressionGenerator generator(scope_tree_);
     ir->SetString(generator.GenerateExpression(type, ir));
     return true;
@@ -807,8 +807,8 @@ bool TypeSystem::simple_fix(IRPtr ir, int type, InferenceResult &inferer) {
       }
 
       type = new_type;
-      spdlog::debug("nothing in cache_inference_map_: {}", ir->ToString());
-      spdlog::debug("NodeType: {}", frontend_->GetIRTypeStr(ir->Type()));
+      SPDLOG_DEBUG("nothing in cache_inference_map_: {}", ir->ToString());
+      SPDLOG_DEBUG("NodeType: {}", frontend_->GetIRTypeStr(ir->Type()));
     }
     if (!inferer.HasCandidateAtType(ir, type)) return false;
     if (ir->HasLeftChild()) {
@@ -828,7 +828,8 @@ bool TypeSystem::simple_fix(IRPtr ir, int type, InferenceResult &inferer) {
 }
 
 bool Fixable(IRPtr root) {
-  return root->Type() == gen::Configuration::GetInstance().GetFixIRType() ||
+  // return root->Type() == gen::Configuration::GetInstance().GetFixIRType() ||
+  return root->GetDataType() == kDataFixUnit ||
          (root->ContainString() && root->GetString() == "FIXME");
 }
 
@@ -1207,6 +1208,40 @@ std::shared_ptr<ScopeTree> SemanticValidator::BuildScopeTreeWithSymbolTable(
   auto scope_tree = ScopeTree::BuildTree(root);
   scope_tree->BuildSymbolTables(root);
   return scope_tree;
+}
+
+std::shared_ptr<InferenceResult> SemanticValidator::InferType(
+    IRPtr &root, std::shared_ptr<ScopeTree> scope_tree) {
+  std::stack<IRPtr> stk;
+  stk.push(root);
+
+  TypeInferer inferer(frontend_, scope_tree);
+  while (!stk.empty()) {
+    root = stk.top();
+    stk.pop();
+
+    if (Fixable(root)) {
+      assert(NeedFixing(root));
+      if (!gen::Configuration::GetInstance().IsWeakType() &&
+          inferer.Infer(root, 0) == nullptr) {
+        return nullptr;
+      } else {
+        inferer.AddCandidateType(root, SpecialType::kAllTypes,
+                                 SpecialType::kAllTypes,
+                                 SpecialType::kAllTypes);
+      }
+    }
+
+    if (root->HasRightChild()) {
+      stk.push(root->RightChild());
+    }
+
+    if (root->HasLeftChild()) {
+      stk.push(root->LeftChild());
+    }
+  }
+
+  return inferer.GetResult();
 }
 
 std::string ExpressionGenerator::GenerateExpression(TypeID type, IRPtr &ir) {
