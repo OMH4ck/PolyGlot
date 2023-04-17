@@ -158,7 +158,7 @@ TEST_F(MutatorTestF, MutateGenerateDifferentTestCases) {
 TEST_F(MutatorTestF, MutateGenerateParsableTestCases) {
   std::string_view test_case = "INT a = 1;";
 
-  for (size_t i = 0; i < 1000; ++i) {
+  for (size_t i = 0; i < 10005; ++i) {
     auto root = frontend->TranslateToIR(test_case.data());
     std::vector<IRPtr> ir_set = CollectAllIRs(root);
 
