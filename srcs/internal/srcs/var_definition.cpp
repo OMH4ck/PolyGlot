@@ -327,7 +327,6 @@ TypeID RealTypeSystem::GetBasicTypeIDByStr(const string &s) {
 
 TypeID RealTypeSystem::GetTypeIDByStr(const string &s) {
   for (auto iter : type_map) {
-    SPDLOG_INFO("type name: {}, checking: {};", iter.second->type_name_, s);
     if (iter.second->type_name_ == s) return iter.first;
   }
 
@@ -427,7 +426,7 @@ shared_ptr<CompoundType> RealTypeSystem::CreateCompoundTypeAtScope(
     }
     if (structure_name.size()) {
       vector<TypeID> tmp;
-      auto pfunc = CreateFunctionType(structure_name, res->type_id_, tmp);
+      // auto pfunc = CreateFunctionType(structure_name, res->type_id_, tmp);
       // TODO: Fix this.
       /*
       if (DBG)
@@ -460,10 +459,12 @@ shared_ptr<CompoundType> RealTypeSystem::CreateCompoundTypeAtScope(
 }
 
 shared_ptr<FunctionType> RealTypeSystem::CreateFunctionType(
-    string &function_name, TypeID return_type, vector<TypeID> &args) {
+    string &function_name, TypeID return_type, vector<TypeID> &args,
+    std::vector<std::string> &arg_names) {
   auto res = make_shared<FunctionType>();
   res->type_id_ = gen_type_id();
   res->type_name_ = function_name;
+  res->v_arg_names_ = arg_names;
 
   res->return_type_ = return_type;
   res->v_arg_types_ = args;
@@ -905,7 +906,8 @@ bool ScopeTree::create_symbol_table(IRPtr root) {
 
 bool ScopeTree::collect_definition(IRPtr cur) {
   bool res = false;
-  if (cur->GetDataType() == kDataVarDefine) {
+  if (cur->GetDataType() == kDataVarDefine ||
+      cur->GetDataType() == kDataFunctionType) {
     auto define_type = find_define_type(cur);
 
     switch (define_type) {
@@ -924,12 +926,8 @@ bool ScopeTree::collect_definition(IRPtr cur) {
         return true;
 
       case kDataFunctionType:
-        if (DBG) cout << "kDataFunctionType" << endl;
-        if (gen::Configuration::GetInstance().IsWeakType()) {
-          collect_function_definition_wt(cur);
-        } else {
-          collect_function_definition(cur);
-        }
+        SPDLOG_INFO("function definition: {}", cur->ToString());
+        collect_function_definition(cur);
         return true;
       default:
         CollectSimpleVariableDefinition(cur);
@@ -1297,6 +1295,7 @@ void ScopeTree::collect_structure_definition(IRPtr cur, IRPtr root) {
   }
 }
 
+/*
 void ScopeTree::collect_function_definition_wt(IRPtr cur) {
   SPDLOG_DEBUG("Collecting {}", cur->ToString());
   auto function_name_ir = search_by_data_type(cur, kDataFunctionName);
@@ -1353,30 +1352,39 @@ void ScopeTree::collect_function_definition_wt(IRPtr cur) {
     create_symbol_table(function_body_ir);
   }
 }
+*/
 
 void ScopeTree::collect_function_definition(IRPtr cur) {
   auto return_value_type_ir =
       search_by_data_type(cur, kDataFunctionReturnValue, kDataFunctionBody);
   auto function_name_ir =
       search_by_data_type(cur, kDataFunctionName, kDataFunctionBody);
-  auto function_arg_ir =
-      search_by_data_type(cur, kDataFunctionArg, kDataFunctionBody);
+  std::vector<IRPtr> arguments;
+  search_by_data_type(cur, kDataFunctionArg, arguments, kDataFunctionBody);
 
-  string function_name_str;
-  if (function_name_ir) {
-    function_name_str = function_name_ir->ToString();
-    strip_string(function_name_str);
+  SPDLOG_INFO("Function name: {}", function_name_ir->ToString());
+  if (return_value_type_ir) {
+    SPDLOG_INFO("Function return type: {}", return_value_type_ir->ToString());
+  }
+  if (arguments.size() > 0) {
+    for (auto i : arguments) {
+      SPDLOG_INFO("Function arg: {}", i->ToString());
+    }
   }
 
-#ifdef SOLIDITYFUZZ
-  TYPEID return_type = SpecialType::kAnyType;
-#else
+  string function_name_str = function_name_ir->ToString();
+  strip_string(function_name_str);
+
+  if (function_name_str.empty()) {
+    SPDLOG_INFO("Anonymous function");
+    return;
+  }
+
   TypeID return_type = SpecialType::kNotExist;
-#endif
-  string return_value_type_str;
   if (return_value_type_ir) {
-    return_value_type_str = return_value_type_ir->ToString();
+    string return_value_type_str = return_value_type_ir->ToString();
     if (return_value_type_str.size() > 7) {
+      // TODO: Trim struct and enum etc.
       if (return_value_type_str.substr(0, 7) == "struct ") {
         return_value_type_str =
             return_value_type_str.substr(7, return_value_type_str.size() - 7);
@@ -1385,95 +1393,44 @@ void ScopeTree::collect_function_definition(IRPtr cur) {
             return_value_type_str.substr(5, return_value_type_str.size() - 5);
       }
     }
-    strip_string(return_value_type_str);
+    Trim(return_value_type_str);
     return_type = real_type_system_->GetTypeIDByStr(return_value_type_str);
   }
 
-#ifdef SOLIDITYFUZZ
-  if (return_type == SpecialType::kNotExist)
-    return_type = SpecialType::kAnyType;
-#else
-#endif
-
   vector<TypeID> arg_types;
   vector<string> arg_names;
-  vector<unsigned long> arg_ids;
-  if (function_arg_ir) {
-    queue<IRPtr> q;
-    map<IRPtr *, IRPtr> m_save;
-    set<IRTYPE> ss;
-    // ss.insert(kParameterDeclaration);
-    if (!gen::Configuration::GetInstance().IsWeakType()) {
-      ss = gen::Configuration::GetInstance().GetFunctionArgNodeType();
+  for (auto &arg_ir : arguments) {
+    auto arg_type_ir = search_by_data_type(arg_ir, kDataVarType);
+    auto arg_name_ir = search_by_data_type(arg_ir, kDataVarName);
+    assert(arg_name_ir);
+    std::string arg_name = arg_name_ir->ToString();
+    Trim(arg_name);
+    TypeID arg_type = SpecialType::kAnyType;
+    if (arg_type_ir) {
+      string arg_type_str = arg_type_ir->ToString();
+      Trim(arg_type_str);
+      arg_type = real_type_system_->GetTypeIDByStr(arg_type_str);
     }
-
-    // q.push(function_arg_ir);
-    // split_to_basic_unit(function_arg_ir, q, m_save, ss);
-
-    while (!q.empty()) {
-      auto cur = q.front();
-      string var_type;
-      string var_name;
-
-      vector<IRPtr> ir_vec;
-      vector<IRPtr> ir_vec_name;
-      search_by_data_type(cur, kDataVarType, ir_vec);
-      search_by_data_type(cur, kDataVarName, ir_vec_name);
-
-      if (ir_vec_name.empty()) {
-        break;
-      }
-      // handle specially
-      for (auto ir : ir_vec) {
-        if (ir->OP() == nullptr || ir->OP()->prefix.empty()) {
-          auto tmpp = ir->ToString();
-          var_type += tmpp.substr(0, tmpp.size() - 1);
-        } else {
-          var_type += ir->OP()->prefix;
-        }
-        var_type += " ";
-      }
-      var_type = var_type.substr(0, var_type.size() - 1);
-      var_name = ir_vec_name[0]->ToString();
-      auto idx = ir_vec_name[0]->GetStatementID();
-      if (DBG) cout << "Type string: " << var_type << endl;
-      if (DBG) cout << "Arg name: " << var_name << endl;
-      if (!var_type.empty()) {
-        int type = real_type_system_->GetBasicTypeIDByStr(var_type);
-        if (type == SpecialType::kNotExist) {
-#ifdef SOLIDITYFUZZ
-          type = SpecialType::kAnyType;
-#else
-          arg_types.clear();
-          arg_names.clear();
-          arg_ids.clear();
-          break;
-#endif
-        }
-        arg_types.push_back(type);
-        arg_names.push_back(var_name);
-        arg_ids.push_back(idx);
-      }
-
-      q.pop();
-    }
-
-    // connect_back(m_save);
+    string arg_type_str = arg_type_ir->ToString();
+    Trim(arg_type_str);
+    arg_types.push_back(real_type_system_->GetTypeIDByStr(arg_type_str));
+    arg_names.push_back(arg_name);
   }
-  if (DBG) cout << "Function name: " << function_name_str << endl;
-  if (DBG)
-    cout << "return value type: " << return_value_type_str
-         << "id:" << return_type << endl;
-  if (DBG) cout << "Args type: " << endl;
-  for (auto i : arg_types) {
-    if (DBG) cout << "typeid" << endl;
-    if (DBG) cout << real_type_system_->GetTypePtrByID(i)->type_name_ << endl;
+
+  SPDLOG_INFO("Function name: {}", function_name_str);
+  if (return_value_type_ir) {
+    SPDLOG_INFO("Function return type: {}", return_type);
+  }
+  for (size_t i = 0; i < arguments.size(); i++) {
+    SPDLOG_INFO("Function arg: {}", arg_names[i]);
+    SPDLOG_INFO("Function arg type: {}",
+                real_type_system_->GetTypePtrByID(arg_types[i])->type_name_);
   }
 
   auto cur_scope = GetScopeById(cur->GetScopeID());
   if (return_type) {
     auto function_ptr = real_type_system_->CreateFunctionType(
-        function_name_str, return_type, arg_types);
+        function_name_str, return_type, arg_types, arg_names);
     if (function_ptr == nullptr || function_name_ir == nullptr) return;
     // if(DBG) cout << cur_scope << ", " << function_ptr << endl;
     cur_scope->AddDefinition(function_ptr->type_name_, function_ptr->type_id_,
@@ -1484,7 +1441,8 @@ void ScopeTree::collect_function_definition(IRPtr cur) {
   if (function_body) {
     cur_scope = GetScopeById(function_body->GetScopeID());
     for (auto i = 0; i < arg_types.size(); i++) {
-      cur_scope->AddDefinition(arg_names[i], arg_types[i], arg_ids[i]);
+      cur_scope->AddDefinition(arg_names[i], arg_types[i],
+                               cur->GetStatementID());
     }
     create_symbol_table(function_body);
   }
