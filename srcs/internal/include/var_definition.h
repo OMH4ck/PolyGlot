@@ -255,8 +255,8 @@ class ScopeTree {
   bool is_contain_definition(IRPtr cur);
   bool collect_definition(IRPtr cur);
   DataType find_define_type(IRPtr cur);
-  void collect_simple_variable_defintion_wt(IRPtr cur);
-  std::optional<SymbolTable> collect_simple_variable_defintion(IRPtr cur);
+  void CollectSimpleVariableDefinition(IRPtr &cur);
+  // std::optional<SymbolTable> collect_simple_variable_defintion(IRPtr cur);
   void collect_structure_definition(IRPtr cur, IRPtr root);
   void collect_structure_definition_wt(IRPtr cur, IRPtr root);
   void collect_function_definition_wt(IRPtr cur);

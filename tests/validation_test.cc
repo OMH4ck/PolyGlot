@@ -64,8 +64,11 @@ TEST(ValidationTest, ScopeTreeBuildCorrectly) {
   auto def_a = global_symbol_table.GetDefinition("a");
   auto def_b = global_symbol_table.GetDefinition("b");
 
+  auto type_system = scope_tree->GetRealTypeSystem();
+
   ASSERT_TRUE(def_a.has_value());
   ASSERT_TRUE(def_b.has_value());
+  ASSERT_TRUE(type_system->GetTypeIDByStr("INT") == def_a.value().type);
   ASSERT_LT(def_a.value().statement_id, def_b.value().statement_id);
 }
 

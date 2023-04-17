@@ -28,6 +28,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <algorithm>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -66,4 +67,25 @@ typename T::const_iterator random_pick(T &cc) {
 }
 
 std::string ReadFileIntoString(std::string_view file_name);
+
+// trim from start (in place)
+static inline void Ltrim(std::string &s) {
+  s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
+            return !std::isspace(ch);
+          }));
+}
+
+// trim from end (in place)
+static inline void Rtrim(std::string &s) {
+  s.erase(std::find_if(s.rbegin(), s.rend(),
+                       [](unsigned char ch) { return !std::isspace(ch); })
+              .base(),
+          s.end());
+}
+
+// trim from both ends (in place)
+static inline void Trim(std::string &s) {
+  Rtrim(s);
+  Ltrim(s);
+}
 #endif

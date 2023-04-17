@@ -57,9 +57,7 @@ TEST_P(ParserTest, ParseValidTestCaseReturnNotNull) {
   std::string_view test_case = GetParam();
 
   auto frontend = std::make_shared<AntlrFrontend>();
-  while (true) {
-    ASSERT_TRUE(frontend->Parsable(test_case.data()));
-  }
+  ASSERT_TRUE(frontend->Parsable(test_case.data()));
   // program_root->deep_delete();
 }
 

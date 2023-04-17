@@ -27,6 +27,7 @@
 #include <stack>
 
 #include "config_misc.h"
+#include "ir.h"
 #include "spdlog/spdlog.h"
 #include "typesystem.h"
 
@@ -183,7 +184,7 @@ void RealTypeSystem::init_basic_types() {
     basic_types[line] = ptr;
     basic_types_set.insert(new_id);
     type_map[new_id] = ptr;
-    if (DBG) cout << "Basic types: " << line << ", type id: " << new_id << endl;
+    SPDLOG_INFO("Basic types: {}, type id: {}", line, new_id);
   }
 
   make_basic_type_add_map(SpecialType::kAllTypes, "SpecialType::kAllTypes");
@@ -326,6 +327,7 @@ TypeID RealTypeSystem::GetBasicTypeIDByStr(const string &s) {
 
 TypeID RealTypeSystem::GetTypeIDByStr(const string &s) {
   for (auto iter : type_map) {
+    SPDLOG_INFO("type name: {}, checking: {};", iter.second->type_name_, s);
     if (iter.second->type_name_ == s) return iter.first;
   }
 
@@ -909,11 +911,7 @@ bool ScopeTree::collect_definition(IRPtr cur) {
     switch (define_type) {
       case kDataVarType:
         if (DBG) cout << "kDataVarType" << endl;
-        if (gen::Configuration::GetInstance().IsWeakType()) {
-          collect_simple_variable_defintion_wt(cur);
-        } else {
-          collect_simple_variable_defintion(cur);
-        }
+        CollectSimpleVariableDefinition(cur);
         return true;
 
       case kDataClassType:
@@ -934,14 +932,7 @@ bool ScopeTree::collect_definition(IRPtr cur) {
         }
         return true;
       default:
-
-        // handle structure and function ,array ,etc..
-        if (gen::Configuration::GetInstance().IsWeakType()) {
-          collect_simple_variable_defintion_wt(cur);
-        } else {
-          collect_simple_variable_defintion(cur);
-        }
-
+        CollectSimpleVariableDefinition(cur);
         break;
     }
   } else {
@@ -1013,6 +1004,7 @@ void search_by_data_type(IRPtr cur, DataType type, vector<IRPtr> &result,
   }
 }
 
+/*
 ScopeType scope_js(const string &s) {
   if (s.find("var") != string::npos) return kScopeFunction;
   if (s.find("let") != string::npos || s.find("const") != string::npos)
@@ -1021,70 +1013,53 @@ ScopeType scope_js(const string &s) {
   assert(0);
   return kScopeStatement;
 }
+*/
 
-void ScopeTree::collect_simple_variable_defintion_wt(IRPtr cur) {
+void ScopeTree::CollectSimpleVariableDefinition(IRPtr &cur) {
   SPDLOG_DEBUG("Collecting: {}", cur->ToString());
 
-  auto var_scope = search_by_data_type(cur, kDataVarScope);
   ScopeType scope_type = kScopeGlobal;
 
   // handle specill
+  /*
+  auto var_scope = search_by_data_type(cur, kDataVarScope);
   if (var_scope) {
     string str = var_scope->ToString();
     scope_type = scope_js(str);
   }
+  */
 
   vector<IRPtr> name_vec;
   vector<IRPtr> init_vec;
   vector<int> type_vec;
   search_by_data_type(cur, kDataVarName, name_vec);
   search_by_data_type(cur, kDataInitiator, init_vec);
-  if (name_vec.empty()) {
-    SPDLOG_DEBUG("fail to search for the name");
-    return;
-  } else if (name_vec.size() != init_vec.size()) {
-    for (auto i = 0; i < name_vec.size(); i++) {
-      type_vec.push_back(SpecialType::kAnyType);
+  IRPtr type_node = search_by_data_type(cur, kDataVarType);
+  TypeID type = SpecialType::kAnyType;
+  if (type_node) {
+    std::string type_str = type_node->ToString();
+    Trim(type_str);
+    type = real_type_system_->GetTypeIDByStr(type_str);
+    if (type == SpecialType::kNotExist &&
+        gen::Configuration::GetInstance().IsWeakType()) {
+      type = SpecialType::kAnyType;
     }
-  } else {
-    for (auto t : init_vec) {
-      // TODO: Double check this logis. We should use type inference during
-      // collections.
-      /*
-      bool flag = type_inference_new(t);
-      if (flag == true) {
-        type = cache_inference_map_[t]->GetARandomCandidateType();
-      }
-      */
-      // cout << "Infer type: " << type << endl;
-      int type = SpecialType::kAllTypes;
-      if (type == SpecialType::kAllTypes || type == SpecialType::kNotExist)
-        type = SpecialType::kAnyType;
-      type_vec.push_back(type);
-    }
+    assert(type != SpecialType::kNotExist);
   }
 
   auto cur_scope = GetScopeById(cur->GetScopeID());
   for (auto i = 0; i < name_vec.size(); i++) {
     auto name_ir = name_vec[i];
     SPDLOG_DEBUG("Adding name: {}", name_ir->ToString());
-    auto type = type_vec[i];
 
     SPDLOG_DEBUG("Scope: {}", scope_type);
     SPDLOG_DEBUG("name_ir id: {}", name_ir->GetStatementID());
-    if (cur_scope->GetScopeType() == kScopeClass) {
-      if (DBG) {
-        SPDLOG_DEBUG("Adding in class: {}", name_ir->ToString());
-      }
-      cur_scope->AddDefinition(name_ir->ToString(), type,
-                               name_ir->GetStatementID(), kScopeStatement);
-    } else {
-      cur_scope->AddDefinition(name_ir->ToString(), type,
-                               name_ir->GetStatementID(), scope_type);
-    }
+    cur_scope->AddDefinition(name_ir->ToString(), type,
+                             name_ir->GetStatementID());
   }
 }
 
+/*
 std::optional<SymbolTable> ScopeTree::collect_simple_variable_defintion(
     IRPtr cur) {
   string var_type;
@@ -1149,6 +1124,7 @@ std::optional<SymbolTable> ScopeTree::collect_simple_variable_defintion(
   }
   return res;
 }
+*/
 
 void ScopeTree::collect_structure_definition_wt(IRPtr cur, IRPtr root) {
   auto cur_scope = GetScopeById(cur->GetScopeID());
