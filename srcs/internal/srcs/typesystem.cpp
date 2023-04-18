@@ -22,6 +22,7 @@
 #include "typesystem.h"
 
 #include <cstddef>
+#include <gsl/assert>
 #include <memory>
 #include <optional>
 #include <string_view>
@@ -72,17 +73,9 @@ namespace validation {
 // shared_ptr<Scope> TypeSystem::current_scope_ptr_;
 // map<IRPtr, shared_ptr<map<TYPEID, vector<pair<TYPEID, TYPEID>>>>>
 //     TypeSystem::cache_inference_map_;
-map<int, vector<OPRule>> TypeInferer::op_rules_;
-map<string, map<string, map<string, int>>> TypeInferer::op_id_map_;
-std::shared_ptr<RealTypeSystem> OPRule::real_type_system_;
-
-IRPtr cur_statement_root = nullptr;
-
-unsigned long type_fix_framework_fail_counter = 0;
-unsigned long top_fix_fail_counter = 0;
-unsigned long top_fix_success_counter = 0;
-
-static set<TypeID> current_define_types;
+// map<int, vector<OPRule>> TypeInferer::op_rules_;
+// map<string, map<string, map<string, int>>> TypeInferer::op_id_map_;
+// std::shared_ptr<TypeSystem> OPRule::real_type_system_;
 
 /*
 void TypeSystem::debug() {
@@ -103,14 +96,15 @@ void TypeSystem::debug() {
 }
 */
 
-void TypeSystem::init_internal_obj(string dirname) {
+/*
+void OldTypeSystem::init_internal_obj(string dirname) {
   auto files = get_all_files_in_dir(dirname.c_str());
   for (auto &file : files) {
     init_one_internal_obj(dirname + "/" + file);
   }
 }
 
-void TypeSystem::init_one_internal_obj(string filename) {
+void OldTypeSystem::init_one_internal_obj(string filename) {
   SPDLOG_DEBUG("Initting builtin file: {}", filename);
   std::string content = ReadFileIntoString(filename);
   // set_scope_translation_flag(true);
@@ -123,20 +117,22 @@ void TypeSystem::init_one_internal_obj(string filename) {
 
   // TODO: Fix this.
   // is_internal_obj_setup = true;
-  /*
+  /
   if (create_symbol_table(res) == false)
     spdlog::error("[init_internal_obj] setup {} failed", filename);
   is_internal_obj_setup = false;
-  */
+  /
 }
 
-void TypeSystem::init() {
+void OldTypeSystem::init() {
   s_basic_unit_ = gen::Configuration::GetInstance().GetBasicUnits();
   TypeInferer::init_type_dict();
   init_internal_obj(
       gen::Configuration::GetInstance().GetBuiltInObjectFilePath());
 }
+*/
 
+/*
 void TypeInferer::init_type_dict() {
   // string line;
   // ifstream input_file("./js_grammar/type_dict");
@@ -154,8 +150,9 @@ int gen_id() {
   static int id = 1;
   return id++;
 }
-
-TypeSystem::TypeSystem(std::shared_ptr<Frontend> frontend) {
+*/
+/*
+OldTypeSystem::OldTypeSystem(std::shared_ptr<Frontend> frontend) {
   if (frontend == nullptr) {
     frontend_ = std::make_shared<AntlrFrontend>();
   } else {
@@ -163,12 +160,12 @@ TypeSystem::TypeSystem(std::shared_ptr<Frontend> frontend) {
   }
   init();
 }
-void TypeSystem::split_to_basic_unit(IRPtr root, queue<IRPtr> &q,
+void OldTypeSystem::split_to_basic_unit(IRPtr root, queue<IRPtr> &q,
                                      map<IRPtr *, IRPtr> &m_save) {
   split_to_basic_unit(root, q, m_save, s_basic_unit_);
 }
 
-void TypeSystem::split_to_basic_unit(IRPtr root, queue<IRPtr> &q,
+void OldTypeSystem::split_to_basic_unit(IRPtr root, queue<IRPtr> &q,
                                      map<IRPtr *, IRPtr> &m_save,
                                      set<IRTYPE> &s_basic_unit) {
   if (root->HasLeftChild() &&
@@ -190,22 +187,24 @@ void TypeSystem::split_to_basic_unit(IRPtr root, queue<IRPtr> &q,
     split_to_basic_unit(root->RightChild(), q, m_save, s_basic_unit);
 }
 
-void TypeSystem::connect_back(map<IRPtr *, IRPtr> &m_save) {
+void OldTypeSystem::connect_back(map<IRPtr *, IRPtr> &m_save) {
   for (auto &i : m_save) {
     *i.first = i.second;
   }
 }
+*/
 
+/*
 FIXORDER TypeInferer::get_fix_order(int op) {
   assert(op_rules_.find(op) != op_rules_.end());
   assert(op_rules_[op].empty() == false);
   return op_rules_[op].front().fix_order_;
-  /*
+  /
   if(fix_order_map_.find(op) == fix_order_map_.end()){
       return DEFAULT;
   }
   return fix_order_map_[op];
-  */
+  /
 }
 
 int TypeInferer::get_op_value(std::shared_ptr<IROperator> op) {
@@ -213,7 +212,8 @@ int TypeInferer::get_op_value(std::shared_ptr<IROperator> op) {
   return op_id_map_[op->prefix][op->middle][op->suffix];
 }
 
-bool TypeInferer::is_op_null(std::shared_ptr<IROperator> op) {
+*/
+bool is_op_null(std::shared_ptr<IROperator> op) {
   return (op == nullptr ||
           (op->suffix == "" && op->middle == "" && op->prefix == ""));
 }
@@ -249,6 +249,7 @@ ScopeType scope_js(const string &s) {
 
 // map<IR*, shared_ptr<map<TYPEID, vector<pair<TYPEID, TYPEID>>>>>
 // TypeSystem::cache_inference_map_;
+/*
 std::shared_ptr<InferenceResult> TypeInferer::Infer(IRPtr &cur,
                                                     int scope_type) {
   if (type_inference_new(cur, scope_type))
@@ -531,7 +532,9 @@ int TypeInferer::locate_defined_variable_by_name(const string &var_name,
 
   return result;
 }
+*/
 
+/*
 set<int> TypeInferer::collect_usable_type(IRPtr cur) {
   set<int> result;
   auto ir_id = cur->GetStatementID();
@@ -543,12 +546,6 @@ set<int> TypeInferer::collect_usable_type(IRPtr cur) {
       for (auto &iter : current_scope->GetSymbolTable().GetTable()) {
         auto tmp_type = iter.first;
         bool flag = false;
-        /*
-        cout << "Type: " << get_type_name_by_id(tmp_type) << endl;
-        for(auto &kk: iter.second){
-            cout << kk.first << endl;
-        }
-        */
         auto type_ptr = real_type_system_->GetTypePtrByID(tmp_type);
         if (type_ptr == nullptr) continue;
         for (auto &kk : iter.second) {
@@ -588,7 +585,7 @@ pair<OPTYPE, vector<int>> TypeInferer::collect_sat_op_by_result_type(
     int type, map<int, vector<set<int>>> &all_satisfiable_types,
     map<int, vector<string>> &function_map,
     map<int, vector<string>> &compound_var_map,
-    std::shared_ptr<RealTypeSystem> &real_type_system) {
+    std::shared_ptr<TypeSystem> &real_type_system) {
   static map<int, vector<vector<int>>>
       cache;  // map<type, vector<pair<opid, int<operand_1, operand_2>>>
   auto res = make_pair(0, std::move(vector<int>(2, 0)));
@@ -665,6 +662,7 @@ vector<string> TypeInferer::get_op_by_optype(OPTYPE op_type) {
 
   return {};
 }
+*/
 
 /*
 bool TypeSystem::filter_function_type(
@@ -754,7 +752,8 @@ string TypeSystem::get_class_member(TYPEID type_id) {
 }
 */
 
-IRPtr TypeSystem::locate_mutated_ir(IRPtr root) {
+/*
+IRPtr OldTypeSystem::locate_mutated_ir(IRPtr root) {
   if (root->HasLeftChild()) {
     if (!root->HasRightChild()) {
       return locate_mutated_ir(root->LeftChild());
@@ -774,7 +773,7 @@ IRPtr TypeSystem::locate_mutated_ir(IRPtr root) {
   return nullptr;
 }
 
-bool TypeSystem::simple_fix(IRPtr ir, int type, InferenceResult &inferer) {
+bool OldTypeSystem::simple_fix(IRPtr ir, int type, InferenceResult &inferer) {
   if (type == SpecialType::kNotExist) return false;
 
   SPDLOG_DEBUG("NodeType: {}", frontend_->GetIRTypeStr(ir->Type()));
@@ -784,7 +783,7 @@ bool TypeSystem::simple_fix(IRPtr ir, int type, InferenceResult &inferer) {
   if (ir->ContainString() && ir->GetString() == FIXMETAG) {
     SPDLOG_DEBUG("Reach here");
     validation::ExpressionGenerator generator(scope_tree_);
-    ir->SetString(generator.GenerateExpression(type, ir));
+    ir->SetString(generator.GenerateExpression(ir, type));
     return true;
   }
 
@@ -825,6 +824,7 @@ bool TypeSystem::simple_fix(IRPtr ir, int type, InferenceResult &inferer) {
   }
   return true;
 }
+*/
 
 bool Fixable(IRPtr root) {
   // return root->Type() == gen::Configuration::GetInstance().GetFixIRType() ||
@@ -832,7 +832,8 @@ bool Fixable(IRPtr root) {
          (root->ContainString() && root->GetString() == "FIXME");
 }
 
-bool TypeSystem::Fix(IRPtr root) {
+/*
+bool OldTypeSystem::Fix(IRPtr root) {
   stack<IRPtr> stk;
 
   stk.push(root);
@@ -866,7 +867,7 @@ bool TypeSystem::Fix(IRPtr root) {
   return res;
 }
 
-bool TypeSystem::validate_syntax_only(IRPtr root) {
+bool OldTypeSystem::validate_syntax_only(IRPtr root) {
   if (frontend_->Parsable(root->ToString()) == false) return false;
   // ast->deep_delete();
   queue<IRPtr> q;
@@ -895,8 +896,9 @@ bool TypeSystem::validate_syntax_only(IRPtr root) {
 
   return true;
 }
+*/
 
-void TypeSystem::MarkFixMe(IRPtr root) {
+void SemanticValidator::MarkFixMe(IRPtr &root) {
   if (root->HasLeftChild()) {
     if (root->LeftChild()->GetDataType() == kFixUnit) {
       if (NeedFixing(root->LeftChild())) {
@@ -962,7 +964,8 @@ bool TypeSystem::validate(IRPtr &root) {
 }
 */
 
-string TypeSystem::generate_definition(string &var_name, int type) {
+/*
+string OldTypeSystem::generate_definition(string &var_name, int type) {
   auto type_ptr = real_type_system_->GetTypePtrByID(type);
   assert(type_ptr != nullptr);
   auto type_str = type_ptr->name;
@@ -971,7 +974,7 @@ string TypeSystem::generate_definition(string &var_name, int type) {
   return res;
 }
 
-string TypeSystem::generate_definition(vector<string> &var_name, int type) {
+string OldTypeSystem::generate_definition(vector<string> &var_name, int type) {
   if (DBG) cout << "Generating definitions for type: " << type << endl;
   auto type_ptr = real_type_system_->GetTypePtrByID(type);
   assert(type_ptr != nullptr);
@@ -985,7 +988,9 @@ string TypeSystem::generate_definition(vector<string> &var_name, int type) {
 
   return res;
 }
+*/
 
+/*
 bool OPRule::is_op1() { return operand_num_ == 1; }
 
 bool OPRule::is_op2() { return operand_num_ == 2; }
@@ -1022,7 +1027,9 @@ int OPRule::apply(int arg1, int arg2) {
   }
   return real_type_system_->GetLeastUpperCommonType(arg1, arg2);
 }
+*/
 
+/*
 int TypeInferer::query_result_type(int op, int arg1, int arg2) {
   bool isop1 = arg2 == 0;
 
@@ -1086,7 +1093,9 @@ bool TypeInferer::is_op2(int op_id) {
 
   return op_rules_[op_id][0].operand_num_ == 2;
 }
+*/
 
+/*
 void OPRule::add_property(const string &s) {
   if (s == "FUNCTIONCALL") {
     property_ = OP_PROP_FunctionCall;
@@ -1096,7 +1105,9 @@ void OPRule::add_property(const string &s) {
     property_ = OP_PROP_Reference;
   }
 }
+*/
 
+/*
 OPRule TypeInferer::parse_op_rule(string s) {
   vector<string> v_strbuf;
   int pos = 0, last_pos = 0;
@@ -1115,9 +1126,9 @@ OPRule TypeInferer::parse_op_rule(string s) {
 
   if (DBG) cout << s << endl;
   if (v_strbuf[0][0] == '2') {
-    auto left = RealTypeSystem::GetBasicTypeIDByStr(v_strbuf[4]);
-    auto right = RealTypeSystem::GetBasicTypeIDByStr(v_strbuf[5]);
-    auto result = RealTypeSystem::GetBasicTypeIDByStr(v_strbuf[6]);
+    auto left = TypeSystem::GetBasicTypeIDByStr(v_strbuf[4]);
+    auto right = TypeSystem::GetBasicTypeIDByStr(v_strbuf[5]);
+    auto result = TypeSystem::GetBasicTypeIDByStr(v_strbuf[6]);
 
     assert(left && right && result);
 
@@ -1134,8 +1145,8 @@ OPRule TypeInferer::parse_op_rule(string s) {
   } else {
     assert(v_strbuf[0][0] == '1');
     if (DBG) cout << "Here: " << v_strbuf[4] << endl;
-    auto left = RealTypeSystem::GetBasicTypeIDByStr(v_strbuf[4]);
-    auto result = RealTypeSystem::GetBasicTypeIDByStr(v_strbuf[5]);
+    auto left = TypeSystem::GetBasicTypeIDByStr(v_strbuf[4]);
+    auto result = TypeSystem::GetBasicTypeIDByStr(v_strbuf[5]);
 
     OPRule res(cur_id, result, left);
     res.add_property(v_strbuf.back());
@@ -1150,6 +1161,7 @@ OPRule TypeInferer::parse_op_rule(string s) {
     return std::move(res);
   }
 }
+*/
 
 /*
 bool TypeSystem::insert_definition(int scope_id, int type_id, string var_name) {
@@ -1188,9 +1200,20 @@ bool TypeSystem::insert_definition(int scope_id, int type_id, string var_name) {
 
 namespace validation {
 ValidationError SemanticValidator::Validate(IRPtr &root) {
-  old_type_system_.MarkFixMe(root);
+  MarkFixMe(root);
   std::shared_ptr<ScopeTree> scope_tree = BuildScopeTreeWithSymbolTable(root);
-  old_type_system_.SetScopeTree(scope_tree);
+  // old_type_system_.SetScopeTree(scope_tree);
+  // auto inference_result = InferType(root, scope_tree);
+  std::vector<FixDecision> fix_decisions =
+      SelectFixStrategy(root, nullptr, scope_tree);
+
+  for (auto &[ir, type] : fix_decisions) {
+    if (!ApplyFix(ir, type, scope_tree)) {
+      return ValidationError::kNoSymbolToUse;
+    }
+  }
+  return ValidationError::kSuccess;
+  /*
   // TODO: Fix this super ugly code.
   old_type_system_.SetRealTypeSystem(scope_tree->GetRealTypeSystem());
   validation::OPRule::SetRealTypeSystem(scope_tree->GetRealTypeSystem());
@@ -1200,6 +1223,16 @@ ValidationError SemanticValidator::Validate(IRPtr &root) {
     // TODO: return the correct error code
     return ValidationError::kNoSymbolToUse;
   }
+  */
+}
+
+bool SemanticValidator::ApplyFix(IRPtr &root, TypeID fix_type,
+                                 std::shared_ptr<ScopeTree> scope_tree) {
+  SPDLOG_INFO("ApplyFix: {} {}", root->ToString(), fix_type);
+  assert(root->ContainString() && root->GetString() == FIXMETAG);
+  validation::ExpressionGenerator generator(scope_tree);
+  root->SetString(generator.GenerateExpression(root, fix_type));
+  return true;
 }
 
 std::shared_ptr<ScopeTree> SemanticValidator::BuildScopeTreeWithSymbolTable(
@@ -1209,6 +1242,7 @@ std::shared_ptr<ScopeTree> SemanticValidator::BuildScopeTreeWithSymbolTable(
   return scope_tree;
 }
 
+/*
 std::shared_ptr<InferenceResult> SemanticValidator::InferType(
     IRPtr &root, std::shared_ptr<ScopeTree> scope_tree) {
   std::stack<IRPtr> stk;
@@ -1242,8 +1276,37 @@ std::shared_ptr<InferenceResult> SemanticValidator::InferType(
 
   return inferer.GetResult();
 }
+*/
 
-std::string ExpressionGenerator::GenerateExpression(TypeID type, IRPtr &ir) {
+// TODO: This is a very naive implementation, we should use a better strategy
+// when we have inference.
+std::vector<SemanticValidator::FixDecision>
+SemanticValidator::SelectFixStrategy(
+    IRPtr &root, std::shared_ptr<InferenceResult> inference_result,
+    std::shared_ptr<ScopeTree> scope_tree) {
+  std::stack<IRPtr> stk;
+  std::vector<FixDecision> res;
+  stk.push(root);
+  while (!stk.empty()) {
+    auto top = stk.top();
+    stk.pop();
+
+    if (top->ContainString() && top->GetString() == "FIXME") {
+      res.emplace_back(FixDecision{top, SpecialType::kAllTypes});
+    } else {
+      if (top->HasRightChild()) {
+        stk.push(top->RightChild());
+      }
+
+      if (top->HasLeftChild()) {
+        stk.push(top->LeftChild());
+      }
+    }
+  }
+  return res;
+}
+
+std::string ExpressionGenerator::GenerateExpression(IRPtr &ir, TypeID type) {
   return generate_expression_by_type(type, ir);
 }
 
@@ -1257,6 +1320,7 @@ string ExpressionGenerator::generate_expression_by_type(int type, IRPtr &ir) {
   return res;
 }
 
+/*
 string ExpressionGenerator::expression_gen_handler(
     int type, map<int, vector<set<int>>> &all_satisfiable_types,
     map<int, vector<string>> &function_map,
@@ -1290,6 +1354,7 @@ string ExpressionGenerator::expression_gen_handler(
   }
   return res;
 }
+*/
 
 string ExpressionGenerator::generate_expression_by_type_core(int type,
                                                              IRPtr &ir) {
@@ -1442,9 +1507,12 @@ string ExpressionGenerator::generate_expression_by_type_core(int type,
   //     return "";
   // }
   if (0 <= choice && choice < prob[0]) {
+    assert(false);
+    /*
     if (DBG) cout << "exp op exp handler" << endl;
     res = expression_gen_handler(type, all_satisfiable_types, function_map,
                                  compound_var_map, ir);
+    */
     return res;
     // expr op expr
   }

@@ -48,11 +48,11 @@ map<TYPEID, map<int, TYPEID>> pointer_map;  // original_type:<level: typeid>
 */
 namespace polyglot {
 
-bool RealTypeSystem::is_internal_obj_setup = true;
-map<string, shared_ptr<VarType>> RealTypeSystem::basic_types;
-set<TypeID> RealTypeSystem::basic_types_set;
+bool TypeSystem::is_internal_obj_setup = true;
+map<string, shared_ptr<VarType>> TypeSystem::basic_types;
+set<TypeID> TypeSystem::basic_types_set;
 
-bool RealTypeSystem::IsBuiltinType(TypeID type_id) {
+bool TypeSystem::IsBuiltinType(TypeID type_id) {
   return internal_type_map.count(type_id) > 0;
 }
 
@@ -82,7 +82,7 @@ std::optional<Definition> SymbolTable::GetDefinition(
   return std::nullopt;
 }
 
-const map<TypeID, vector<string>> &RealTypeSystem::GetBuiltinSimpleVarTypes()
+const map<TypeID, vector<string>> &TypeSystem::GetBuiltinSimpleVarTypes()
     const {
   static map<TypeID, vector<string>> res;
   if (res.size() > 0) return res;
@@ -90,8 +90,7 @@ const map<TypeID, vector<string>> &RealTypeSystem::GetBuiltinSimpleVarTypes()
   // TODO: Initialize the map.
   return res;
 }
-const map<TypeID, vector<string>> &RealTypeSystem::GetBuiltinCompoundTypes()
-    const {
+const map<TypeID, vector<string>> &TypeSystem::GetBuiltinCompoundTypes() const {
   static map<TypeID, vector<string>> res;
   if (res.size() > 0) return res;
 
@@ -106,8 +105,7 @@ const map<TypeID, vector<string>> &RealTypeSystem::GetBuiltinCompoundTypes()
   return res;
 }
 
-const map<TypeID, vector<string>> &RealTypeSystem::GetBuiltinFunctionTypes()
-    const {
+const map<TypeID, vector<string>> &TypeSystem::GetBuiltinFunctionTypes() const {
   // TODO: Initialize the map.
   static map<TypeID, vector<string>> res;
   if (res.size() > 0) return res;
@@ -126,7 +124,7 @@ TypeID VarType::get_type_id() const { return type_id_; }
 
 // shared_ptr<Scope> get_scope_root() { return g_scope_root; }
 
-void RealTypeSystem::init_convert_chain() {
+void TypeSystem::init_convert_chain() {
   // init instance for SpecialType::kAllTypes, ALLCLASS,
   // SpecialType::kAllFunction ...
 
@@ -152,7 +150,7 @@ void RealTypeSystem::init_convert_chain() {
   }
 }
 
-bool RealTypeSystem::CanDeriveFrom(TypeID dtype, TypeID btype) {
+bool TypeSystem::CanDeriveFrom(TypeID dtype, TypeID btype) {
   auto derived_type = GetTypePtrByID(dtype);
   auto base_type = GetTypePtrByID(btype);
 
@@ -170,12 +168,12 @@ bool RealTypeSystem::CanDeriveFrom(TypeID dtype, TypeID btype) {
   return res;
 }
 
-RealTypeSystem::RealTypeSystem() {
+TypeSystem::TypeSystem() {
   init_basic_types();
   init_convert_chain();
 }
 
-void RealTypeSystem::init_basic_types() {
+void TypeSystem::init_basic_types() {
   for (auto &line : gen::Configuration::GetInstance().GetBasicTypeStr()) {
     if (line.empty()) continue;
     auto new_id = gen_type_id();
@@ -203,12 +201,12 @@ void RealTypeSystem::init_basic_types() {
   basic_types["SpecialType::kAnyType"] = GetTypePtrByID(SpecialType::kAnyType);
 }
 
-int RealTypeSystem::gen_type_id() {
+int TypeSystem::gen_type_id() {
   static int id = 10;
   return id++;
 }
 
-void RealTypeSystem::init_internal_type() {
+void TypeSystem::init_internal_type() {
   for (auto i : all_internal_functions) {
     auto ptr = GetFunctionType(i);
     // TODO: Fix this.
@@ -257,7 +255,7 @@ shared_ptr<Scope> get_scope_by_id(int scope_id) {
 }
 */
 
-shared_ptr<VarType> RealTypeSystem::GetTypePtrByID(TypeID type_id) {
+shared_ptr<VarType> TypeSystem::GetTypePtrByID(TypeID type_id) {
   if (type_map.find(type_id) != type_map.end()) return type_map[type_id];
 
   if (internal_type_map.find(type_id) != internal_type_map.end())
@@ -266,7 +264,7 @@ shared_ptr<VarType> RealTypeSystem::GetTypePtrByID(TypeID type_id) {
   return nullptr;
 }
 
-shared_ptr<CompoundType> RealTypeSystem::GetCompoundType(TypeID type_id) {
+shared_ptr<CompoundType> TypeSystem::GetCompoundType(TypeID type_id) {
   if (type_map.find(type_id) != type_map.end())
     return static_pointer_cast<CompoundType>(type_map[type_id]);
   if (internal_type_map.find(type_id) != internal_type_map.end())
@@ -275,7 +273,7 @@ shared_ptr<CompoundType> RealTypeSystem::GetCompoundType(TypeID type_id) {
   return nullptr;
 }
 
-shared_ptr<FunctionType> RealTypeSystem::GetFunctionType(TypeID type_id) {
+shared_ptr<FunctionType> TypeSystem::GetFunctionType(TypeID type_id) {
   if (type_map.find(type_id) != type_map.end())
     return static_pointer_cast<FunctionType>(type_map[type_id]);
   if (internal_type_map.find(type_id) != internal_type_map.end())
@@ -284,13 +282,13 @@ shared_ptr<FunctionType> RealTypeSystem::GetFunctionType(TypeID type_id) {
   return nullptr;
 }
 
-bool RealTypeSystem::IsCompoundType(TypeID type_id) {
+bool TypeSystem::IsCompoundType(TypeID type_id) {
   return all_compound_types_.find(type_id) != all_compound_types_.end() ||
          all_internal_compound_types.find(type_id) !=
              all_internal_compound_types.end();
 }
 
-TypeID RealTypeSystem::get_compound_type_id_by_string(const string &s) {
+TypeID TypeSystem::get_compound_type_id_by_string(const string &s) {
   for (auto k : all_compound_types_) {
     if (type_map[k]->name == s) return k;
   }
@@ -302,22 +300,22 @@ TypeID RealTypeSystem::get_compound_type_id_by_string(const string &s) {
   return SpecialType::kNotExist;
 }
 
-bool RealTypeSystem::IsFunctionType(TypeID type_id) {
+bool TypeSystem::IsFunctionType(TypeID type_id) {
   return all_functions.find(type_id) != all_functions.end() ||
          all_internal_functions.find(type_id) != all_internal_functions.end() ||
          all_internal_class_methods.find(type_id) !=
              all_internal_class_methods.end();
 }
 
-bool RealTypeSystem::IsBasicType(TypeID type_id) {
+bool TypeSystem::IsBasicType(TypeID type_id) {
   return basic_types_set.find(type_id) != basic_types_set.end();
 }
 
-bool RealTypeSystem::is_basic_type(const string &s) {
+bool TypeSystem::is_basic_type(const string &s) {
   return basic_types.find(s) != basic_types.end();
 }
 
-TypeID RealTypeSystem::GetBasicTypeIDByStr(const string &s) {
+TypeID TypeSystem::GetBasicTypeIDByStr(const string &s) {
   if (s == "ALLTYPES") return SpecialType::kAllTypes;
   if (s == "ALLCOMPOUNDTYPE") return SpecialType::kAllCompoundType;
   if (s == "ALLFUNCTION") return SpecialType::kAllFunction;
@@ -326,7 +324,7 @@ TypeID RealTypeSystem::GetBasicTypeIDByStr(const string &s) {
   return basic_types[s]->get_type_id();
 }
 
-TypeID RealTypeSystem::GetTypeIDByStr(const string &s) {
+TypeID TypeSystem::GetTypeIDByStr(const string &s) {
   for (auto iter : type_map) {
     if (iter.second->name == s) return iter.first;
   }
@@ -337,7 +335,7 @@ TypeID RealTypeSystem::GetTypeIDByStr(const string &s) {
   return SpecialType::kNotExist;
 }
 
-void RealTypeSystem::make_basic_type_add_map(TypeID id, const string &s) {
+void TypeSystem::make_basic_type_add_map(TypeID id, const string &s) {
   auto res = make_basic_type(id, s);
   type_map[id] = res;
   if (id == SpecialType::kAllCompoundType) {
@@ -358,8 +356,7 @@ void RealTypeSystem::make_basic_type_add_map(TypeID id, const string &s) {
   }
 }
 
-shared_ptr<VarType> RealTypeSystem::make_basic_type(TypeID id,
-                                                    const string &s) {
+shared_ptr<VarType> TypeSystem::make_basic_type(TypeID id, const string &s) {
   auto res = make_shared<VarType>();
   res->type_id_ = id;
   res->name = s;
@@ -367,8 +364,8 @@ shared_ptr<VarType> RealTypeSystem::make_basic_type(TypeID id,
   return res;
 }
 
-set<int> RealTypeSystem::get_all_types_from_compound_type(int compound_type,
-                                                          set<int> &visit) {
+set<int> TypeSystem::get_all_types_from_compound_type(int compound_type,
+                                                      set<int> &visit) {
   set<int> res;
   if (visit.find(compound_type) != visit.end()) return res;
   visit.insert(compound_type);
@@ -400,7 +397,8 @@ set<int> RealTypeSystem::get_all_types_from_compound_type(int compound_type,
   return res;
 }
 
-shared_ptr<CompoundType> RealTypeSystem::CreateCompoundTypeAtScope(
+/*
+shared_ptr<CompoundType> TypeSystem::CreateCompoundTypeAtScope(
     shared_ptr<Scope> scope, std::string structure_name) {
   shared_ptr<CompoundType> res = nullptr;
 
@@ -429,12 +427,12 @@ shared_ptr<CompoundType> RealTypeSystem::CreateCompoundTypeAtScope(
       vector<TypeID> tmp;
       // auto pfunc = CreateFunctionType(structure_name, res->type_id_, tmp);
       // TODO: Fix this.
-      /*
+      /
       if (DBG)
         cout << "add definition: " << pfunc->type_id_ << ", " << structure_name
              << " to scope " << g_scope_root->scope_id_ << endl;
       g_scope_root->AddDefinition(pfunc->type_id_, structure_name, 0);
-      */
+      /
     }
   }
 
@@ -457,8 +455,9 @@ shared_ptr<CompoundType> RealTypeSystem::CreateCompoundTypeAtScope(
 
   return res;
 }
+*/
 
-shared_ptr<FunctionType> RealTypeSystem::CreateFunctionType(
+shared_ptr<FunctionType> TypeSystem::CreateFunctionType(
     string &function_name, TypeID return_type, vector<TypeID> &args,
     std::vector<std::string> &arg_names) {
   auto res = make_shared<FunctionType>();
@@ -520,7 +519,7 @@ void Scope::AddDefinition(const string &var_name, TypeID type, unsigned long id,
   symbol_table_.AddDefinition({var_name, type, id});
 }
 
-TypeID RealTypeSystem::GetLeastUpperCommonType(TypeID type1, TypeID type2) {
+TypeID TypeSystem::GetLeastUpperCommonType(TypeID type1, TypeID type2) {
   if (type1 == type2) {
     return type1;
   }
@@ -702,7 +701,7 @@ std::shared_ptr<ScopeTree> ScopeTree::BuildTree(IRPtr root) {
   return scope_tree;
 }
 
-int RealTypeSystem::GeneratePointerType(int original_type, int pointer_level) {
+int TypeSystem::GeneratePointerType(int original_type, int pointer_level) {
   // must be a positive level
   assert(pointer_level);
   if (pointer_map[original_type].count(pointer_level))
@@ -733,7 +732,7 @@ int RealTypeSystem::GeneratePointerType(int original_type, int pointer_level) {
   return cur_type->type_id_;
 }
 
-int RealTypeSystem::GetOrCreatePointerType(int type) {
+int TypeSystem::GetOrCreatePointerType(int type) {
   bool is_found = false;
   int orig_type = -1;
   int level = -1;
@@ -806,13 +805,13 @@ int RealTypeSystem::GetOrCreatePointerType(int type) {
   return res;
 }
 
-bool RealTypeSystem::IsPointerType(TypeID type) {
+bool TypeSystem::IsPointerType(TypeID type) {
   if (DBG) cout << "is_pointer_type: " << type << endl;
   auto type_ptr = GetTypePtrByID(type);
   return type_ptr->is_pointer_type();
 }
 
-shared_ptr<PointerType> RealTypeSystem::GetPointerType(TypeID type_id) {
+shared_ptr<PointerType> TypeSystem::GetPointerType(TypeID type_id) {
   if (type_map.find(type_id) == type_map.end()) return nullptr;
 
   auto res = static_pointer_cast<PointerType>(type_map[type_id]);
@@ -821,7 +820,7 @@ shared_ptr<PointerType> RealTypeSystem::GetPointerType(TypeID type_id) {
   return res;
 }
 
-void RealTypeSystem::debug_pointer_type(shared_ptr<PointerType> &p) {
+void TypeSystem::debug_pointer_type(shared_ptr<PointerType> &p) {
   if (DBG) cout << "------new_pointer_type-------" << endl;
   if (DBG) cout << "type id: " << p->type_id_ << endl;
   if (DBG) cout << "basic_type: " << p->basic_type_ << endl;
@@ -1160,7 +1159,7 @@ void ScopeTree::collect_structure_definition_wt(IRPtr cur, IRPtr root) {
 }
 */
 
-std::shared_ptr<CompoundType> RealTypeSystem::CreateCompoundType(
+std::shared_ptr<CompoundType> TypeSystem::CreateCompoundType(
     std::string &structure_name, std::vector<TypeID> &members,
     std::vector<std::string> &member_names) {
   Ensures(members.size() == member_names.size());

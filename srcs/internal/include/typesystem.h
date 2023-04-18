@@ -56,10 +56,10 @@ class ExpressionGenerator {
         real_type_system_(scope_tree->GetRealTypeSystem()) {
     assert(real_type_system_ != nullptr);
   }
-  std::string GenerateExpression(TypeID type, IRPtr &ir);
+  std::string GenerateExpression(IRPtr &ir, TypeID type);
 
  private:
-  std::shared_ptr<RealTypeSystem> real_type_system_;
+  std::shared_ptr<TypeSystem> real_type_system_;
   std::shared_ptr<ScopeTree> scope_tree_;
   int gen_counter_ = 0;
   int function_gen_counter_ = 0;
@@ -91,17 +91,10 @@ class ExpressionGenerator {
                                       const set<int> &available_types);
   set<int> calc_possible_types_from_structure(int structure_type);
 };
-}  // namespace validation
 
-namespace validation {
-
-using std::map;
-using std::set;
-using std::shared_ptr;
-using std::string;
-using std::vector;
 class Scope;
 
+/*
 enum FIXORDER {
   LEFT_TO_RIGHT = 0,
   RIGHT_TO_LEFT,
@@ -141,12 +134,14 @@ class OPRule {
 
   OPRuleProperty property_ = OP_PROP_Default;
   static void SetRealTypeSystem(
-      std::shared_ptr<RealTypeSystem> real_type_system) {
+      std::shared_ptr<TypeSystem> real_type_system) {
     real_type_system_ = real_type_system;
   }
-  static std::shared_ptr<RealTypeSystem> real_type_system_;
+  static std::shared_ptr<TypeSystem> real_type_system_;
 };
+*/
 
+/*
 struct InferenceRule {
   TypeID result;
   TypeID left;
@@ -194,7 +189,7 @@ class CandidateTypes {
   }
 
  private:
-  std::unordered_map<TypeID /* result type*/, std::vector<InferenceRule>>
+  std::unordered_map<TypeID / result type/, std::vector<InferenceRule>>
       candidates_;
 };
 
@@ -238,7 +233,9 @@ class InferenceResult {
   std::unordered_map<IRPtr, std::shared_ptr<validation::CandidateTypes>>
       cache_inference_map_;
 };
+*/
 
+/*
 class TypeInferer {
  public:
   TypeInferer(std::shared_ptr<Frontend> frontend = nullptr,
@@ -277,7 +274,7 @@ class TypeInferer {
       int type, map<int, vector<set<int>>> &a,
       map<int, vector<string>> &function_map,
       map<int, vector<string>> &compound_var_map,
-      std::shared_ptr<RealTypeSystem> &real_type_system);
+      std::shared_ptr<TypeSystem> &real_type_system);
 
  private:
   std::shared_ptr<Frontend> frontend_;
@@ -288,10 +285,12 @@ class TypeInferer {
   int locate_defined_variable_by_name(const string &var_name, int scope_id);
   set<int> collect_usable_type(IRPtr cur);
   InferenceResult inference_result_;
-  std::shared_ptr<RealTypeSystem> real_type_system_;
+  std::shared_ptr<TypeSystem> real_type_system_;
 };
+*/
 
-class TypeSystem {
+/*
+class OldTypeSystem {
  private:
   std::shared_ptr<Frontend> frontend_;
   // map<string, int> basic_types_;
@@ -304,16 +303,14 @@ class TypeSystem {
   std::shared_ptr<ScopeTree> scope_tree_;
 
  public:
-  TypeSystem(std::shared_ptr<Frontend> frontend = nullptr);
+  OldTypeSystem(std::shared_ptr<Frontend> frontend = nullptr);
   // TODO: Return ValidationError instead of bool
   // The validation consists of three steps:
   // 1. It builds the sysmbol table in each scope.
   // 2. It infers the types of the IRs that need fixing.
   // 3. Fix the IRs based on their inferred types and symbol tables.
-  /*
   [[deprecated("Replaced by Validator::Validate()")]] bool validate(
       IRPtr &root);
-  */
   void MarkFixMe(IRPtr);
   bool Fix(IRPtr root);
 
@@ -322,12 +319,12 @@ class TypeSystem {
     scope_tree_ = scope_tree;
   }
 
-  void SetRealTypeSystem(std::shared_ptr<RealTypeSystem> real_type_system) {
+  void SetRealTypeSystem(std::shared_ptr<TypeSystem> real_type_system) {
     real_type_system_ = real_type_system;
   }
 
  private:
-  std::shared_ptr<RealTypeSystem> real_type_system_;
+  std::shared_ptr<TypeSystem> real_type_system_;
   [[deprecated("Should be removed")]] void split_to_basic_unit(
       IRPtr root, std::queue<IRPtr> &q, map<IRPtr *, IRPtr> &m_save,
       set<IRTYPE> &s_basic_unit_ptr);
@@ -350,27 +347,14 @@ class TypeSystem {
   void debug();
   void init();
 };
+*/
 
-}  // namespace validation
-
-namespace validation {
-
+class InferenceResult {};
 enum class ValidationError {
   kSuccess,
   kUnparseable,
   kNoSymbolToUse,
   // And others.
-};
-
-class TypeSystemRefactor {
- public:
-  TypePtr GetTypeById(TypeID id);
-  TypePtr CreateVarType(std::string name, ScopePtr scope);
-  TypePtr CreateFunctionType(std::string name, std::span<TypePtr> args,
-                             TypePtr ret, ScopePtr scope);
-  // TODO: The signature of this function is not finalized.
-  TypePtr CreateCompoundType(std::string name, std::span<TypePtr> args,
-                             ScopePtr scope);
 };
 
 // Refactored interfaces
@@ -383,8 +367,7 @@ class Validator {
 
 class SemanticValidator : public Validator {
  public:
-  SemanticValidator(std::shared_ptr<Frontend> frontend)
-      : frontend_(frontend), old_type_system_(frontend) {}
+  SemanticValidator(std::shared_ptr<Frontend> frontend) : frontend_(frontend) {}
   ValidationError Validate(IRPtr &root) override;
 
   struct FixDecision {
@@ -401,17 +384,19 @@ class SemanticValidator : public Validator {
   // Assign a usable type to each IR.
   // 4. Fix the IRs.
   std::shared_ptr<ScopeTree> BuildScopeTreeWithSymbolTable(IRPtr &root);
+  // TODO: Implement this.
   std::shared_ptr<InferenceResult> InferType(
       IRPtr &root, std::shared_ptr<ScopeTree> scope_tree);
   std::vector<FixDecision> SelectFixStrategy(
       IRPtr &root, std::shared_ptr<InferenceResult> inference_result,
       std::shared_ptr<ScopeTree> scope_tree);
-  bool Fix(IRPtr &root, std::vector<FixDecision> &fix_decisions,
-           std::shared_ptr<ScopeTree> scope_tree);
+  bool ApplyFix(IRPtr &root, TypeID fix_type,
+                std::shared_ptr<ScopeTree> scope_tree);
 
  private:
+  void MarkFixMe(IRPtr &root);
   std::shared_ptr<Frontend> frontend_;
-  TypeSystem old_type_system_;
+  // TypeSystem old_type_system_;
 };
 }  // namespace validation
 }  // namespace polyglot

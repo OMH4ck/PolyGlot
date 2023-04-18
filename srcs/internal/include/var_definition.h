@@ -160,9 +160,9 @@ class PointerType : public VarType {
 // extern map<std::string, int> basic_types;
 
 // TODO: Bad name. Fix later.
-class RealTypeSystem {
+class TypeSystem {
  public:
-  RealTypeSystem();
+  TypeSystem();
   const std::map<TypeID, std::vector<std::string>> &GetBuiltinSimpleVarTypes()
       const;
   const std::map<TypeID, std::vector<std::string>> &GetBuiltinCompoundTypes()
@@ -180,8 +180,8 @@ class RealTypeSystem {
       std::vector<std::string> &member_names);
   // TODO: Refactor the signature of this function. It should accept a vector of
   // member types and names along with the name of the structure.
-  std::shared_ptr<CompoundType> CreateCompoundTypeAtScope(
-      std::shared_ptr<Scope> scope, std::string structure_name);
+  // std::shared_ptr<CompoundType> CreateCompoundTypeAtScope(
+  //    std::shared_ptr<Scope> scope, std::string structure_name);
   std::shared_ptr<VarType> GetTypePtrByID(TypeID type_id);
   std::shared_ptr<CompoundType> GetCompoundType(TypeID type_id);
   std::shared_ptr<FunctionType> GetFunctionType(TypeID type_id);
@@ -239,10 +239,8 @@ class ScopeTree {
 
   void BuildSymbolTables(IRPtr &root);
 
-  std::shared_ptr<RealTypeSystem> GetRealTypeSystem() {
-    return real_type_system_;
-  }
-  ScopeTree() { real_type_system_ = std::make_shared<RealTypeSystem>(); }
+  std::shared_ptr<TypeSystem> GetRealTypeSystem() { return real_type_system_; }
+  ScopeTree() { real_type_system_ = std::make_shared<TypeSystem>(); }
   static std::shared_ptr<ScopeTree> BuildTree(IRPtr root);
 
  private:
@@ -252,7 +250,7 @@ class ScopeTree {
   ScopePtr g_scope_root_;
   std::shared_ptr<Scope> g_scope_current_;
   std::map<ScopeID, ScopePtr> scope_id_map_;
-  std::shared_ptr<RealTypeSystem> real_type_system_;
+  std::shared_ptr<TypeSystem> real_type_system_;
 
   // Moved from the Old TypeSystem
   bool create_symbol_table(IRPtr root);
