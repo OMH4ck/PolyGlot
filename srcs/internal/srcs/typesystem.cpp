@@ -440,7 +440,7 @@ bool TypeInferer::type_inference_new(IRPtr cur, int scope_type) {
           assert(tmp_ptr->is_pointer_type());
           if (DBG) cout << "left type of -> is : " << left_type << endl;
           auto type_ptr = static_pointer_cast<PointerType>(tmp_ptr);
-          if (DBG) cout << "Type ptr: " << type_ptr->type_name_ << endl;
+          if (DBG) cout << "Type ptr: " << type_ptr->name << endl;
           assert(type_ptr);
           new_left_type = type_ptr->orig_type_;
         }
@@ -966,7 +966,7 @@ bool TypeSystem::validate(IRPtr &root) {
 string TypeSystem::generate_definition(string &var_name, int type) {
   auto type_ptr = real_type_system_->GetTypePtrByID(type);
   assert(type_ptr != nullptr);
-  auto type_str = type_ptr->type_name_;
+  auto type_str = type_ptr->name;
   string res = type_str + " " + var_name + ";";
 
   return res;
@@ -977,7 +977,7 @@ string TypeSystem::generate_definition(vector<string> &var_name, int type) {
   auto type_ptr = real_type_system_->GetTypePtrByID(type);
   assert(type_ptr != nullptr);
   assert(var_name.size());
-  auto type_str = type_ptr->type_name_;
+  auto type_str = type_ptr->name;
   string res = type_str + " ";
   string var_list = var_name[0];
   for (auto itr = var_name.begin() + 1; itr != var_name.end(); itr++)
@@ -1481,7 +1481,7 @@ string ExpressionGenerator::function_call_gen_handler(
 
   assert(choice_ptr != nullptr);
 
-  res = choice_ptr->type_name_;
+  res = choice_ptr->name;
   res += "(";
   function_gen_counter_ += choice_ptr->v_arg_types_.size();
   for (auto k : choice_ptr->v_arg_types_) {
@@ -1515,8 +1515,8 @@ string ExpressionGenerator::structure_member_gen_handler(
     if (gen::Configuration::GetInstance().IsWeakType()) {
       if (real_type_system_->IsBuiltinType(compound_type) && get_rand_int(4)) {
         auto compound_ptr = real_type_system_->GetTypePtrByID(compound_type);
-        if (compound_ptr != nullptr && compound_var == compound_ptr->type_name_)
-          return "(new " + compound_ptr->type_name_ + "())";
+        if (compound_ptr != nullptr && compound_var == compound_ptr->name)
+          return "(new " + compound_ptr->name + "())";
         else {
           return compound_var;
         }
@@ -1596,13 +1596,13 @@ string ExpressionGenerator::get_class_member_by_type_no_duplicate(
   } else if (!all_sol.size() && func_sol.size()) {
     auto pfunc = *random_pick(func_sol);
     map<int, vector<string>> tmp_func_map;
-    tmp_func_map[pfunc->type_id_] = {pfunc->type_name_};
+    tmp_func_map[pfunc->type_id_] = {pfunc->name};
     res = member_str + function_call_gen_handler(tmp_func_map, nullptr);
   } else if (all_sol.size() && func_sol.size()) {
     if (get_rand_int(2)) {
       auto pfunc = *random_pick(func_sol);
       map<int, vector<string>> tmp_func_map;
-      tmp_func_map[pfunc->type_id_] = {pfunc->type_name_};
+      tmp_func_map[pfunc->type_id_] = {pfunc->name};
       res = member_str + function_call_gen_handler(tmp_func_map, nullptr);
     } else {
       res = *random_pick(all_sol);
@@ -1837,8 +1837,7 @@ set<int> ExpressionGenerator::calc_possible_types_from_structure(
   set<int> visit;
   if (DBG) {
     auto type_ptr = real_type_system_->GetCompoundType(structure_type);
-    cout << "[calc_possible_types_from_structure] " << type_ptr->type_name_
-         << endl;
+    cout << "[calc_possible_types_from_structure] " << type_ptr->name << endl;
   }
   if (builtin_structure_type_cache.count(structure_type))
     return builtin_structure_type_cache[structure_type];

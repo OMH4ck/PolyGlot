@@ -101,7 +101,7 @@ class Scope {
 class VarType {
  public:
   TypeID type_id_;
-  std::string type_name_;
+  std::string name;
   std::vector<std::shared_ptr<VarType>> base_type_;
   std::vector<std::weak_ptr<VarType>> derived_type_;
   TypeID get_type_id() const;
@@ -175,6 +175,9 @@ class RealTypeSystem {
       std::string &function_name, TypeID return_type, std::vector<TypeID> &args,
       std::vector<std::string> &arg_names);
 
+  std::shared_ptr<CompoundType> CreateCompoundType(
+      std::string &structure_name, std::vector<TypeID> &members,
+      std::vector<std::string> &member_names);
   // TODO: Refactor the signature of this function. It should accept a vector of
   // member types and names along with the name of the structure.
   std::shared_ptr<CompoundType> CreateCompoundTypeAtScope(
@@ -258,10 +261,8 @@ class ScopeTree {
   DataType find_define_type(IRPtr cur);
   void CollectSimpleVariableDefinition(IRPtr &cur);
   // std::optional<SymbolTable> collect_simple_variable_defintion(IRPtr cur);
-  void collect_structure_definition(IRPtr cur, IRPtr root);
-  void collect_structure_definition_wt(IRPtr cur, IRPtr root);
-  void collect_function_definition_wt(IRPtr cur);
-  void collect_function_definition(IRPtr cur);
+  void CollectStructureDefinition(IRPtr &cur, IRPtr &root);
+  void CollectFunctionDefinition(IRPtr &cur);
 };
 void reset_scope();
 
