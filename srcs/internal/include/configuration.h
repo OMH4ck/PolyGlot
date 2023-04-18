@@ -35,7 +35,8 @@ namespace polyglot {
 
 class Frontend;
 
-namespace gen {
+namespace config {
+bool ConfigFileValidate(std::string_view config_file_path);
 
 class Configuration {
  public:
@@ -44,26 +45,28 @@ class Configuration {
   static const Configuration& GetInstance();
 
   bool IsWeakType() const;
-  IRTYPE GetFixIRType() const;
-  std::set<IRTYPE> GetFunctionArgNodeType() const;
-
-  std::set<IRTYPE> GetBasicUnits() const;
+  // IRTYPE GetFixIRType() const;
+  // std::set<IRTYPE> GetFunctionArgNodeType() const;
+  // std::set<IRTYPE> GetBasicUnits() const;
 
   std::string GetBuiltInObjectFilePath() const;
 
-  std::vector<string> GetOpRules() const;
+  // std::vector<string> GetOpRules() const;
 
-  std::vector<std::pair<std::string, std::string>> GetConvertableTypes() const;
+  // std::vector<std::pair<std::string, std::string>> GetConvertableTypes()
+  // const;
 
-  std::vector<std::pair<std::string, std::string>> GetConvertChain() const;
+  // std::vector<std::pair<std::string, std::string>> GetConvertChain() const;
 
   std::vector<std::string> GetBasicTypeStr() const;
 
   // std::string LiteralTypeToString(IRTYPE type);
 
+  /*
   bool IsFloatLiteral(IRTYPE type) const;
   bool IsIntLiteral(IRTYPE type) const;
   bool IsStringLiteral(IRTYPE type) const;
+  */
   // bool IsIdentifier(IRTYPE type);
 
   std::string GetInitDirPath() const;
@@ -98,6 +101,6 @@ class Configuration {
   std::vector<string> op_rules_;
   std::shared_ptr<Frontend> frontend_;
 };
-}  // namespace gen
+}  // namespace config
 }  // namespace polyglot
 #endif

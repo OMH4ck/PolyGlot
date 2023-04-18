@@ -27,7 +27,7 @@
 #include <optional>
 #include <string_view>
 
-#include "config_misc.h"
+#include "configuration.h"
 // #include "define.h"
 #include "frontend.h"
 #include "ir.h"
@@ -64,7 +64,7 @@ namespace validation {
 
 // map<int, vector<OPRule>> TypeSystem::op_rules_;
 // map<string, map<string, map<string, OPTYPE>>> TypeSystem::op_id_map_;
-// set<IRTYPE> TypeSystem::s_basic_unit_ = gen::GetBasicUnits();
+// set<IRTYPE> TypeSystem::s_basic_unit_ = config::GetBasicUnits();
 // int TypeSystem::gen_counter_;
 // int TypeSystem::function_gen_counter_;
 // int TypeSystem::current_fix_scope_;
@@ -125,10 +125,10 @@ void OldTypeSystem::init_one_internal_obj(string filename) {
 }
 
 void OldTypeSystem::init() {
-  s_basic_unit_ = gen::Configuration::GetInstance().GetBasicUnits();
+  s_basic_unit_ = config::Configuration::GetInstance().GetBasicUnits();
   TypeInferer::init_type_dict();
   init_internal_obj(
-      gen::Configuration::GetInstance().GetBuiltInObjectFilePath());
+      config::Configuration::GetInstance().GetBuiltInObjectFilePath());
 }
 */
 
@@ -137,7 +137,7 @@ void TypeInferer::init_type_dict() {
   // string line;
   // ifstream input_file("./js_grammar/type_dict");
 
-  vector<string> type_dict = gen::Configuration::GetInstance().GetOpRules();
+  vector<string> type_dict = config::Configuration::GetInstance().GetOpRules();
   for (auto &line : type_dict) {
     if (line.empty()) continue;
 
@@ -790,7 +790,7 @@ bool OldTypeSystem::simple_fix(IRPtr ir, int type, InferenceResult &inferer) {
   // TODO: Refactor.
   // This checks whether we can find a derived type from `type`.
   // We should consider the availability of the derived type.
-  if (!gen::Configuration::GetInstance().IsWeakType()) {
+  if (!config::Configuration::GetInstance().IsWeakType()) {
     if (!inferer.HasCandidateAtType(ir, type)) {
       TypeID new_type = SpecialType::kNotExist;
       int counter = 0;
@@ -827,7 +827,8 @@ bool OldTypeSystem::simple_fix(IRPtr ir, int type, InferenceResult &inferer) {
 */
 
 bool Fixable(IRPtr root) {
-  // return root->Type() == gen::Configuration::GetInstance().GetFixIRType() ||
+  // return root->Type() == config::Configuration::GetInstance().GetFixIRType()
+  // ||
   return root->GetDataType() == kFixUnit ||
          (root->ContainString() && root->GetString() == "FIXME");
 }
@@ -849,7 +850,7 @@ bool OldTypeSystem::Fix(IRPtr root) {
       int type = SpecialType::kAllTypes;
       std::shared_ptr<InferenceResult> inference_result =
           std::make_shared<InferenceResult>();
-      if (!gen::Configuration::GetInstance().IsWeakType()) {
+      if (!config::Configuration::GetInstance().IsWeakType()) {
         inference_result = inferer.Infer(root, 0);
         if (inference_result == nullptr) {
           res = false;
@@ -904,8 +905,8 @@ void SemanticValidator::MarkFixMe(IRPtr &root) {
       if (NeedFixing(root->LeftChild())) {
         auto save_ir_id = root->LeftChild()->GetStatementID();
         auto save_scope = root->LeftChild()->GetScopeID();
-        root->SetLeftChild(std::make_shared<IR>(
-            frontend_->GetStringLiteralType(), std::string("FIXME")));
+        root->SetLeftChild(std::make_shared<IR>(frontend_->GetUnknownType(),
+                                                std::string("FIXME")));
         root->LeftChild()->SetScopeID(save_scope);
         root->LeftChild()->SetStatementID(save_ir_id);
       }
@@ -919,7 +920,7 @@ void SemanticValidator::MarkFixMe(IRPtr &root) {
         auto save_ir_id = root->RightChild()->GetStatementID();
         auto save_scope = root->RightChild()->GetScopeID();
         root->SetRightChild(
-            std::make_shared<IR>(frontend_->GetStringLiteralType(), "FIXME"));
+            std::make_shared<IR>(frontend_->GetUnknownType(), "FIXME"));
         root->RightChild()->SetScopeID(save_scope);
         root->RightChild()->SetStatementID(save_ir_id);
       }
@@ -1255,7 +1256,7 @@ std::shared_ptr<InferenceResult> SemanticValidator::InferType(
 
     if (Fixable(root)) {
       assert(NeedFixing(root));
-      if (!gen::Configuration::GetInstance().IsWeakType() &&
+      if (!config::Configuration::GetInstance().IsWeakType() &&
           inferer.Infer(root, 0) == nullptr) {
         return nullptr;
       } else {
@@ -1385,7 +1386,7 @@ string ExpressionGenerator::generate_expression_by_type_core(int type,
   auto compound_var_size = compound_var_map.size();
   auto function_size = function_map.size();
 
-  if (!gen::Configuration::GetInstance().IsWeakType()) {
+  if (!config::Configuration::GetInstance().IsWeakType()) {
     // add pointer into *_var_map
     update_pointer_var(pointer_var_map, simple_var_map, compound_var_map);
   }
@@ -1579,7 +1580,7 @@ string ExpressionGenerator::structure_member_gen_handler(
   res = get_class_member_by_type(compound_type, member_type);
   if (res.empty()) {
     assert(member_type == compound_type);
-    if (gen::Configuration::GetInstance().IsWeakType()) {
+    if (config::Configuration::GetInstance().IsWeakType()) {
       if (real_type_system_->IsBuiltinType(compound_type) && get_rand_int(4)) {
         auto compound_ptr = real_type_system_->GetTypePtrByID(compound_type);
         if (compound_ptr != nullptr && compound_var == compound_ptr->name)

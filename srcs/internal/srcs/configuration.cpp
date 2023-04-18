@@ -18,20 +18,67 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include "configuration.h"
+
 #include <cassert>
+#include <filesystem>
 #include <set>
 #include <string>
 
 #include "absl/strings/str_join.h"
-#include "config_misc.h"
 #include "frontend.h"
+#include "spdlog/spdlog.h"
 #include "typesystem.h"
 #include "var_definition.h"
 #include "yaml-cpp/yaml.h"
 
+namespace {
+bool IsNodeBool(const YAML::Node &node) {
+  return node.IsScalar() &&
+         (!node.Scalar().compare("true") || !node.Scalar().compare("false"));
+}
+}  // namespace
 namespace polyglot {
 
-namespace gen {
+namespace config {
+
+bool ConfigFileValidate(std::string_view config_file_path) {
+  YAML::Node config;
+
+  try {
+    config = YAML::LoadFile(config_file_path.data());
+  } catch (YAML::BadFile &e) {
+    SPDLOG_ERROR("Config file {} not found or invalid", config_file_path);
+    return false;
+  }
+
+  // If weaktype is not bool
+  if (!config["IsWeakType"] || !IsNodeBool(config["IsWeakType"])) {
+    SPDLOG_ERROR("Config file {} is missing IsWeakType", config_file_path);
+    return false;
+  }
+
+  // If InitFileDir is not string
+  if (!config["InitFileDir"] || !config["InitFileDir"].IsScalar()) {
+    SPDLOG_ERROR("Config file {} has invalid InitFileDir", config_file_path);
+    return false;
+  }
+
+  // If InitFileDir not a valid path
+  if (!std::filesystem::exists(config["InitFileDir"].as<std::string>())) {
+    SPDLOG_ERROR("Init file dir {} is not a valid path",
+                 config["InitFileDir"].as<std::string>());
+    return false;
+  }
+
+  // Check whether BasicTypes is valid
+  if (!config["BasicTypes"] || !config["BasicTypes"].IsSequence()) {
+    SPDLOG_ERROR("Config file {} has invalid BasicTypes", config_file_path);
+    return false;
+  }
+
+  return true;
+}
 
 const Configuration &Configuration::GetInstance() {
   auto &instance = GetInstanceImpl();
@@ -46,26 +93,12 @@ bool Configuration::Initialize(std::string_view config_file_path) {
 bool Configuration::Init(std::string_view config_file_path) {
   try {
     YAML::Node config = YAML::LoadFile(config_file_path.data());
-    // TODO: Fix this.
-    if (config["Frontend"]) {
-      std::string frontend_name = config["Frontend"].as<std::string>();
-      if (frontend_name == "bison") {
-        assert(false && "Bison frontend has been deprecated");
-      } else if (frontend_name == "antlr") {
-        frontend_ = std::make_unique<AntlrFrontend>();
-      } else {
-        assert(false && "Unknown frontend");
-        return false;
-      }
-    } else {
-      frontend_ = std::make_unique<AntlrFrontend>();
-    }
-    if (config["IsWeakType"]) {
-      is_weak_type_ = config["IsWeakType"].as<bool>();
-    } else {
-      assert(false);
+    if (!ConfigFileValidate(config_file_path)) {
       return false;
     }
+    // TODO: Fix this.
+    frontend_ = std::make_unique<AntlrFrontend>();
+    is_weak_type_ = config["IsWeakType"].as<bool>();
     /*
     if (config["FixIRType"]) {
       fix_ir_type_ =
@@ -78,12 +111,9 @@ bool Configuration::Init(std::string_view config_file_path) {
       }
     }
     */
-    if (config["InitFileDir"]) {
-      init_dir_path_ = config["InitFileDir"].as<std::string>();
-    } else {
-      assert(false);
-      return false;
-    }
+    init_dir_path_ = config["InitFileDir"].as<std::string>();
+
+    /*
     if (config["FunctionArgumentUnit"]) {
       function_arg_node_type_.insert(frontend_->GetIRTypeByStr(
           config["FunctionArgumentUnit"].as<std::string>()));
@@ -96,6 +126,8 @@ bool Configuration::Init(std::string_view config_file_path) {
       }
       function_arg_node_type_.insert(frontend_->GetUnknownType());
     }
+    */
+    /*
     if (config["StringLiteralType"]) {
       // Ensure it is an array
       assert(config["StringLiteralType"].IsSequence() &&
@@ -145,6 +177,7 @@ bool Configuration::Init(std::string_view config_file_path) {
       assert(false);
       return false;
     }
+    */
 
     // This is optional.
     if (config["BuiltinObjFile"]) {
@@ -158,17 +191,11 @@ bool Configuration::Init(std::string_view config_file_path) {
       syntax_only_ = false;
     }
 
-    if (config["BasicTypes"]) {
-      // Ensure it is an array
-      assert(config["BasicTypes"].IsSequence() && "BasicTypes is not an array");
-      // Iterate through the array
-      for (const auto &type : config["BasicTypes"]) {
-        basic_types_.push_back(type.as<std::string>());
-      }
-    } else {
-      assert(false);
+    for (const auto &type : config["BasicTypes"]) {
+      basic_types_.push_back(type.as<std::string>());
     }
 
+    /*
     if (config["ConvertableTypes"]) {
       // Ensure it is an array
       assert(config["ConvertableTypes"].IsSequence() &&
@@ -198,6 +225,8 @@ bool Configuration::Init(std::string_view config_file_path) {
     } else {
       assert(false);
     }
+    */
+    /*
     if (config["OPRules"]) {
       // Ensure it is an array
       assert(config["OPRules"].IsSequence() && "OPRules is not an array");
@@ -234,6 +263,7 @@ bool Configuration::Init(std::string_view config_file_path) {
     for (const auto &op_rule : op_rules_) {
       std::cout << "\"" << op_rule << "\", " << std::endl;
     }
+    */
 
     return is_init_ = true;
   } catch (YAML::BadFile &e) {
@@ -244,6 +274,7 @@ bool Configuration::Init(std::string_view config_file_path) {
 
 bool Configuration::IsWeakType() const { return is_weak_type_; }
 
+/*
 IRTYPE Configuration::GetFixIRType() const { return fix_ir_type_; }
 std::set<IRTYPE> Configuration::GetFunctionArgNodeType() const {
   return function_arg_node_type_;
@@ -266,11 +297,13 @@ std::vector<std::pair<std::string, std::string>>
 Configuration::GetConvertChain() const {
   return convert_chain_;
 }
+*/
 
 std::vector<std::string> Configuration::GetBasicTypeStr() const {
   return basic_types_;
 }
 
+/*
 bool Configuration::IsFloatLiteral(IRTYPE type) const {
   return float_literal_type_.find(type) != float_literal_type_.end();
 }
@@ -282,6 +315,7 @@ bool Configuration::IsIntLiteral(IRTYPE type) const {
 bool Configuration::IsStringLiteral(IRTYPE type) const {
   return string_literal_type_.find(type) != string_literal_type_.end();
 }
+*/
 
 std::string Configuration::GetInitDirPath() const { return init_dir_path_; }
 /*
@@ -291,5 +325,5 @@ bool IsIdentifier(NODETYPE type){
 }
 */
 
-}  // namespace gen
+}  // namespace config
 }  // namespace polyglot

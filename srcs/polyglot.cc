@@ -22,7 +22,7 @@
 
 #include <memory>
 
-#include "config_misc.h"
+#include "configuration.h"
 // #include "define.h"
 #include "frontend.h"
 #include "ir.h"
@@ -58,7 +58,7 @@ size_t PolyGlotMutator::Mutate(const char *test_case) {
   ;
 
   for (auto &ir : mutated_tree) {
-    if (polyglot::gen::Configuration::GetInstance().SyntaxOnly()) {
+    if (polyglot::config::Configuration::GetInstance().SyntaxOnly()) {
       // TODO: Replace this with a validator!
       if (GetChildNum(ir) > 1500) {
         continue;
@@ -88,7 +88,7 @@ PolyGlotMutator *PolyGlotMutator::CreateInstance(std::string_view config) {
   std::shared_ptr<polyglot::Frontend> frontend =
       std::make_shared<polyglot::AntlrFrontend>();
 
-  assert(polyglot::gen::Configuration::Initialize(config) &&
+  assert(polyglot::config::Configuration::Initialize(config) &&
          "config file contains some errors!");
 
   PolyGlotMutator *mutator = new PolyGlotMutator(frontend);
@@ -100,7 +100,7 @@ void PolyGlotMutator::Initialize(std::string_view config_path) {
   vector<polyglot::IRPtr> ir_set;
 
   std::string init_file_path =
-      polyglot::gen::Configuration::GetInstance().GetInitDirPath();
+      polyglot::config::Configuration::GetInstance().GetInitDirPath();
   vector<string> file_list = get_all_files_in_dir(init_file_path.c_str());
 
   for (auto &f : file_list) {

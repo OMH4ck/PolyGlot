@@ -25,7 +25,7 @@
 #include <string_view>
 #include <unordered_set>
 
-#include "config_misc.h"
+#include "configuration.h"
 #include "frontend.h"
 #include "ir.h"
 #include "mutate.h"
@@ -160,8 +160,8 @@ TEST(TypeSystemTest, ValidateFixDefineUse) {
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
-  if (!gen::Configuration::Initialize(GetRootPath() +
-                                      "/grammars/simplelang/semantic.yml")) {
+  if (!config::Configuration::Initialize(GetRootPath() +
+                                         "/grammars/simplelang/semantic.yml")) {
     std::cerr << "Failed to initialize configuration.\n";
     exit(-1);
   }

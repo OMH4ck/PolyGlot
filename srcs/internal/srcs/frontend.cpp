@@ -68,6 +68,8 @@ IRTYPE AntlrFrontend::GetIRTypeByStr(std::string_view type) {
 std::string_view AntlrFrontend::GetIRTypeStr(IRTYPE type) {
   return antlr4::GetIRTypeStr(type);
 }
+
+/*
 IRTYPE AntlrFrontend::GetStringLiteralType() {
   return antlr4::GetIRTypeByStr("string_literal");
 }
@@ -82,6 +84,7 @@ IRTYPE AntlrFrontend::GetFloatLiteralType() {
 IRTYPE AntlrFrontend::GetIdentifierType() {
   return antlr4::GetIRTypeByStr("identifier");
 }
+*/
 
 IRTYPE AntlrFrontend::GetUnknownType() { return antlr4::kUnknown; }
 

@@ -37,8 +37,9 @@
 #include <unordered_set>
 
 #include "absl/random/random.h"
-#include "config_misc.h"
+#include "configuration.h"
 // #include "define.h"
+#include "ir.h"
 #include "spdlog/spdlog.h"
 #include "utils.h"
 
@@ -76,9 +77,9 @@ static inline bool is_leaf(IRPtr r) {
 Mutator::Mutator(std::shared_ptr<Frontend> frontend) {
   srand(time(nullptr));
   frontend_ = frontend;
-  float_types_.insert(frontend_->GetFloatLiteralType());
-  int_types_.insert(frontend_->GetIntLiteralType());
-  string_types_.insert(frontend_->GetStringLiteralType());
+  // float_types_.insert(frontend_->GetFloatLiteralType());
+  // int_types_.insert(frontend_->GetIntLiteralType());
+  // string_types_.insert(frontend_->GetStringLiteralType());
   init_convertable_ir_type_map();
 }
 // Need No fix
@@ -202,10 +203,12 @@ void IRLibrary::SaveIRRecursive(IRPtr cur) {
 }
 
 void Mutator::init_convertable_ir_type_map() {
-  for (auto &p : gen::Configuration::GetInstance().GetConvertableTypes()) {
+  /*
+  for (auto &p : config::Configuration::GetInstance().GetConvertableTypes()) {
     m_convertable_map_[frontend_->GetIRTypeByStr(p.first)].insert(
         frontend_->GetIRTypeByStr(p.second));
   }
+  */
 }
 
 vector<IRPtr> Mutator::MutateIR(IRPtr input) {
@@ -391,7 +394,7 @@ void Mutator::ExtractStructure(IRPtr &root) {
     if (root->LeftChild()->GetDataType() == kFixUnit) {
       ;
       root->SetLeftChild(
-          std::make_shared<IR>(frontend_->GetStringLiteralType(), "FIXME"));
+          std::make_shared<IR>(frontend_->GetUnknownType(), "FIXME"));
     } else {
       ExtractStructure(root->LeftChild());
     }
@@ -400,7 +403,7 @@ void Mutator::ExtractStructure(IRPtr &root) {
     if (root->RightChild()->GetDataType() == kFixUnit) {
       ;
       root->SetRightChild(
-          std::make_shared<IR>(frontend_->GetStringLiteralType(), "FIXME"));
+          std::make_shared<IR>(frontend_->GetUnknownType(), "FIXME"));
     } else {
       ExtractStructure(root->RightChild());
     }
@@ -416,11 +419,11 @@ void Mutator::ExtractStructure(IRPtr &root) {
   }
   */
   // #endif
-  if (string_types_.find(type) != string_types_.end()) {
+  if (root->GetDataType() == kDataDefault && root->ContainString()) {
     root->SetString("'x'");
-  } else if (int_types_.find(type) != int_types_.end()) {
+  } else if (root->ContainInt()) {
     root->SetInt(1);
-  } else if (float_types_.find(type) != float_types_.end()) {
+  } else if (root->ContainFloat()) {
     root->SetFloat(1.1);
   }
 }

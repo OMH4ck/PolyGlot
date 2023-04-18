@@ -25,7 +25,7 @@
 #include <string_view>
 #include <unordered_set>
 
-#include "config_misc.h"
+#include "configuration.h"
 #include "frontend.h"
 #include "ir.h"
 #include "mutate.h"
@@ -98,7 +98,7 @@ TEST(MutatorTest, MutateInitGoodTestCasesOnly) {
   mutation::Mutator mutator(frontend);
 
   std::string init_file_path =
-      gen::Configuration::GetInstance().GetInitDirPath();
+      config::Configuration::GetInstance().GetInitDirPath();
   vector<string> file_list = get_all_files_in_dir(init_file_path.c_str());
 
   size_t valid_test_case_count = 0;
@@ -121,7 +121,7 @@ class MutatorTestF : public testing::Test {
     frontend = std::make_shared<AntlrFrontend>();
     mutator = std::make_unique<mutation::Mutator>(frontend);
     std::string init_file_path =
-        gen::Configuration::GetInstance().GetInitDirPath();
+        config::Configuration::GetInstance().GetInitDirPath();
     vector<string> file_list = get_all_files_in_dir(init_file_path.c_str());
     for (auto& f : file_list) {
       std::string content = ReadFileIntoString(f);
@@ -219,7 +219,7 @@ TEST(TypeSystemTest, ValidateFixDefineUse) {
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
-  if (!gen::Configuration::Initialize(
+  if (!config::Configuration::Initialize(
           GetRootPath() + "/grammars/simplelang/semantic_weak_type.yml")) {
     std::cerr << "Failed to initialize configuration.\n";
     exit(-1);

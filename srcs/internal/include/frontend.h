@@ -39,10 +39,12 @@ class Frontend {
   virtual ~Frontend() = default;
   virtual IRTYPE GetIRTypeByStr(std::string_view type) = 0;
   virtual std::string_view GetIRTypeStr(IRTYPE type) = 0;
+  /*
   virtual IRTYPE GetStringLiteralType() = 0;
   virtual IRTYPE GetIntLiteralType() = 0;
   virtual IRTYPE GetFloatLiteralType() = 0;
   virtual IRTYPE GetIdentifierType() = 0;
+  */
   virtual IRTYPE GetUnknownType() = 0;
   virtual FrontendType GetFrontendType() = 0;
   virtual size_t GetIRTypeNum() = 0;
@@ -54,10 +56,12 @@ class AntlrFrontend : public Frontend {
   IRPtr TranslateToIR(std::string input) override;
   IRTYPE GetIRTypeByStr(std::string_view type) override;
   std::string_view GetIRTypeStr(IRTYPE type) override;
+  /*
   IRTYPE GetStringLiteralType() override;
   IRTYPE GetIntLiteralType() override;
   IRTYPE GetFloatLiteralType() override;
   IRTYPE GetIdentifierType() override;
+  */
   IRTYPE GetUnknownType() override;
   FrontendType GetFrontendType() override { return FrontendType::kANTLR; }
   size_t GetIRTypeNum() override;

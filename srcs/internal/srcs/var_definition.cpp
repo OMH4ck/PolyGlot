@@ -26,7 +26,7 @@
 #include <queue>
 #include <stack>
 
-#include "config_misc.h"
+#include "configuration.h"
 #include "gsl/assert"
 #include "ir.h"
 #include "spdlog/spdlog.h"
@@ -138,7 +138,8 @@ void TypeSystem::init_convert_chain() {
   }
   */
 
-  for (auto &rule : gen::Configuration::GetInstance().GetConvertChain()) {
+  /*
+  for (auto &rule : config::Configuration::GetInstance().GetConvertChain()) {
     auto base_var = GetTypePtrByID(GetBasicTypeIDByStr(rule.second));
     auto derived_var = GetTypePtrByID(GetBasicTypeIDByStr(rule.first));
     if (base_var != nullptr && derived_var != nullptr) {
@@ -148,6 +149,7 @@ void TypeSystem::init_convert_chain() {
       assert(0);
     }
   }
+  */
 }
 
 bool TypeSystem::CanDeriveFrom(TypeID dtype, TypeID btype) {
@@ -174,7 +176,7 @@ TypeSystem::TypeSystem() {
 }
 
 void TypeSystem::init_basic_types() {
-  for (auto &line : gen::Configuration::GetInstance().GetBasicTypeStr()) {
+  for (auto &line : config::Configuration::GetInstance().GetBasicTypeStr()) {
     if (line.empty()) continue;
     auto new_id = gen_type_id();
     auto ptr = make_shared<VarType>();
@@ -380,7 +382,7 @@ set<int> TypeSystem::get_all_types_from_compound_type(int compound_type,
       res.insert(member_type);
     } else if (IsFunctionType(member_type)) {
       // assert(0);
-      if (gen::Configuration::GetInstance().IsWeakType()) {
+      if (config::Configuration::GetInstance().IsWeakType()) {
         auto pfunc = GetFunctionType(member_type);
         res.insert(pfunc->return_type_);
         res.insert(member_type);
@@ -388,7 +390,7 @@ set<int> TypeSystem::get_all_types_from_compound_type(int compound_type,
     } else if (IsBasicType(member_type)) {
       res.insert(member_type);
     } else {
-      if (gen::Configuration::GetInstance().IsWeakType()) {
+      if (config::Configuration::GetInstance().IsWeakType()) {
         res.insert(member_type);
       }
     }
@@ -497,7 +499,7 @@ void Scope::AddDefinition(const string &var_name, TypeID type, unsigned long id,
                           ScopeType stype) {
   if (type == SpecialType::kNotExist) return;
 
-  if (gen::Configuration::GetInstance().IsWeakType()) {
+  if (config::Configuration::GetInstance().IsWeakType()) {
     if (stype != kScopeStatement) {
       auto p = this;
       while (p != nullptr && p->scope_type_ != stype) p = p->GetParent().get();
@@ -1031,7 +1033,7 @@ void ScopeTree::CollectSimpleVariableDefinition(IRPtr &cur) {
     Trim(type_str);
     type = real_type_system_->GetTypeIDByStr(type_str);
     if (type == SpecialType::kNotExist &&
-        gen::Configuration::GetInstance().IsWeakType()) {
+        config::Configuration::GetInstance().IsWeakType()) {
       type = SpecialType::kAnyType;
     }
     assert(type != SpecialType::kNotExist);

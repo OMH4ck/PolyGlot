@@ -132,7 +132,7 @@ add_library(config_lib STATIC
 target_include_directories(config_lib
                            PUBLIC ${CMAKE_SOURCE_DIR}/srcs/internal/include)
 target_compile_options(config_lib PRIVATE -fPIC)
-target_link_libraries(config_lib PRIVATE yaml-cpp absl::str_format)
+target_link_libraries(config_lib PRIVATE yaml-cpp absl::str_format spdlog::spdlog)
 
 add_library(ir_lib STATIC srcs/internal/srcs/ir.cpp)
 target_include_directories(ir_lib
