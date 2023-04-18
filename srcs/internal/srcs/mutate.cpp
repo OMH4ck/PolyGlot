@@ -388,7 +388,7 @@ void Mutator::ExtractStructure(IRPtr &root) {
   auto type = root->Type();
 
   if (root->HasLeftChild()) {
-    if (root->LeftChild()->GetDataType() == kDataFixUnit) {
+    if (root->LeftChild()->GetDataType() == kFixUnit) {
       ;
       root->SetLeftChild(
           std::make_shared<IR>(frontend_->GetStringLiteralType(), "FIXME"));
@@ -397,7 +397,7 @@ void Mutator::ExtractStructure(IRPtr &root) {
     }
   }
   if (root->HasRightChild()) {
-    if (root->RightChild()->GetDataType() == kDataFixUnit) {
+    if (root->RightChild()->GetDataType() == kFixUnit) {
       ;
       root->SetRightChild(
           std::make_shared<IR>(frontend_->GetStringLiteralType(), "FIXME"));
@@ -409,10 +409,12 @@ void Mutator::ExtractStructure(IRPtr &root) {
   if (root->HasLeftChild() || root->HasRightChild()) return;
 
   // TODO: Verify whether this should be == or !=.
-  if (root->GetDataType() == kDataWhatever) {
+  /*
+  if (root->GetDataType() == kDataDefault) {
     root->SetString("x");
     return;
   }
+  */
   // #endif
   if (string_types_.find(type) != string_types_.end()) {
     root->SetString("'x'");
@@ -428,9 +430,9 @@ bool Mutator::can_be_mutated(IRPtr cur) {
   // return true;
   // #else
   bool res = true;
-  if (cur->GetDataType() == kDataVarDefine || isDefine(cur->GetDataFlag()) ||
-      cur->GetDataType() == kDataVarType ||
-      cur->GetDataType() == kDataClassType) {
+  if (cur->GetDataType() == kVariableDefinition ||
+      cur->GetDataType() == kVariableType ||
+      cur->GetDataType() == kClassDefinition) {
     return false;
   }
   if (cur->HasLeftChild()) res = res && can_be_mutated(cur->LeftChild());

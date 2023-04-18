@@ -850,7 +850,9 @@ bool ScopeTree::is_contain_definition(IRPtr cur) {
   while (stk.empty() == false) {
     cur = stk.top();
     stk.pop();
-    if (cur->GetDataType() == kDataVarDefine || isDefine(cur->GetDataFlag())) {
+    DataType cur_type = cur->GetDataType();
+    if (cur_type == kVariableDefinition || cur_type == kFunctionDefinition ||
+        cur_type == kClassDefinition) {
       return true;
     }
     if (cur->HasRightChild()) stk.push(cur->RightChild());
@@ -904,23 +906,23 @@ bool ScopeTree::create_symbol_table(IRPtr root) {
 
 bool ScopeTree::collect_definition(IRPtr cur) {
   bool res = false;
-  if (cur->GetDataType() == kDataVarDefine ||
-      cur->GetDataType() == kDataFunctionType ||
-      cur->GetDataType() == kDataClassType) {
+  if (cur->GetDataType() == kVariableDefinition ||
+      cur->GetDataType() == kFunctionDefinition ||
+      cur->GetDataType() == kClassDefinition) {
     auto define_type = find_define_type(cur);
 
     switch (define_type) {
-      case kDataVarType:
-        if (DBG) cout << "kDataVarType" << endl;
+      case kVariableType:
+        if (DBG) cout << "kVariableType" << endl;
         CollectSimpleVariableDefinition(cur);
         return true;
 
-      case kDataClassType:
-        if (DBG) cout << "kDataClassType" << endl;
+      case kClassDefinition:
+        if (DBG) cout << "kClassDefinition" << endl;
         CollectStructureDefinition(cur, cur);
         return true;
 
-      case kDataFunctionType:
+      case kFunctionDefinition:
         SPDLOG_INFO("function definition: {}", cur->ToString());
         CollectFunctionDefinition(cur);
         return true;
@@ -938,30 +940,29 @@ bool ScopeTree::collect_definition(IRPtr cur) {
 }
 
 DataType ScopeTree::find_define_type(IRPtr cur) {
-  if (cur->GetDataType() == kDataVarType ||
-      cur->GetDataType() == kDataClassType ||
-      cur->GetDataType() == kDataFunctionType)
+  if (cur->GetDataType() == kVariableType ||
+      cur->GetDataType() == kClassDefinition ||
+      cur->GetDataType() == kFunctionDefinition)
     return cur->GetDataType();
 
   if (cur->HasLeftChild()) {
     auto res = find_define_type(cur->LeftChild());
-    if (res != kDataWhatever) return res;
+    if (res != kDataDefault) return res;
   }
 
   if (cur->HasRightChild()) {
     auto res = find_define_type(cur->RightChild());
-    if (res != kDataWhatever) return res;
+    if (res != kDataDefault) return res;
   }
 
-  return kDataWhatever;
+  return kDataDefault;
 }
 
 IRPtr search_by_data_type(IRPtr cur, DataType type,
-                          DataType forbit_type = kDataWhatever) {
+                          DataType forbit_type = kDataDefault) {
   if (cur->GetDataType() == type) {
     return cur;
-  } else if (forbit_type != kDataWhatever &&
-             cur->GetDataType() == forbit_type) {
+  } else if (forbit_type != kDataDefault && cur->GetDataType() == forbit_type) {
     return nullptr;
   } else {
     if (cur->HasLeftChild()) {
@@ -977,12 +978,11 @@ IRPtr search_by_data_type(IRPtr cur, DataType type,
 }
 
 void search_by_data_type(IRPtr cur, DataType type, vector<IRPtr> &result,
-                         DataType forbit_type = kDataWhatever,
+                         DataType forbit_type = kDataDefault,
                          bool go_inside = false) {
   if (cur->GetDataType() == type) {
     result.push_back(cur);
-  } else if (forbit_type != kDataWhatever &&
-             cur->GetDataType() == forbit_type) {
+  } else if (forbit_type != kDataDefault && cur->GetDataType() == forbit_type) {
     return;
   }
   if (cur->GetDataType() != type || go_inside == true) {
@@ -1023,11 +1023,9 @@ void ScopeTree::CollectSimpleVariableDefinition(IRPtr &cur) {
   */
 
   vector<IRPtr> name_vec;
-  vector<IRPtr> init_vec;
   vector<int> type_vec;
-  search_by_data_type(cur, kDataVarName, name_vec);
-  search_by_data_type(cur, kDataInitiator, init_vec);
-  IRPtr type_node = search_by_data_type(cur, kDataVarType);
+  search_by_data_type(cur, kVariableName, name_vec);
+  IRPtr type_node = search_by_data_type(cur, kVariableType);
   TypeID type = SpecialType::kAnyType;
   if (type_node) {
     std::string type_str = type_node->ToString();
@@ -1059,7 +1057,7 @@ std::optional<SymbolTable> ScopeTree::collect_simple_variable_defintion(
 
   vector<IRPtr> ir_vec;
 
-  search_by_data_type(cur, kDataVarType, ir_vec);
+  search_by_data_type(cur, kVariableType, ir_vec);
 
   // Chain types like "long int"
   if (!ir_vec.empty()) {
@@ -1096,10 +1094,10 @@ std::optional<SymbolTable> ScopeTree::collect_simple_variable_defintion(
   SymbolTable res;
   for (auto ir : ir_vec) {
     SPDLOG_DEBUG("var: {}", ir->ToString());
-    auto name_ir = search_by_data_type(ir, kDataVarName);
+    auto name_ir = search_by_data_type(ir, kVariableName);
     auto new_type = type;
     vector<IRPtr> tmp_vec;
-    search_by_data_type(ir, kDataPointer, tmp_vec, kDataWhatever, true);
+    search_by_data_type(ir, kPointer, tmp_vec, kDataDefault, true);
 
     if (!tmp_vec.empty()) {
       SPDLOG_DEBUG("This is a pointer definition");
@@ -1123,11 +1121,11 @@ std::optional<SymbolTable> ScopeTree::collect_simple_variable_defintion(
 void ScopeTree::collect_structure_definition_wt(IRPtr cur, IRPtr root) {
   auto cur_scope = GetScopeById(cur->GetScopeID());
 
-  if (isDefine(cur->GetDataFlag())) {
+  if (isDefincur->GetDataFlag())) {
     vector<IRPtr> structure_name, strucutre_variable_name, structure_body;
 
-    search_by_data_type(cur, kDataClassName, structure_name);
-    auto struct_body = search_by_data_type(cur, kDataStructBody);
+    search_by_data_type(cur, kClassName, structure_name);
+    auto struct_body = search_by_data_type(cur, kClassBody);
     if (struct_body == nullptr) return;
     shared_ptr<CompoundType> new_compound;
     string current_compound_name;
@@ -1178,16 +1176,15 @@ std::shared_ptr<CompoundType> RealTypeSystem::CreateCompoundType(
 }
 
 void ScopeTree::CollectStructureDefinition(IRPtr &cur, IRPtr &root) {
-  Ensures(cur->GetDataType() == kDataClassType);
-  Ensures(isDefine(cur->GetDataFlag()));
+  Ensures(cur->GetDataType() == kClassDefinition);
   SPDLOG_DEBUG("to_string: {}", cur->ToString());
-  SPDLOG_DEBUG("[collect_structure_definition] data_type_ = kDataClassType");
+  SPDLOG_DEBUG("[collect_structure_definition] data_type_ = kClassDefinition");
   auto cur_scope = GetScopeById(cur->GetScopeID());
 
   vector<IRPtr> structure_body;
-  IRPtr stucture_name = search_by_data_type(cur, kDataClassName);
+  IRPtr stucture_name = search_by_data_type(cur, kClassName);
 
-  auto struct_body = search_by_data_type(cur, kDataStructBody);
+  auto struct_body = search_by_data_type(cur, kClassBody);
   assert(struct_body && "A structure definition should have body");
 
   // type_fix_framework(struct_body);
@@ -1236,17 +1233,17 @@ void ScopeTree::CollectStructureDefinition(IRPtr &cur, IRPtr &root) {
   vector<IRPtr> strucutre_variable_unit;
   vector<IRPtr> structure_pointer_var;
   search_by_data_type(root, kDataDeclarator, strucutre_variable_unit,
-                      kDataStructBody);
+                      kClassBody);
   if (DBG) cout << strucutre_variable_unit.size() << endl;
   if (DBG) cout << root->ToString() << endl;
   // if (DBG) cout << frontend_->GetIRTypeStr(root->type) << endl;
 
-  // for each class variable define unit, collect all kDataPointer.
+  // for each class variable define unit, collect all kPointer.
   // it will be the reference level, if empty, it is not a pointer
   for (auto var_define_unit : strucutre_variable_unit) {
-    search_by_data_type(var_define_unit, kDataPointer, structure_pointer_var,
-                        kDataWhatever, true);
-    auto var_name = search_by_data_type(var_define_unit, kDataVarName);
+    search_by_data_type(var_define_unit, kPointer, structure_pointer_var,
+                        kDataDefault, true);
+    auto var_name = search_by_data_type(var_define_unit, kVariableName);
     assert(var_name);
     if (structure_pointer_var.size() == 0) {  // not a pointer
       cur_scope->AddDefinition(var_name->GetString(), compound_id,
@@ -1270,9 +1267,9 @@ void ScopeTree::CollectStructureDefinition(IRPtr &cur, IRPtr &root) {
   else if (isUse(cur->GetDataFlag())) {  // only strucutre variable define
     if (DBG) cout << "data_flag = Use" << endl;
     vector<IRPtr> structure_name, strucutre_variable_name;
-    search_by_data_type(cur, kDataClassName, structure_name);
-    // search_by_data_type(root, kDataVarName, strucutre_variable_name,
-    // kDataStructBody);
+    search_by_data_type(cur, kClassName, structure_name);
+    // search_by_data_type(root, kVariableName, strucutre_variable_name,
+    // kClassBody);
 
     assert(structure_name.size());
     auto compound_id =
@@ -1289,17 +1286,17 @@ void ScopeTree::CollectStructureDefinition(IRPtr &cur, IRPtr &root) {
     vector<IRPtr> strucutre_variable_unit;
     vector<IRPtr> structure_pointer_var;
     search_by_data_type(root, kDataDeclarator, strucutre_variable_unit,
-                        kDataStructBody);
+                        kClassBody);
     if (DBG) cout << strucutre_variable_unit.size() << endl;
     if (DBG) cout << root->ToString() << endl;
     // if (DBG) cout << frontend_->GetIRTypeStr(root->type) << endl;
 
-    // for each class variable define unit, collect all kDataPointer.
+    // for each class variable define unit, collect all kPointer.
     // it will be the reference level, if empty, it is not a pointer
     for (auto var_define_unit : strucutre_variable_unit) {
-      search_by_data_type(var_define_unit, kDataPointer, structure_pointer_var,
-                          kDataWhatever, true);
-      auto var_name = search_by_data_type(var_define_unit, kDataVarName);
+      search_by_data_type(var_define_unit, kPointer, structure_pointer_var,
+                          kDataDefault, true);
+      auto var_name = search_by_data_type(var_define_unit, kVariableName);
       assert(var_name);
       if (structure_pointer_var.size() == 0) {  // not a pointer
         cur_scope->AddDefinition(var_name->GetString(), compound_id,
@@ -1322,8 +1319,8 @@ void ScopeTree::CollectStructureDefinition(IRPtr &cur, IRPtr &root) {
 /*
 void ScopeTree::collect_function_definition_wt(IRPtr cur) {
   SPDLOG_DEBUG("Collecting {}", cur->ToString());
-  auto function_name_ir = search_by_data_type(cur, kDataFunctionName);
-  auto function_args_ir = search_by_data_type(cur, kDataFunctionArg);
+  auto function_name_ir = search_by_data_type(cur, kFunctionName);
+  auto function_args_ir = search_by_data_type(cur, kFunctionArgument);
   // assert(function_name_ir || function_args_ir);
 
   string function_name;
@@ -1336,7 +1333,7 @@ void ScopeTree::collect_function_definition_wt(IRPtr cur) {
   vector<string> arg_names;
   vector<int> arg_types;
   if (function_args_ir) {
-    search_by_data_type(function_args_ir, kDataVarName, args);
+    search_by_data_type(function_args_ir, kVariableName, args);
     num_function_args = args.size();
     SPDLOG_DEBUG("Num arg: {}", num_function_args);
     for (auto i : args) {
@@ -1363,7 +1360,7 @@ void ScopeTree::collect_function_definition_wt(IRPtr cur) {
   // cout << "Scope is global?: " << (cur_scope->scope_type_ == kScopeGlobal) <<
   // endl; cout << "Scope ID: " << (cur_scope->scope_id_) << endl;
 
-  auto function_body_ir = search_by_data_type(cur, kDataFunctionBody);
+  auto function_body_ir = search_by_data_type(cur, kFunctionBody);
   if (function_body_ir) {
     cur_scope = GetScopeById(function_body_ir->GetScopeID());
     for (auto i = 0; i < num_function_args; i++) {
@@ -1380,11 +1377,11 @@ void ScopeTree::collect_function_definition_wt(IRPtr cur) {
 
 void ScopeTree::CollectFunctionDefinition(IRPtr &cur) {
   auto return_value_type_ir =
-      search_by_data_type(cur, kDataFunctionReturnValue, kDataFunctionBody);
+      search_by_data_type(cur, kFunctionReturnType, kFunctionBody);
   auto function_name_ir =
-      search_by_data_type(cur, kDataFunctionName, kDataFunctionBody);
+      search_by_data_type(cur, kFunctionName, kFunctionBody);
   std::vector<IRPtr> arguments;
-  search_by_data_type(cur, kDataFunctionArg, arguments, kDataFunctionBody);
+  search_by_data_type(cur, kFunctionArgument, arguments, kFunctionBody);
 
   SPDLOG_INFO("Function name: {}", function_name_ir->ToString());
   if (return_value_type_ir) {
@@ -1424,8 +1421,8 @@ void ScopeTree::CollectFunctionDefinition(IRPtr &cur) {
   vector<TypeID> arg_types;
   vector<string> arg_names;
   for (auto &arg_ir : arguments) {
-    auto arg_type_ir = search_by_data_type(arg_ir, kDataVarType);
-    auto arg_name_ir = search_by_data_type(arg_ir, kDataVarName);
+    auto arg_type_ir = search_by_data_type(arg_ir, kVariableType);
+    auto arg_name_ir = search_by_data_type(arg_ir, kVariableName);
     assert(arg_name_ir);
     std::string arg_name = arg_name_ir->ToString();
     Trim(arg_name);
@@ -1461,7 +1458,7 @@ void ScopeTree::CollectFunctionDefinition(IRPtr &cur) {
                              function_name_ir->GetStatementID());
   }
 
-  auto function_body = search_by_data_type(cur, kDataFunctionBody);
+  auto function_body = search_by_data_type(cur, kFunctionBody);
   if (function_body) {
     cur_scope = GetScopeById(function_body->GetScopeID());
     for (auto i = 0; i < arg_types.size(); i++) {

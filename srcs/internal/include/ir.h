@@ -42,53 +42,21 @@ using StatementID = unsigned long;
 using ScopeID = unsigned long;
 
 enum DataType {
-  kDataWhatever,
-  kDataFunctionType,
-  kDataClassType,
-  kDataInitiator,
-  kDataFunctionBody,
-  kDataFunctionArg,
-  kDataFunctionReturnValue,
-  kDataFunctionName,
-  kDataVarDefine,
-  kDataClassName,
-  kDataPointer,
-  kDataStructBody,
-  kDataDeclarator,
-  kDataVarType,
-  kDataFixUnit,
-  kDataVarName,
-  kDataVarScope,
-  kDataDefault
+  kDataDefault,
+  kFunctionDefinition,
+  kFunctionName,
+  kFunctionArgument,
+  kFunctionReturnType,
+  kFunctionBody,
+  kClassDefinition,
+  kClassName,
+  kClassBody,
+  kVariableDefinition,
+  kVariableName,
+  kVariableType,
+  kPointer,
+  kFixUnit
 };
-
-enum DataFlag {
-  kDefine = 0x1,
-  kUndefine = 0x2,
-  kGlobal = 0x4,
-  kUse = 0x8,
-  kMapToClosestOne = 0x10,
-  kMapToAll = 0x20,
-  kReplace = 0x40,
-  kAlias = 0x80,
-  kNoSplit = 0x100,
-  kClassDefine = 0x200,
-  kFunctionDefine = 0x400,
-  kInsertable = 0x800,
-};
-
-#define isDefine(a) ((a)&kDefine)
-#define isUndefine(a) ((a)&kUndefine)
-#define isGlobal(a) ((a)&kGlobal)
-#define isUse(a) ((a)&kUse)
-#define isMapToClosestOne(a) ((a)&kMapToClosestOne)
-#define isMapToAll(a) ((a)&kMapToAll)
-#define isReplace(a) ((a)&kReplace)
-#define isAlias(a) ((a)&kAlias)
-#define isNoSplit(a) ((a)&kNoSplit)
-#define isClassDefine(a) ((a)&kClassDefine)
-#define isFunctionDefine(a) ((a)&kFunctionDefine)
-#define isInsertable(a) ((a)&kInsertable)
 
 enum ScopeType {
   kScopeDefault,
@@ -152,8 +120,6 @@ class IR {
   ScopeType GetScopeType() const;
   void SetScopeID(ScopeID id);
   ScopeID GetScopeID() const;
-  void SetDataFlag(DataFlag flag);
-  DataFlag GetDataFlag() const;
   void SetDataType(DataType type);
   DataType GetDataType() const;
   IRTYPE Type() const;  // IRTYPE should not be changed.
@@ -167,8 +133,7 @@ class IR {
 
   ScopeType scope_type_ = kScopeDefault;
   ScopeID scope_id_;
-  DataFlag data_flag_ = kUse;
-  DataType data_type_ = kDataWhatever;
+  DataType data_type_ = kDataDefault;
   IRTYPE type_;
   StatementID statement_id_;
   std::variant<std::monostate, std::string, int, double> data_;

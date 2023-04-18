@@ -177,7 +177,6 @@ IRPtr TranslateNode(tree::ParseTree* node, PolyGlotGrammarParser* parser) {
   IRPtr new_ir = std::get<IRPtr>(stk.top());
   if (ctx && ctx->GetDataType() != kDataDefault) {
     // std::cout << "IR special: " << new_ir->to_string() << std::endl;
-    new_ir->SetDataFlag(ctx->GetDataFlag());
     new_ir->SetDataType(ctx->GetDataType());
   } else {
     new_ir->SetDataType(kDataDefault);

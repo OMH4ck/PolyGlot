@@ -219,12 +219,11 @@ bool TypeInferer::is_op_null(std::shared_ptr<IROperator> op) {
 }
 
 void search_by_data_type(IRPtr cur, DataType type, vector<IRPtr> &result,
-                         DataType forbit_type = kDataWhatever,
+                         DataType forbit_type = kDataDefault,
                          bool go_inside = false) {
   if (cur->GetDataType() == type) {
     result.push_back(cur);
-  } else if (forbit_type != kDataWhatever &&
-             cur->GetDataType() == forbit_type) {
+  } else if (forbit_type != kDataDefault && cur->GetDataType() == forbit_type) {
     return;
   }
   if (cur->GetDataType() != type || go_inside == true) {
@@ -829,7 +828,7 @@ bool TypeSystem::simple_fix(IRPtr ir, int type, InferenceResult &inferer) {
 
 bool Fixable(IRPtr root) {
   // return root->Type() == gen::Configuration::GetInstance().GetFixIRType() ||
-  return root->GetDataType() == kDataFixUnit ||
+  return root->GetDataType() == kFixUnit ||
          (root->ContainString() && root->GetString() == "FIXME");
 }
 
@@ -899,7 +898,7 @@ bool TypeSystem::validate_syntax_only(IRPtr root) {
 
 void TypeSystem::MarkFixMe(IRPtr root) {
   if (root->HasLeftChild()) {
-    if (root->LeftChild()->GetDataType() == kDataFixUnit) {
+    if (root->LeftChild()->GetDataType() == kFixUnit) {
       if (NeedFixing(root->LeftChild())) {
         auto save_ir_id = root->LeftChild()->GetStatementID();
         auto save_scope = root->LeftChild()->GetScopeID();
@@ -913,7 +912,7 @@ void TypeSystem::MarkFixMe(IRPtr root) {
     }
   }
   if (root->HasRightChild()) {
-    if (root->RightChild()->GetDataType() == kDataFixUnit) {
+    if (root->RightChild()->GetDataType() == kFixUnit) {
       if (NeedFixing(root->RightChild())) {
         auto save_ir_id = root->RightChild()->GetStatementID();
         auto save_scope = root->RightChild()->GetScopeID();
@@ -1170,7 +1169,7 @@ bool TypeSystem::insert_definition(int scope_id, int type_id, string var_name) {
   if (!insert_target) return false;
 
   auto def_str = generate_definition(var_name, type_id);
-  auto def_ir = std::make_shared<IR>(kIdentifier, def_str, kDataWhatever);
+  auto def_ir = std::make_shared<IR>(kIdentifier, def_str, kDataDefault);
   auto root_ir =
       std::make_shared<IR>(kUnknown, OP0(), def_ir, insert_target->left_);
 

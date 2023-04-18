@@ -56,7 +56,7 @@ IR::IR(IRTYPE type, int int_val)
       left_child(nullptr),
       op(nullptr),
       right_child(nullptr),
-      data_type_(kDataWhatever) {
+      data_type_(kDataDefault) {
   GEN_NAME();
 }
 
@@ -66,7 +66,7 @@ IR::IR(IRTYPE type, double f_val)
       left_child(nullptr),
       op(nullptr),
       right_child(nullptr),
-      data_type_(kDataWhatever) {
+      data_type_(kDataDefault) {
   GEN_NAME();
 }
 
@@ -80,7 +80,7 @@ IR::IR(IRTYPE type, std::shared_ptr<IROperator> op, IRPtr left, IRPtr right,
       right_child(right),
       str_val(str_val),
       float_val(f_val),
-      data_type(kDataWhatever),
+      data_type(kDataDefault),
       scope_type(scope),
       data_flag(flag) {}
 */
@@ -99,7 +99,6 @@ IR::IR(IRPtr ir, IRPtr left, IRPtr right) {
   this->data_ = ir->data_;
   this->data_type_ = ir->data_type_;
   this->scope_type_ = ir->scope_type_;
-  this->data_flag_ = ir->data_flag_;
 }
 
 IRPtr deep_copy(const IRPtr root) {
@@ -198,8 +197,6 @@ void IR::SetFloat(double f) { data_ = f; }
 
 void IR::SetScopeType(ScopeType type) { scope_type_ = type; }
 ScopeType IR::GetScopeType() const { return scope_type_; }
-void IR::SetDataFlag(DataFlag flag) { data_flag_ = flag; }
-DataFlag IR::GetDataFlag() const { return data_flag_; }
 void IR::SetDataType(DataType type) { data_type_ = type; }
 DataType IR::GetDataType() const { return data_type_; }
 void IR::SetScopeID(ScopeID id) { scope_id_ = id; }

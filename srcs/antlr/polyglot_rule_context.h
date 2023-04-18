@@ -47,10 +47,6 @@ class PolyGlotRuleContext : public antlr4::ParserRuleContext {
     // Add your custom logic to update the custom attribute here
   }
 
-  void SetDataFlag(DataFlag flag) { data_flag = flag; }
-
-  DataFlag GetDataFlag() { return data_flag; }
-
   DataType GetDataType() { return data_type; }
 
   void SetDataType(DataType type) { data_type = type; }
@@ -59,7 +55,6 @@ class PolyGlotRuleContext : public antlr4::ParserRuleContext {
 
   ScopeType GetScopeType() { return scope_type; }
 
-  DataFlag data_flag = kUse;
   DataType data_type = kDataDefault;
   ScopeType scope_type = kScopeDefault;
 };
