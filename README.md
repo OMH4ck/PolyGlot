@@ -9,7 +9,7 @@ Features:
 - Support antlr4 grammar.
 - Implemented as aflpp custom mutator.
 
-The original version that uses bison can be found here.
+The original version that uses bison can be found [here](https://github.com/s3team/Polyglot).
 
 ## Build
 1. Install dependencies:
@@ -54,7 +54,8 @@ IsWeakType: true
 BasicTypes:
   - X
 ```
-You need to `InitFileDir` to the path of your mutation corpus.
+You need to set `InitFileDir` to be the path of your mutation corpus.
+
 3. Set the environment variable
 ```bash
 export POLYGLOT_CONFIG=abs_path/to/semantic.yml
