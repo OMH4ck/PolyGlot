@@ -2,6 +2,11 @@ name: Build
 
 on:
   push:
+    paths:
+      - 'src/**'
+      - 'CMakeLists.txt'
+      - 'e2e_tests/**'
+      - '.github/workflows/ci.yml'
 
 jobs:
   linux:
