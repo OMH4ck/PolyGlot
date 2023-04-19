@@ -46,6 +46,7 @@ jobs:
           external-data-json-path: ./cache/benchmark-data.json
           comment-on-alert: true
           fail-on-alert: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Generate Coverage Report
         run: cd build && lcov --directory . --capture --output-file coverage.info && lcov --remove coverage.info '/usr/*' --output-file coverage.info && lcov --remove coverage.info '/*/experiments/generated/*' --output-file coverage.info && lcov --remove coverage.info  '/*/.conan2/*' --output-file coverage.info && lcov --list coverage.info
       - name: Upload coverage reports to Codecov
