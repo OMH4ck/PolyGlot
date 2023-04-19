@@ -106,7 +106,7 @@ vector<string> get_all_files_in_dir(const char *dir_name) {
     cout << "Can not open dir " << dir_name << endl;
     return file_list;
   }
-  cout << "Successfully opened the dir !" << endl;
+  // cout << "Successfully opened the dir !" << endl;
 
   std::string abs_path(dir_name);
   if (abs_path[abs_path.size() - 1] != '/') {

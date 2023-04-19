@@ -87,6 +87,7 @@ conan_cmake_configure(
   yaml-cpp/0.7.0
   abseil/20230125.2
   antlr4-cppruntime/4.12.0
+  benchmark/1.7.1
   GENERATORS
   CMakeDeps
   CMakeToolchain)
@@ -108,6 +109,7 @@ find_package(Microsoft.GSL REQUIRED)
 find_package(absl REQUIRED)
 find_package(antlr4-runtime REQUIRED)
 find_package(yaml-cpp REQUIRED)
+find_package(benchmark REQUIRED)
 
 file(GLOB SRC_FILES ${CMAKE_SOURCE_DIR}/srcs/internal/srcs/*.cpp)
 
@@ -172,4 +174,5 @@ option(BUILD_TESTING "Build the testing tree." ON)
 if(BUILD_TESTING AND (PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR))
   enable_testing()
   add_subdirectory(tests)
+  add_subdirectory(benchmarks)
 endif()
