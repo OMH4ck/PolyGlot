@@ -43,7 +43,7 @@ jobs:
         with:
           tool: 'googlecpp'
           output-file-path: build/benchmarks/benchmark_result.json
-          external-data-json-path: ./cache/benchmark-data.json
+          external-data-json-path: ./benchmarks/benchmark-data.json
           comment-on-alert: true
           fail-on-alert: true
           github-token: ${{ secrets.GITHUB_TOKEN }}
