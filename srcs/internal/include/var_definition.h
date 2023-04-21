@@ -28,6 +28,7 @@
 #include <memory>
 #include <optional>
 #include <set>
+#include <unordered_map>
 #include <vector>
 
 // #include "define.h"
@@ -205,26 +206,26 @@ class TypeSystem {
   void init_internal_type();
   int gen_type_id();
   void debug_pointer_type(std::shared_ptr<PointerType> &p);
-  TypeID get_compound_type_id_by_string(const std::string &s);
+  // TypeID get_compound_type_id_by_string(const std::string &s);
   static bool is_basic_type(const std::string &s);
   std::shared_ptr<VarType> make_basic_type(TypeID id, const std::string &s);
-  void make_basic_type_add_map(TypeID id, const std::string &s);
+  void CreateBuiltinType(TypeID id, const std::string &s);
   void init_convert_chain();
   void init_basic_types();
-  std::set<int> all_compound_types_;
-  set<int> all_functions;
-  // for internal type
-  std::set<int> all_internal_compound_types;
-  std::set<int> all_internal_functions;
-  // This should be static.
-  std::map<TypeID, std::shared_ptr<VarType>> internal_type_map;
   map<TypeID, map<int, TypeID>> pointer_map;  // original_type:<level: typeid>
   bool is_in_class;
-  map<TypeID, shared_ptr<VarType>> type_map;
-  static map<string, shared_ptr<VarType>> basic_types;
-  static set<TypeID> basic_types_set;  // For fast lookup
   set<int> all_internal_class_methods;
   static bool is_internal_obj_setup;
+
+  static std::unordered_map<TypeID, std::shared_ptr<VarType>>
+      s_builted_simple_types_;
+  static std::unordered_map<TypeID, std::shared_ptr<CompoundType>>
+      s_builted_compound_types_;
+  static std::unordered_map<TypeID, std::shared_ptr<FunctionType>>
+      s_builted_function_types_;
+  std::unordered_map<TypeID, std::shared_ptr<VarType>> simple_var_types_;
+  std::unordered_map<TypeID, std::shared_ptr<CompoundType>> compound_types_;
+  std::unordered_map<TypeID, std::shared_ptr<FunctionType>> function_types_;
 };
 
 class ScopeTree {

@@ -3,7 +3,8 @@ name: Build
 on:
   push:
     paths:
-      - 'src/**'
+      - 'srcs/**'
+      - 'tests/**'
       - 'CMakeLists.txt'
       - 'e2e_tests/**'
       - '.github/workflows/ci.yml'

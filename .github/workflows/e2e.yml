@@ -5,7 +5,8 @@ on:
     branches:
       - main
     paths:
-      - 'src/**'
+      - 'srcs/**'
+      - 'tests/**'
       - 'CMakeLists.txt'
       - 'e2e_tests/**'
       - '.github/workflows/e2e.yml'

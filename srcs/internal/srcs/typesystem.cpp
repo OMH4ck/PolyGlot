@@ -238,6 +238,7 @@ void search_by_data_type(IRPtr cur, DataType type, vector<IRPtr> &result,
   }
 }
 
+/*
 ScopeType scope_js(const string &s) {
   if (s.find("var") != string::npos) return kScopeFunction;
   if (s.find("let") != string::npos || s.find("const") != string::npos)
@@ -246,6 +247,7 @@ ScopeType scope_js(const string &s) {
   assert(0);
   return kScopeStatement;
 }
+*/
 
 // map<IR*, shared_ptr<map<TYPEID, vector<pair<TYPEID, TYPEID>>>>>
 // TypeSystem::cache_inference_map_;
