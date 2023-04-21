@@ -48,12 +48,22 @@ map<TYPEID, map<int, TYPEID>> pointer_map;  // original_type:<level: typeid>
 */
 namespace polyglot {
 
-bool TypeSystem::is_internal_obj_setup = true;
-map<string, shared_ptr<VarType>> TypeSystem::basic_types;
-set<TypeID> TypeSystem::basic_types_set;
+bool TypeSystem::is_internal_obj_setup = false;
+// map<string, shared_ptr<VarType>> TypeSystem::basic_types;
+std::unordered_map<TypeID, std::shared_ptr<VarType>>
+    TypeSystem::s_builted_simple_types_;
+std::unordered_map<TypeID, std::shared_ptr<CompoundType>>
+    TypeSystem::s_builted_compound_types_;
+std::unordered_map<TypeID, std::shared_ptr<FunctionType>>
+    TypeSystem::s_builted_function_types_;
 
 bool TypeSystem::IsBuiltinType(TypeID type_id) {
-  return internal_type_map.count(type_id) > 0;
+  return s_builted_compound_types_.find(type_id) !=
+             s_builted_compound_types_.end() ||
+         s_builted_simple_types_.find(type_id) !=
+             s_builted_simple_types_.end() ||
+         s_builted_function_types_.find(type_id) !=
+             s_builted_function_types_.end();
 }
 
 void SymbolTable::AddDefinition(Definition def) {
@@ -182,18 +192,17 @@ void TypeSystem::init_basic_types() {
     auto ptr = make_shared<VarType>();
     ptr->type_id_ = new_id;
     ptr->name = line;
-    basic_types[line] = ptr;
-    basic_types_set.insert(new_id);
-    type_map[new_id] = ptr;
+    s_builted_simple_types_[new_id] = ptr;
+    // type_map[new_id] = ptr;
     SPDLOG_INFO("Basic types: {}, type id: {}", line, new_id);
   }
 
-  make_basic_type_add_map(SpecialType::kAllTypes, "SpecialType::kAllTypes");
-  make_basic_type_add_map(SpecialType::kAllCompoundType,
-                          "SpecialType::kAllCompoundType");
-  make_basic_type_add_map(SpecialType::kAllFunction,
-                          "SpecialType::kAllFunction");
-  make_basic_type_add_map(SpecialType::kAnyType, "SpecialType::kAnyType");
+  CreateBuiltinType(SpecialType::kAllTypes, "SpecialType::kAllTypes");
+  CreateBuiltinType(SpecialType::kAllCompoundType,
+                    "SpecialType::kAllCompoundType");
+  CreateBuiltinType(SpecialType::kAllFunction, "SpecialType::kAllFunction");
+  CreateBuiltinType(SpecialType::kAnyType, "SpecialType::kAnyType");
+  /*
   basic_types["SpecialType::kAllTypes"] =
       GetTypePtrByID(SpecialType::kAllTypes);
   basic_types["SpecialType::kAllCompoundType"] =
@@ -201,6 +210,7 @@ void TypeSystem::init_basic_types() {
   basic_types["SpecialType::kAllFunction"] =
       GetTypePtrByID(SpecialType::kAllFunction);
   basic_types["SpecialType::kAnyType"] = GetTypePtrByID(SpecialType::kAnyType);
+  */
 }
 
 int TypeSystem::gen_type_id() {
@@ -209,11 +219,11 @@ int TypeSystem::gen_type_id() {
 }
 
 void TypeSystem::init_internal_type() {
-  for (auto i : all_internal_functions) {
-    auto ptr = GetFunctionType(i);
-    // TODO: Fix this.
-    // g_scope_root->AddDefinition(ptr->type_id_, ptr->type_name_, 0);
-  }
+  // for (auto i : all_internal_functions) {
+  //  auto ptr = GetFunctionType(i);
+  // TODO: Fix this.
+  // g_scope_root->AddDefinition(ptr->type_id_, ptr->type_name_, 0);
+  //}
 
   /*
       for(auto i: all_internal_class_methods){
@@ -258,38 +268,54 @@ shared_ptr<Scope> get_scope_by_id(int scope_id) {
 */
 
 shared_ptr<VarType> TypeSystem::GetTypePtrByID(TypeID type_id) {
-  if (type_map.find(type_id) != type_map.end()) return type_map[type_id];
+  if (s_builted_simple_types_.find(type_id) != s_builted_simple_types_.end())
+    return s_builted_simple_types_[type_id];
 
-  if (internal_type_map.find(type_id) != internal_type_map.end())
-    return internal_type_map[type_id];
+  if (s_builted_compound_types_.find(type_id) !=
+      s_builted_compound_types_.end())
+    return s_builted_compound_types_[type_id];
+
+  if (s_builted_function_types_.find(type_id) !=
+      s_builted_function_types_.end())
+    return s_builted_function_types_[type_id];
+
+  if (simple_var_types_.find(type_id) != simple_var_types_.end())
+    return simple_var_types_[type_id];
+
+  if (compound_types_.find(type_id) != compound_types_.end())
+    return compound_types_[type_id];
+
+  if (function_types_.find(type_id) != function_types_.end())
+    return function_types_[type_id];
 
   return nullptr;
 }
 
 shared_ptr<CompoundType> TypeSystem::GetCompoundType(TypeID type_id) {
-  if (type_map.find(type_id) != type_map.end())
-    return static_pointer_cast<CompoundType>(type_map[type_id]);
-  if (internal_type_map.find(type_id) != internal_type_map.end())
-    return static_pointer_cast<CompoundType>(internal_type_map[type_id]);
-
+  if (compound_types_.find(type_id) != compound_types_.end())
+    return compound_types_[type_id];
+  if (s_builted_compound_types_.find(type_id) !=
+      s_builted_compound_types_.end())
+    return s_builted_compound_types_[type_id];
   return nullptr;
 }
 
 shared_ptr<FunctionType> TypeSystem::GetFunctionType(TypeID type_id) {
-  if (type_map.find(type_id) != type_map.end())
-    return static_pointer_cast<FunctionType>(type_map[type_id]);
-  if (internal_type_map.find(type_id) != internal_type_map.end())
-    return static_pointer_cast<FunctionType>(internal_type_map[type_id]);
-
+  if (function_types_.find(type_id) != function_types_.end())
+    return function_types_[type_id];
+  if (s_builted_function_types_.find(type_id) !=
+      s_builted_function_types_.end())
+    return s_builted_function_types_[type_id];
   return nullptr;
 }
 
 bool TypeSystem::IsCompoundType(TypeID type_id) {
-  return all_compound_types_.find(type_id) != all_compound_types_.end() ||
-         all_internal_compound_types.find(type_id) !=
-             all_internal_compound_types.end();
+  return s_builted_compound_types_.find(type_id) !=
+             s_builted_compound_types_.end() ||
+         compound_types_.find(type_id) != compound_types_.end();
 }
 
+/*
 TypeID TypeSystem::get_compound_type_id_by_string(const string &s) {
   for (auto k : all_compound_types_) {
     if (type_map[k]->name == s) return k;
@@ -301,60 +327,82 @@ TypeID TypeSystem::get_compound_type_id_by_string(const string &s) {
 
   return SpecialType::kNotExist;
 }
+*/
 
 bool TypeSystem::IsFunctionType(TypeID type_id) {
-  return all_functions.find(type_id) != all_functions.end() ||
-         all_internal_functions.find(type_id) != all_internal_functions.end() ||
-         all_internal_class_methods.find(type_id) !=
-             all_internal_class_methods.end();
+  return s_builted_function_types_.find(type_id) !=
+             s_builted_function_types_.end() ||
+         function_types_.find(type_id) != function_types_.end();
 }
 
 bool TypeSystem::IsBasicType(TypeID type_id) {
-  return basic_types_set.find(type_id) != basic_types_set.end();
+  return s_builted_simple_types_.find(type_id) != s_builted_simple_types_.end();
 }
 
+/*
 bool TypeSystem::is_basic_type(const string &s) {
   return basic_types.find(s) != basic_types.end();
 }
+*/
 
 TypeID TypeSystem::GetBasicTypeIDByStr(const string &s) {
   if (s == "ALLTYPES") return SpecialType::kAllTypes;
   if (s == "ALLCOMPOUNDTYPE") return SpecialType::kAllCompoundType;
   if (s == "ALLFUNCTION") return SpecialType::kAllFunction;
   if (s == "ANYTYPE") return SpecialType::kAnyType;
-  if (is_basic_type(s) == false) return SpecialType::kNotExist;
-  return basic_types[s]->get_type_id();
-}
-
-TypeID TypeSystem::GetTypeIDByStr(const string &s) {
-  for (auto iter : type_map) {
-    if (iter.second->name == s) return iter.first;
-  }
-
-  for (auto iter : internal_type_map) {
+  for (auto iter : s_builted_simple_types_) {
     if (iter.second->name == s) return iter.first;
   }
   return SpecialType::kNotExist;
 }
 
-void TypeSystem::make_basic_type_add_map(TypeID id, const string &s) {
+TypeID TypeSystem::GetTypeIDByStr(const string &s) {
+  for (auto iter : s_builted_simple_types_) {
+    if (iter.second->name == s) return iter.first;
+  }
+  for (auto iter : s_builted_compound_types_) {
+    if (iter.second->name == s) return iter.first;
+  }
+  for (auto iter : s_builted_function_types_) {
+    if (iter.second->name == s) return iter.first;
+  }
+  for (auto iter : simple_var_types_) {
+    if (iter.second->name == s) return iter.first;
+  }
+  for (auto iter : compound_types_) {
+    if (iter.second->name == s) return iter.first;
+  }
+  for (auto iter : function_types_) {
+    if (iter.second->name == s) return iter.first;
+  }
+
+  return SpecialType::kNotExist;
+}
+
+void TypeSystem::CreateBuiltinType(TypeID id, const string &s) {
   auto res = make_basic_type(id, s);
-  type_map[id] = res;
+  s_builted_simple_types_[id] = res;
   if (id == SpecialType::kAllCompoundType) {
+    /*
     for (auto internal_compound : all_internal_compound_types) {
       auto compound_ptr = GetTypePtrByID(internal_compound);
       res->derived_type_.push_back(compound_ptr);
     }
+    */
   } else if (id == SpecialType::kAllFunction) {
     // handler function here
+    /*
     for (auto internal_func : all_internal_functions) {
       auto func_ptr = GetTypePtrByID(internal_func);
       res->derived_type_.push_back(func_ptr);
     }
+    */
   } else if (id == SpecialType::kAnyType) {
+    /*
     for (auto &type : internal_type_map) {
       res->derived_type_.push_back(type.second);
     }
+    */
   }
 }
 
@@ -469,22 +517,26 @@ shared_ptr<FunctionType> TypeSystem::CreateFunctionType(
 
   res->return_type_ = return_type;
   res->v_arg_types_ = args;
+  /*
   if (is_internal_obj_setup == true) {
     internal_type_map[res->type_id_] = res;
-    if (!is_in_class)
-      all_internal_functions.insert(res->type_id_);
+    if (!is_in_class){
+      //all_internal_functions.insert(res->type_id_);
+    }
     else
       all_internal_class_methods.insert(res->type_id_);
     auto all_function_type = GetTypePtrByID(SpecialType::kAllFunction);
     all_function_type->derived_type_.push_back(res);
     res->base_type_.push_back(all_function_type);
   } else {
-    type_map[res->type_id_] = res;        // here
-    all_functions.insert(res->type_id_);  // here
-    auto all_function_type = GetTypePtrByID(SpecialType::kAllFunction);
-    all_function_type->derived_type_.push_back(res);
-    res->base_type_.push_back(all_function_type);
-  }
+  */
+  SPDLOG_INFO("add function type: {}", res->type_id_);
+  function_types_[res->type_id_] = res;  // here
+  // all_functions.insert(res->type_id_);  // here
+  auto all_function_type = GetTypePtrByID(SpecialType::kAllFunction);
+  all_function_type->derived_type_.push_back(res);
+  res->base_type_.push_back(all_function_type);
+  //}
 
   return res;
 }
@@ -728,7 +780,7 @@ int TypeSystem::GeneratePointerType(int original_type, int pointer_level) {
   cur_type->base_type_.push_back(alltype_ptr);
   alltype_ptr->derived_type_.push_back(cur_type);
 
-  type_map[cur_type->type_id_] = cur_type;
+  s_builted_simple_types_[cur_type->type_id_] = cur_type;
   pointer_map[original_type][pointer_level] = cur_type->type_id_;
   debug_pointer_type(cur_type);
   return cur_type->type_id_;
@@ -781,7 +833,8 @@ int TypeSystem::GetOrCreatePointerType(int type) {
     alltype_ptr->derived_type_.push_back(cur_type);
     cur_type->base_type_.push_back(alltype_ptr);
 
-    type_map[cur_type->type_id_] = cur_type;
+    simple_var_types_[cur_type->type_id_] = cur_type;
+    // type_map[cur_type->type_id_] = cur_type;
     pointer_map[orig_type][level + 1] = cur_type->type_id_;
     res = cur_type->type_id_;
     debug_pointer_type(cur_type);
@@ -798,7 +851,8 @@ int TypeSystem::GetOrCreatePointerType(int type) {
     alltype_ptr->derived_type_.push_back(cur_type);
     cur_type->base_type_.push_back(alltype_ptr);
 
-    type_map[cur_type->type_id_] = cur_type;
+    simple_var_types_[cur_type->type_id_] = cur_type;
+    // type_map[cur_type->type_id_] = cur_type;
     pointer_map[type][1] = cur_type->type_id_;
     res = cur_type->type_id_;
     debug_pointer_type(cur_type);
@@ -814,12 +868,15 @@ bool TypeSystem::IsPointerType(TypeID type) {
 }
 
 shared_ptr<PointerType> TypeSystem::GetPointerType(TypeID type_id) {
+  return nullptr;
+  /*
   if (type_map.find(type_id) == type_map.end()) return nullptr;
 
   auto res = static_pointer_cast<PointerType>(type_map[type_id]);
   if (res->is_pointer_type() == false) return nullptr;
 
   return res;
+  */
 }
 
 void TypeSystem::debug_pointer_type(shared_ptr<PointerType> &p) {
@@ -1171,8 +1228,7 @@ std::shared_ptr<CompoundType> TypeSystem::CreateCompoundType(
   for (size_t i = 0; i < members.size(); i++) {
     new_compound->v_members_[members[i]].push_back(member_names[i]);
   }
-  type_map[new_compound->type_id_] = new_compound;
-  all_compound_types_.insert(new_compound->type_id_);
+  compound_types_[new_compound->type_id_] = new_compound;
   return new_compound;
 }
 
