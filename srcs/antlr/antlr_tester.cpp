@@ -22,7 +22,7 @@
 #include "ir_translater.h"
 
 using namespace antlr4;
-using namespace antlrcpptest;
+using namespace polyglot;
 
 class CustomExprVisitor : public PolyGlotGrammarBaseVisitor {
  public:

@@ -53,6 +53,27 @@ else()
   get_filename_component(PARSER_NAME ${PARSER_FILE} NAME_WE)
 endif()
 
+if(DEFINED GRAMMAR_HELPER_DIR)
+  if (NOT EXISTS ${GRAMMAR_HELPER_DIR})
+    message(FATAL_ERROR "The grammar helper dir ${GRAMMAR_HELPER_DIR} does not exist.")
+  endif()
+  file(GLOB GRAMMAR_HELPER_SRC
+    "${GRAMMAR_HELPER_DIR}/*.cpp"
+    "${GRAMMAR_HELPER_DIR}/*.cc"
+  )
+endif()
+
+# Check if the string ends with "Parser"
+if(${PARSER_NAME} MATCHES ".*Parser$")
+    # Remove the "Parser" suffix
+    string(REGEX REPLACE "Parser$" "" PARSER_GEN_NAME ${PARSER_NAME})
+endif()
+
+if(${LEXER_NAME} MATCHES ".*Lexer$")
+    # Remove the "Parser" suffix
+    string(REGEX REPLACE "Lexer$" "" LEXER_GEN_NAME ${LEXER_NAME})
+endif()
+
 message("LEXER_NAME: ${LEXER_NAME}")
 message("PARSER_NAME: ${PARSER_NAME}")
 
@@ -63,16 +84,16 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/generated_header.h.in
                ${CMAKE_CURRENT_BINARY_DIR}/generated/generated_header.h @ONLY)
 
 set(GENERATED_SRC_FILES
-    ${GENERATED_DIR}/${PARSER_NAME}Parser.cpp
-    ${GENERATED_DIR}/${LEXER_NAME}Lexer.cpp
+    ${GENERATED_DIR}/${PARSER_GEN_NAME}Parser.cpp
+    ${GENERATED_DIR}/${LEXER_GEN_NAME}Lexer.cpp
     ${GENERATED_DIR}/${PARSER_NAME}BaseListener.cpp
     ${GENERATED_DIR}/${PARSER_NAME}BaseVisitor.cpp
     ${GENERATED_DIR}/${PARSER_NAME}Listener.cpp
     ${GENERATED_DIR}/${PARSER_NAME}Visitor.cpp)
 
 set(GENERATED_HDR_FILES
-    ${GENERATED_DIR}/${PARSER_NAME}Parser.h
-    ${GENERATED_DIR}/${LEXER_NAME}Lexer.h
+    ${GENERATED_DIR}/${PARSER_GEN_NAME}Parser.h
+    ${GENERATED_DIR}/${LEXER_GEN_NAME}Lexer.h
     ${GENERATED_DIR}/${PARSER_NAME}BaseListener.h
     ${GENERATED_DIR}/${PARSER_NAME}BaseVisitor.h
     ${GENERATED_DIR}/${PARSER_NAME}Listener.h
@@ -83,13 +104,14 @@ add_custom_command(
   COMMAND
     java -jar ${ANTLR4CPP_JAR_LOCATION} -Dlanguage=Cpp -o
     ${GENERATED_DIR} -visitor -listener -package
-    antlrcpptest ${GRAMMAR_FILE}
-  DEPENDS ${GRAMMAR_FILE})
+    polyglot ${GRAMMAR_FILE} ${PARSER_FILE} ${LEXER_FILE}
+  DEPENDS ${GRAMMAR_FILE} ${PARSER_FILE} ${LEXER_FILE})
 
-add_library(ir_translator STATIC ir_translater.cpp ${GENERATED_SRC_FILES})
+add_library(ir_translator STATIC ir_translater.cpp ${GENERATED_SRC_FILES} ${GRAMMAR_HELPER_SRC})
 target_include_directories(
   ir_translator PUBLIC ${GENERATED_DIR}
-                       ${CMAKE_CURRENT_SOURCE_DIR})
+                       ${CMAKE_CURRENT_SOURCE_DIR}
+                       ${GRAMMAR_HELPER_DIR})
 target_link_libraries(ir_translator PUBLIC antlr4_static ir_lib
                                            absl::flat_hash_map)
 target_compile_options(ir_translator PRIVATE -fPIC)

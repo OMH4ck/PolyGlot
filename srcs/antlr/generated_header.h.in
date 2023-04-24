@@ -1,14 +1,14 @@
 #ifndef __GENARATED_HEADER_H__
 #define __GENARATED_HEADER_H__
-#include "@LEXER_NAME@Lexer.h"
-#include "@PARSER_NAME@Parser.h"
+#include "@LEXER_GEN_NAME@Lexer.h"
+#include "@PARSER_GEN_NAME@Parser.h"
 #include "@PARSER_NAME@BaseVisitor.h"
 
 using namespace antlr4;
-using namespace antlrcpptest;
 
-using PolyGlotGrammarParser = @PARSER_NAME@Parser;
-using PolyGlotGrammarLexer = @LEXER_NAME@Lexer;
+using namespace polyglot;
+using PolyGlotGrammarParser = @PARSER_GEN_NAME@Parser;
+using PolyGlotGrammarLexer = @LEXER_GEN_NAME@Lexer;
 using PolyGlotGrammarBaseVisitor = @PARSER_NAME@BaseVisitor;
 
 using IRTYPE = unsigned int;

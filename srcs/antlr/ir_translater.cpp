@@ -37,7 +37,6 @@
 // #include "var_definition.h"
 
 using namespace polyglot;
-using namespace antlrcpptest;
 
 using IM = std::variant<std::monostate, std::string, IRPtr>;
 
@@ -52,7 +51,7 @@ struct OneIR {
 // Fill the OneIR struct with the information from the stack
 // The order is, if it is a string, then it is either the prefix or the suffix
 // or the middle, otherwise it is the left or the right
-OneIR ExtractOneIR(std::stack<IM>& stk) {
+OneIR ExtractOneIR(std::stack<IM> &stk) {
   OneIR one_ir;
   while (!stk.empty()) {
     auto im = stk.top();
@@ -87,11 +86,41 @@ OneIR ExtractOneIR(std::stack<IM>& stk) {
 }
 
 namespace antlr4 {
-IRPtr TranslateNode(tree::ParseTree* node, PolyGlotGrammarParser* parser) {
+
+class MyErrorListener : public ANTLRErrorListener {
+ public:
+  bool HasError() const { return has_error_; }
+  void Reset() { has_error_ = false; }
+  virtual void syntaxError(Recognizer *recognizer, Token *offendingSymbol,
+                           size_t line, size_t charPositionInLine,
+                           const std::string &msg,
+                           std::exception_ptr e) override {
+    has_error_ = true;
+  }
+  virtual void reportAmbiguity(Parser *recognizer, const dfa::DFA &dfa,
+                               size_t startIndex, size_t stopIndex, bool exact,
+                               const antlrcpp::BitSet &ambigAlts,
+                               atn::ATNConfigSet *configs) override {}
+
+  virtual void reportAttemptingFullContext(
+      Parser *recognizer, const dfa::DFA &dfa, size_t startIndex,
+      size_t stopIndex, const antlrcpp::BitSet &conflictingAlts,
+      atn::ATNConfigSet *configs) override {}
+
+  virtual void reportContextSensitivity(Parser *recognizer, const dfa::DFA &dfa,
+                                        size_t startIndex, size_t stopIndex,
+                                        size_t prediction,
+                                        atn::ATNConfigSet *configs) override{};
+
+ private:
+  bool has_error_ = false;
+};
+
+IRPtr TranslateNode(tree::ParseTree *node, PolyGlotGrammarParser *parser) {
   assert(node->getTreeType() == antlr4::tree::ParseTreeType::RULE);
 
   std::stack<IM> stk;
-  PolyGlotRuleContext* ctx = dynamic_cast<PolyGlotRuleContext*>(node);
+  PolyGlotRuleContext *ctx = dynamic_cast<PolyGlotRuleContext *>(node);
   if (ctx->isStringLiteral) {
     // std::cout << "literal: " << ctx->getText() << "\n";
     stk.push(std::make_shared<IR>((IRTYPE)ctx->getRuleIndex(), ctx->getText()));
@@ -115,6 +144,11 @@ IRPtr TranslateNode(tree::ParseTree* node, PolyGlotGrammarParser* parser) {
         if (child_ir) {
           tmp_stk.push(child_ir);
         }
+      }
+    }
+    if (tmp_stk.empty()) {
+      if (ctx->getText() == "<EOF>") {
+        return nullptr;
       }
     }
     assert(!tmp_stk.empty());
@@ -207,9 +241,10 @@ IRPtr TranslateNode(tree::ParseTree* node, PolyGlotGrammarParser* parser) {
 
 IRPtr TranslateToIR(std::string input_program) {
   static size_t s_counter = 0;
+  static MyErrorListener s_error_lister;
   static PolyGlotGrammarParser s_parser(nullptr);
-  static atn::ParserATNSimulator* s_parser_interpreter;
-  static std::vector<antlr4::dfa::DFA>* s_decision_to_dfa;
+  static atn::ParserATNSimulator *s_parser_interpreter;
+  static std::vector<antlr4::dfa::DFA> *s_decision_to_dfa;
   static std::unique_ptr<antlr4::atn::PredictionContextCache> s_cache;
   static bool init = false;
   if (!init) {
@@ -221,28 +256,38 @@ IRPtr TranslateToIR(std::string input_program) {
     s_parser_interpreter = new atn::ParserATNSimulator(
         &s_parser, s_parser.getATN(), *s_decision_to_dfa, *s_cache);
     s_parser.setInterpreter(s_parser_interpreter);
+    s_parser.removeErrorListeners();
+    s_parser.addErrorListener(&s_error_lister);
   }
-  ANTLRInputStream input(input_program);
-  PolyGlotGrammarLexer lexer(&input);
-  CommonTokenStream tokens(&lexer);
-  tokens.fill();
-  s_parser.setTokenStream(&tokens);
+  try {
+    ANTLRInputStream input(input_program);
+    PolyGlotGrammarLexer lexer(&input);
+    lexer.removeErrorListeners();
+    lexer.addErrorListener(&s_error_lister);
+    CommonTokenStream tokens(&lexer);
 
-  tree::ParseTree* tree = s_parser.program();
-  if (s_parser.getNumberOfSyntaxErrors() > 0) {
+    tokens.fill();
+    s_parser.setTokenStream(&tokens);
+
+    tree::ParseTree *tree = s_parser.program();
+    if (s_error_lister.HasError()) {
+      s_error_lister.Reset();
+      return nullptr;
+    }
+    if (s_counter++ > 10000) {
+      s_counter = 0;
+      s_parser_interpreter->clearDFA();
+      s_cache = std::make_unique<antlr4::atn::PredictionContextCache>();
+      s_parser_interpreter = new atn::ParserATNSimulator(
+          &s_parser, s_parser.getATN(), *s_decision_to_dfa, *s_cache);
+      s_parser.setInterpreter(s_parser_interpreter);
+    }
+    IRPtr ir = TranslateNode(tree, &s_parser);
+    // std::cout << ir->to_string() << std::endl;
+    return ir;
+  } catch (antlr4::IllegalArgumentException e) {
     return nullptr;
   }
-  if (s_counter++ > 10000) {
-    s_counter = 0;
-    s_parser_interpreter->clearDFA();
-    s_cache = std::make_unique<antlr4::atn::PredictionContextCache>();
-    s_parser_interpreter = new atn::ParserATNSimulator(
-        &s_parser, s_parser.getATN(), *s_decision_to_dfa, *s_cache);
-    s_parser.setInterpreter(s_parser_interpreter);
-  }
-  IRPtr ir = TranslateNode(tree, &s_parser);
-  // std::cout << ir->to_string() << std::endl;
-  return ir;
 }
 
 std::string_view GetIRTypeStr(IRTYPE type) {

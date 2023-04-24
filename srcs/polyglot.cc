@@ -67,10 +67,10 @@ size_t PolyGlotMutator::Mutate(const char *test_case) {
       if (g_frontend->Parsable(ir_str)) {
         save_test_cases_.push_back(ir_str);
       } else {
-        std::cout << "not parsable: " << ir_str << std::endl;
-        std::cout << "Before: " << test_case << std::endl;
+        // std::cout << "not parsable: " << ir_str << std::endl;
+        // std::cout << "Before: " << test_case << std::endl;
         // TODO: Make sure everything is parsable.
-        assert(0);
+        // assert(0);
         continue;
       }
     } else {
