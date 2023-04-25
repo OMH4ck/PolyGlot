@@ -36,6 +36,8 @@ options {
 }
 ```
 
+If you use separate lexer and parser file, you should include `polyglot_rule_context.h` in both files.
+
 Build with cmake:
 If you have a single g4 file, you should set `-DGRAMMAR_FILE=path/to/grammar.g4`. For example:
 ```bash
