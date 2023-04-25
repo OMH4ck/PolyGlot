@@ -67,11 +67,15 @@ endif()
 if(${PARSER_NAME} MATCHES ".*Parser$")
     # Remove the "Parser" suffix
     string(REGEX REPLACE "Parser$" "" PARSER_GEN_NAME ${PARSER_NAME})
+else()
+    set(PARSER_GEN_NAME ${PARSER_NAME})
 endif()
 
 if(${LEXER_NAME} MATCHES ".*Lexer$")
     # Remove the "Parser" suffix
     string(REGEX REPLACE "Lexer$" "" LEXER_GEN_NAME ${LEXER_NAME})
+else()
+    set(LEXER_GEN_NAME ${LEXER_NAME})
 endif()
 
 message("LEXER_NAME: ${LEXER_NAME}")
