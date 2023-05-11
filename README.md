@@ -20,7 +20,7 @@ pip install conan
 
 2. Clone the repo and build aflpp:
 ```bash
-git clone https://github.com/OMH4ck/PolyGlot && git submodule update --init && cd AFLplusplus && make -j
+git clone https://github.com/OMH4ck/PolyGlot && cd PolyGlot && git submodule update --init && cd AFLplusplus && make -j
 ```
 
 3. Build PolyGlot:
@@ -74,7 +74,7 @@ You need to set `InitFileDir` to be the path of your mutation corpus.
 4. Set the environment variable
 ```bash
 export POLYGLOT_CONFIG=abs_path/to/semantic.yml
-export AFL_CUSTOM_MUTATOR_LIBRARY=abs_path/to/build/libPolyGlot.so
+export AFL_CUSTOM_MUTATOR_LIBRARY=abs_path/to/build/libpolyglot_mutator.so
 export AFL_CUSTOM_MUTATOR_ONLY=1
 export AFL_DISABLE_TRIM=1 # We haven't implemented trimming yet.
 ```
