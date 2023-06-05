@@ -23,7 +23,7 @@ BasicTypes:\n \
   - X" > /PolyGlot/semantic.yml
 
 # Set the environment variable
-ENV OLYGLOT_CONFIG=/PolyGlot/semantic.yml
+ENV POLYGLOT_CONFIG=/PolyGlot/semantic.yml
 ENV AFL_CUSTOM_MUTATOR_LIBRARY=/PolyGlot/build/libpolyglot_mutator.so
 ENV AFL_CUSTOM_MUTATOR_ONLY=1
 ENV AFL_DISABLE_TRIM=1 
