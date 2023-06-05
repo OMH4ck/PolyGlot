@@ -147,7 +147,7 @@ IRPtr TranslateNode(tree::ParseTree *node, PolyGlotGrammarParser *parser) {
       }
     }
     if (tmp_stk.empty()) {
-      if (ctx->getText() == "<EOF>") {
+      if (ctx->getText() == "<EOF>" || ctx->getText().empty()) {
         return nullptr;
       }
     }
