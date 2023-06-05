@@ -86,7 +86,7 @@ conan_cmake_configure(
   ms-gsl/4.0.0
   yaml-cpp/0.7.0
   abseil/20230125.2
-  antlr4-cppruntime/4.12.0
+  # antlr4-cppruntime/4.12.0
   benchmark/1.7.1
   GENERATORS
   CMakeDeps
@@ -107,9 +107,13 @@ conan_cmake_install(
 find_package(spdlog REQUIRED)
 find_package(Microsoft.GSL REQUIRED)
 find_package(absl REQUIRED)
-find_package(antlr4-runtime REQUIRED)
+# find_package(antlr4-runtime REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(benchmark REQUIRED)
+
+add_subdirectory(antlr4/runtime/Cpp)
+
+include_directories( ${CMAKE_SOURCE_DIR}/antlr4/runtime/Cpp/runtime/src)
 
 file(GLOB SRC_FILES ${CMAKE_SOURCE_DIR}/srcs/internal/srcs/*.cpp)
 
