@@ -13,7 +13,14 @@
 	// "forwardPorts": [],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "pip install pre-commit && pre-commit install"
+	"postCreateCommand": "pip install pre-commit && pre-commit install",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"vscodevim.vim"
+			]
+		}
+	}
 
 	// Configure tool-specific properties.
 	// "customizations": {},
