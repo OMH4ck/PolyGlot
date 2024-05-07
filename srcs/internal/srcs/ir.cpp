@@ -20,10 +20,10 @@
 
 #include "ir.h"
 
+#include <absl/strings/str_cat.h>
+
 #include <cassert>
 #include <set>
-
-#include "absl/strings/str_cat.h"
 // #include "configuration.h"
 //  #include "define.h"
 #include "utils.h"

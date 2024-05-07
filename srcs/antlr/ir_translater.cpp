@@ -110,7 +110,7 @@ class MyErrorListener : public ANTLRErrorListener {
   virtual void reportContextSensitivity(Parser *recognizer, const dfa::DFA &dfa,
                                         size_t startIndex, size_t stopIndex,
                                         size_t prediction,
-                                        atn::ATNConfigSet *configs) override{};
+                                        atn::ATNConfigSet *configs) override {};
 
  private:
   bool has_error_ = false;

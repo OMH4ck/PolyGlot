@@ -42,7 +42,7 @@ class PolyGlotMutator {
 
  private:
   PolyGlotMutator(std::shared_ptr<polyglot::Frontend> frontend)
-      : g_frontend(frontend), g_mutator(frontend), g_validator(frontend){};
+      : g_frontend(frontend), g_mutator(frontend), g_validator(frontend) {};
   void Initialize(std::string_view);
   std::shared_ptr<polyglot::Frontend> g_frontend;
   polyglot::mutation::Mutator g_mutator;

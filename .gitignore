@@ -27,3 +27,4 @@ release
 gen/
 .cache/
 test.py
+CMakeUserPresets.json

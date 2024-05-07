@@ -66,44 +66,18 @@ if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   link_libraries(coverage_config)
 endif(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 
+execute_process(
+  COMMAND conan install . --output-folder=${CMAKE_BINARY_DIR} --build=missing --settings=build_type=${CMAKE_BUILD_TYPE}
+  RESULT_VARIABLE result
+  ERROR_VARIABLE error
+)
 
-if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
-  message(
-    STATUS
-      "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
-  file(
-    DOWNLOAD
-    "https://raw.githubusercontent.com/conan-io/cmake-conan/0.18.1/conan.cmake"
-    "${CMAKE_BINARY_DIR}/conan.cmake" TLS_VERIFY ON)
+# Check if the command was successful
+if(NOT result EQUAL "0")
+    message(FATAL_ERROR "Command failed with error: ${error}")
 endif()
 
-include(${CMAKE_BINARY_DIR}/conan.cmake)
-
-conan_cmake_configure(
-  REQUIRES
-  gtest/1.12.1
-  spdlog/1.11.0
-  ms-gsl/4.0.0
-  yaml-cpp/0.7.0
-  abseil/20230125.2
-  antlr4-cppruntime/4.12.0
-  benchmark/1.7.1
-  GENERATORS
-  CMakeDeps
-  CMakeToolchain)
-
-conan_cmake_autodetect(settings)
-
-conan_cmake_install(
-  PATH_OR_REFERENCE
-  .
-  BUILD
-  missing
-  REMOTE
-  conancenter
-  SETTINGS
-  ${settings})
-
+set(CMAKE_TOOLCHAIN_FILE ${CMAKE_BINARY_DIR}/conan_toolchain.cmake)
 find_package(spdlog REQUIRED)
 find_package(Microsoft.GSL REQUIRED)
 find_package(absl REQUIRED)
@@ -139,14 +113,14 @@ target_link_libraries(config_lib PRIVATE yaml-cpp absl::str_format spdlog::spdlo
 add_library(ir_lib STATIC srcs/internal/srcs/ir.cpp)
 target_include_directories(ir_lib
                            PUBLIC ${CMAKE_SOURCE_DIR}/srcs/internal/include)
-target_link_libraries(ir_lib PUBLIC absl::str_format util_lib)
+target_link_libraries(ir_lib PUBLIC absl::str_format util_lib absl::strings)
 target_compile_options(ir_lib PRIVATE -fPIC)
 
 add_library(mutate_lib STATIC srcs/internal/srcs/mutate.cpp)
 target_include_directories(mutate_lib
                            PUBLIC ${CMAKE_SOURCE_DIR}/srcs/internal/include)
 target_link_libraries(mutate_lib PRIVATE ir_lib config_lib Microsoft.GSL::GSL
-                                         spdlog::spdlog)
+                                         spdlog::spdlog absl::str_format)
 target_compile_options(mutate_lib PRIVATE -fPIC)
 
 add_library(
