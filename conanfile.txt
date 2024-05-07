@@ -1,11 +1,11 @@
 [requires]
-gtest/1.12.1
-spdlog/1.11.0
+gtest/1.14.0
+spdlog/1.14.1
 ms-gsl/4.0.0
-yaml-cpp/0.7.0
-abseil/20230125.2
+yaml-cpp/0.8.0
+abseil/20240116.2
 antlr4-cppruntime/4.12.0
-benchmark/1.7.1
+benchmark/1.8.3
 
 [generators]
 CMakeDeps
