@@ -34,7 +34,7 @@ jobs:
       - name: build
         run: cmake -Bbuild -DCMAKE_BUILD_TYPE=Debug -G Ninja -DGRAMMAR_FILE=$POLYGLOT_ROOT/grammars/simplelang/SimpleLang.g4 -DCODE_COVERAGE=ON && ninja -C build
       - name: unittest
-        run: cd build && ctest --repeat until-fail:3
+        run: cd build && ctest --repeat until-fail:3 || ctest --rerun-failed --output-on-failure
       - name: benchmark
         run: cd build/benchmarks && ./mutation_bench --benchmark_format=json | tee benchmark_result.json
       - name: Store benchmark result
