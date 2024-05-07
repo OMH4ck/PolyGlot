@@ -32,7 +32,7 @@ jobs:
       - name: install conan profile
         run: conan profile detect
       - name: build
-        run: mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DGRAMMAR_FILE=$POLYGLOT_ROOT/grammars/simplelang/SimpleLang.g4 -DCODE_COVERAGE=ON && make -j
+        run: cmake .. -Bbuild -DCMAKE_BUILD_TYPE=Debug -DGRAMMAR_FILE=$POLYGLOT_ROOT/grammars/simplelang/SimpleLang.g4 -DCODE_COVERAGE=ON && make -j
       - name: unittest
         run: cd build && ctest --repeat until-fail:3
       - name: benchmark
