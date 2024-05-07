@@ -16,7 +16,7 @@ mkdir -p $OUT
 
 pushd $ROOT
 rm -rf gen
-cmake -Brelease -DCMAKE_BUILD_TYPE=Release -DGRAMMAR_FILE=${ROOT}/grammars/lua/Lua.g4 -DBUILD_TESTING=OFF && cd release && make -j
+cmake -Brelease -DCMAKE_BUILD_TYPE=Release -DGRAMMAR_FILE=${ROOT}/grammars/lua/Lua.g4 -DBUILD_TESTING=OFF && ninja -C release
 popd
 
 export AFLPATH=$PWD/../AFLplusplus
